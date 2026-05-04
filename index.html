@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toros Auto Care | Carpentersville Auto Repair</title>
+  <meta name="description" content="Toros Auto Care in Carpentersville, IL. Auto repair and service without the bull. Book service online or call today." />
+  <style>
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #020617; background: #fff; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; border: 0; }
+    a { color: inherit; text-decoration: none; }
+    .top-bar { background: #1a3455; color: white; padding: 8px 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; overflow: hidden; }
+    .top-bar-inner { max-width: 1280px; margin: 0 auto; display: grid; gap: 8px; text-align: center; }
+    .top-bar-item { display: block; }
+    header { position: sticky; top: 0; z-index: 40; background: rgba(255,255,255,.96); backdrop-filter: blur(10px); border-bottom: 1px solid #e2e8f0; }
+    .header-inner { max-width: 1280px; margin: 0 auto; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .logo-button, .footer-logo-button { background: transparent; display: flex; align-items: center; gap: 12px; padding: 0; }
+    .footer-logo-button { background: #fff; padding: 12px; border-radius: 16px; }
+    .logo-mark { display: flex; align-items: center; gap: 12px; }
+    .site-logo-img { display: block; width: 260px; max-width: 100%; height: auto; object-fit: contain; }
+    .footer-logo-button .site-logo-img { width: 240px; }
+    .coupon-logo-img { display: block; width: 220px; max-width: 100%; height: auto; object-fit: contain; }
+    .bull-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: #ae2b27; color: white; font-size: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.15); outline: 2px solid #1a3455; }
+    .logo-title { line-height: 1; }
+    .logo-toros { font-size: 30px; font-weight: 950; color: #ae2b27; letter-spacing: -1px; }
+    .logo-sub { margin-top: 4px; font-size: 13px; font-weight: 950; color: #1a3455; letter-spacing: .35em; }
+    nav { display: none; align-items: center; gap: 32px; font-size: 14px; font-weight: 700; color: #334155; }
+    nav a:hover { color: #1a3455; }
+    .header-actions { display: none; gap: 12px; }
+    .mobile-header-call { display: none; }
+    .desktop-header-call { display: none; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 14px; padding: 12px 20px; font-weight: 800; transition: .2s ease; text-align: center; }
+    .btn-primary { background: #1a3455; color: #fff; }
+    .btn-primary:hover { background: #142a44; }
+    .btn-red { background: #ae2b27; color: #fff; }
+    .btn-red:hover { background: #8f2320; }
+    .btn-outline { background: transparent; border: 1px solid #1a3455; color: #1a3455; }
+    .btn-outline:hover { background: #fef2f2; }
+    .btn-lg { padding: 16px 28px; font-size: 16px; border-radius: 18px; }
+    .hero { position: relative; overflow: hidden; background: #1a3455; scroll-margin-top: 96px; }
+    .hero::before { content: ""; position: absolute; inset: 0; opacity: .1; background: radial-gradient(circle at 90% 0%, white 0 150px, transparent 151px), radial-gradient(circle at 10% 80%, white 0 90px, transparent 91px); }
+    .hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: 80px 20px; display: grid; gap: 48px; align-items: center; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); padding: 8px 16px; font-size: 14px; font-weight: 700; }
+    h1 { max-width: 760px; margin: 0; color: #fff; font-size: 42px; line-height: 1.05; letter-spacing: -1.5px; font-weight: 950; }
+    .hero p { max-width: 680px; color: rgba(255,255,255,.82); font-size: 18px; line-height: 1.75; }
+    .card { border-radius: 28px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .booking-card { border-radius: 32px; border: 0; box-shadow: 0 25px 60px rgba(0,0,0,.24); }
+    .card-content { padding: 28px; }
+    .booking-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .eyebrow { margin: 0; color: #ae2b27; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+    h2 { margin: 8px 0 0; color: #1a3455; font-size: 32px; line-height: 1.15; font-weight: 950; letter-spacing: -.7px; }
+    h3 { margin: 0; color: #1a3455; font-size: 20px; font-weight: 900; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #F5F7FA; border-radius: 16px; padding: 4px; margin-bottom: 20px; }
+    .tab { border-radius: 12px; padding: 9px 16px; background: transparent; color: #64748b; font-size: 14px; font-weight: 800; }
+    .tab.active { background: #fff; color: #1a3455; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .form-grid { display: grid; gap: 16px; }
+    input, select, textarea { width: 100%; border: 1px solid #e2e8f0; border-radius: 12px; padding: 13px 16px; outline: none; background: white; color: #334155; }
+    input:focus, select:focus, textarea:focus { border-color: #ae2b27; }
+    textarea { min-height: 96px; resize: vertical; }
+    .error { border-color: #ef4444 !important; color: #ae2b27 !important; }
+    .checkbox-row { display: flex; align-items: flex-start; gap: 12px; border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px 16px; color: #475569; font-size: 14px; line-height: 1.45; }
+    .checkbox-row input { width: 16px; height: 16px; margin-top: 4px; flex: none; }
+    .muted-box { border-radius: 16px; background: #F5F7FA; padding: 12px 16px; font-size: 14px; color: #475569; }
+    .vehicle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .relative { position: relative; }
+    .dropdown { position: absolute; top: calc(100% + 8px); left: 0; width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 20px 45px rgba(0,0,0,.2); z-index: 70; }
+    .calendar-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; color: #1a3455; font-weight: 800; }
+    .small-nav { border: 1px solid #e2e8f0; background: white; color: #1a3455; border-radius: 8px; padding: 4px 12px; font-weight: 900; }
+    .calendar-labels, .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+    .calendar-labels { color: #64748b; font-size: 12px; font-weight: 800; margin-bottom: 8px; }
+    .date-btn { aspect-ratio: 1; border-radius: 12px; background: #fff; color: #334155; font-size: 14px; font-weight: 800; }
+    .date-btn:hover { background: #fef2f2; color: #1a3455; }
+    .date-btn.selected { background: #1a3455; color: white; }
+    .date-btn.disabled { cursor: not-allowed; background: #f1f5f9; color: #cbd5e1; text-decoration: line-through; }
+    .time-list { padding: 0; overflow: hidden; }
+    .time-list button { display: block; width: 100%; padding: 10px 16px; text-align: left; background: white; color: #334155; font-weight: 800; }
+    .time-list button:hover, .time-list button.selected { background: #1a3455; color: white; }
+    .time-list button.disabled { cursor: not-allowed; background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
+    .time-list button.disabled:hover { background: #f1f5f9; color: #94a3b8; }
+    .note { margin: -8px 0 0; color: #64748b; font-size: 12px; line-height: 1.5; }
+    .section { padding: 80px 20px; }
+    .section.gray { background: #F5F7FA; }
+    .container { max-width: 1280px; margin: 0 auto; }
+    .section-center { max-width: 680px; margin: 0 auto; text-align: center; }
+    .section-center p:last-child { color: #475569; line-height: 1.65; }
+    .services-grid { margin-top: 48px; display: grid; gap: 20px; }
+    .service-card { padding: 28px; cursor: pointer; transition: .2s ease; }
+    .service-card:hover, .info-card:hover, .deal-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 18px 35px rgba(0,0,0,.12); }
+    .service-icon { margin-bottom: 20px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: #1a3455; color: white; font-size: 24px; transition: .2s; }
+    .service-card:hover .service-icon { background: #ae2b27; }
+    .service-card p, .deal-card p, .info-card p { color: #475569; line-height: 1.65; }
+    .learn { margin-top: 18px; background: transparent; padding: 0; color: #ae2b27; font-weight: 900; }
+    .deals-grid { max-width: 900px; margin: 48px auto 0; display: grid; gap: 20px; }
+    .deal-card { position: relative; overflow: hidden; border: 2px dashed #1a3455; border-radius: 28px; padding: 28px; transition: .2s ease; }
+    .deal-card::before, .deal-card::after { content: ""; position: absolute; top: 50%; width: 24px; height: 24px; background: white; border-radius: 999px; transform: translateY(-50%); }
+    .deal-card::before { left: -12px; } .deal-card::after { right: -12px; }
+    .deal-icon { font-size: 40px; margin-bottom: 16px; }
+    .trust-layout { display: grid; gap: 40px; }
+    .trust-list, .trust-items, .why-bullets, .trust-bullets { display: none !important; }
+    .quote { padding: 32px; border: 0; box-shadow: 0 18px 35px rgba(0,0,0,.12); }
+    #reviewQuote, #reviewText { transition: opacity .25s ease, transform .25s ease; }
+    .review-changing #reviewQuote, .review-changing #reviewText { opacity: 0; transform: translateY(6px); }
+    .stars { color: #eab308; letter-spacing: 2px; }
+    .google-review-badge { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; border: 1px solid #e2e8f0; background: #fff; color: #475569; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 800; }
+    .google-g { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; background: #f8fafc; color: #4285F4; font-weight: 950; font-size: 15px; }
+    blockquote { margin: 24px 0; color: #1a3455; font-size: 24px; line-height: 1.3; font-weight: 900; }
+    .stats { display: grid; gap: 16px; margin-top: 28px; }
+    .stat { border-radius: 16px; background: #F5F7FA; padding: 16px; text-align: center; }
+    .stat strong { display: block; color: #1a3455; font-size: 24px; }
+    .stat span { color: #64748b; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
+    .contact-grid { margin-top: 48px; display: grid; gap: 20px; }
+    .info-card { padding: 28px; cursor: pointer; transition: .2s ease; }
+    footer { background: #1a3455; color: #fff; }
+    .footer-grid { max-width: 1280px; margin: 0 auto; padding: 56px 20px; display: grid; gap: 40px; }
+    footer h3 { color: rgba(255,255,255,.7); font-size: 14px; text-transform: uppercase; letter-spacing: .18em; }
+    footer p { color: rgba(255,255,255,.85); font-size: 14px; line-height: 1.65; }
+    .copyright { background: #102742; padding: 20px; text-align: center; font-size: 12px; color: rgba(255,255,255,.55); }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.5); padding: 16px; }
+    .modal { width: 100%; max-width: 430px; background: white; border-radius: 28px; padding: 24px; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; }
+    .close-btn { background: transparent; font-size: 22px; font-weight: 900; }
+    .coupon-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 999px; background:white; border:2px solid #1a3455; color:#1a3455; font-size:20px; font-weight:900; display:flex; align-items:center; justify-content:center; line-height:1; }
+    .coupon-box { margin: 20px 0; border-top: 4px solid #dbe3ee; border-bottom: 4px solid #dbe3ee; padding: 12px 0; }
+    .coupon-inner { border-radius: 18px; background: #e8eff4; padding: 28px 20px; text-align: center; }
+    .coupon-inner strong { color:#1a3455; font-size:28px; }
+    .success { border-radius: 28px; background:#F5F7FA; border:1px solid #e2e8f0; padding:32px 20px; text-align:center; color:#1a3455; box-shadow:0 18px 35px rgba(0,0,0,.12); }
+    .success h3 { color:#1a3455; font-size:28px; }
+    .success p { color:#334155 !important; line-height:1.7; }
+    .success strong { color:#1a3455; }
+    .success .muted-box { background:#ffffff; color:#1a3455; border-radius:18px; margin-top:20px; padding:18px; }
+    .success .muted-box p { color:#1a3455 !important; margin:10px 0; }
+    .success .muted-box strong { color:#1a3455; }
+    .mobile-sheet { position: fixed; inset: 0; z-index: 120; display:flex; align-items:flex-end; justify-content:center; background:rgba(0,0,0,.4); padding:16px; }
+    .sheet-content { width:100%; max-width:390px; overflow:hidden; border-radius:18px; background:white; box-shadow:0 30px 80px rgba(0,0,0,.35); }
+    .sheet-content button { width:100%; padding:16px 20px; background:white; border-bottom:1px solid #e2e8f0; color:#1a3455; font-weight:800; font-size:16px; }
+    .sheet-content .cancel { background:#f8fafc; color:#64748b; }
+    .confirmed-box { border-radius: 28px; border:1px solid #e2e8f0; background:white; text-align:center; overflow:hidden; box-shadow:0 18px 35px rgba(0,0,0,.12); }
+    .confirmed-top { background:#F5F7FA; padding:32px 20px; }
+    .confirmed-row { padding:16px 20px; border-top:1px solid #e2e8f0; text-align:left; color:#334155; }
+    .hidden { display: none !important; }
+    @media (min-width: 640px) { .top-bar-inner { grid-template-columns: repeat(3,1fr); text-align: left; } .top-bar-inner div:nth-child(2) { text-align: center; } .top-bar-inner div:nth-child(3) { text-align: right; } .header-actions { display: flex; } .desktop-header-call { display: none !important; } .stats { grid-template-columns: repeat(3,1fr); } .appt-actions { grid-template-columns: repeat(2,1fr); } }
+    @media (min-width: 768px) { nav { display: flex; } .services-grid { grid-template-columns: repeat(2,1fr); } .deals-grid { grid-template-columns: repeat(2,1fr); } .contact-grid { grid-template-columns: repeat(3,1fr); } }
+    @media (min-width: 1024px) { .hero-inner { grid-template-columns: 1.05fr .95fr; padding: 112px 32px; } h1 { font-size: 60px; } .services-grid { grid-template-columns: repeat(3,1fr); } .service-other { grid-column: 2; } .trust-layout { grid-template-columns: 1fr 1fr; } .footer-grid { grid-template-columns: 1.3fr 1fr 1fr 1fr; padding-left: 32px; padding-right: 32px; } }
+    @media (max-width: 560px) { .site-logo-img { width: 235px; } .footer-logo-button .site-logo-img { width: 220px; } .coupon-logo-img { width: 210px; } .logo-toros { font-size: 24px; } .logo-sub { font-size: 11px; } .bull-icon { width: 42px; height: 42px; } h1 { font-size: 38px; } .vehicle-grid { grid-template-columns: 1fr; } .card-content { padding: 22px; } .section { padding: 64px 20px; } }
+    @media (max-width: 639px) {
+      .badges { flex-wrap: nowrap; gap: 8px; }
+      .badge { flex: 1; justify-content: center; padding: 8px 10px; font-size: 12px; white-space: nowrap; }
+      #services.section { padding: 54px 16px; }
+      #services .section-center h2 { font-size: 28px; }
+      #services .services-grid { margin-top: 28px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      #services .service-card { padding: 16px 12px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 132px; text-align: center; }
+      #services .service-icon { width: 48px; height: 48px; margin: 0 0 10px; border-radius: 14px; font-size: 22px; }
+      #services .service-card h3 { font-size: 15px; line-height: 1.25; }
+      #services .service-card p, #services .service-card .learn { display: none; }
+      #services .service-other { grid-column: 1 / -1; min-height: 96px; flex-direction: row; gap: 12px; }
+      #services .service-other .service-icon { margin: 0; }
+
+      #deals.section, #why-choose-us.section, #contact-details.section { padding: 54px 16px; }
+      #deals .section-center h2, #why-choose-us h2, #contact-details .section-center h2 { font-size: 28px; }
+      #deals .deals-grid { margin-top: 28px; gap: 12px; }
+      #deals .deal-card { padding: 18px; border-radius: 20px; display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: center; }
+      #deals .deal-card::before, #deals .deal-card::after { display: none; }
+      #deals .deal-icon { font-size: 30px; margin: 0; grid-row: 1 / span 2; }
+      #deals .deal-card h3 { font-size: 16px; line-height: 1.25; }
+      #deals .deal-card p { margin: 0; font-size: 14px; line-height: 1.45; }
+      #deals .deal-card .btn { grid-column: 1 / -1; padding: 12px 16px; border-radius: 14px; }
+
+      #why-choose-us .trust-layout { gap: 22px; }
+      #why-choose-us .quote { padding: 22px; border-radius: 22px; }
+      #why-choose-us blockquote { margin: 16px 0; font-size: 20px; line-height: 1.3; }
+      #why-choose-us #reviewText { font-size: 14px; line-height: 1.55 !important; }
+      #why-choose-us .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 18px; }
+      #why-choose-us .stat { padding: 12px 8px; border-radius: 14px; }
+      #why-choose-us .stat strong { font-size: 18px; }
+      #why-choose-us .stat span { font-size: 9px; }
+
+      #contact-details .contact-grid { margin-top: 28px; gap: 12px; }
+      #contact-details .info-card { padding: 18px; border-radius: 20px; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; }
+      #contact-details .info-card div[style*="font-size:40px"] { font-size: 28px !important; margin-bottom: 0 !important; grid-row: 1 / span 3; }
+      #contact-details .info-card h3 { font-size: 17px; }
+      #contact-details .info-card p { margin: 2px 0; font-size: 14px; line-height: 1.45; }
+      #contact-details #addressStatus, #contact-details #phoneStatus { font-size: 12px !important; }
+
+      .top-bar { display: none; }
+      .header-inner { justify-content: space-between; position: relative; padding: 18px 18px; gap: 12px; }
+      .logo-button { margin: 0; flex: 1; justify-content: flex-start; min-width: 0; }
+      .site-logo-img { width: 230px; }
+      .header-actions { display: flex; position: relative; right: 26px; transform: none; flex: 0 0 auto; }
+      .mobile-header-call { display: inline-flex; padding: 11px 16px; font-size: 14px; border-radius: 14px; white-space: nowrap; }
+      .desktop-header-book { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="modalRoot"></div>
+  <div class="top-bar"><div class="top-bar-inner"><div class="top-bar-item active">☎️ (847) 608-0236</div><div class="top-bar-item">⏰ Mon-Fri: 9AM-6PM</div><div class="top-bar-item">📍 8 Lake Marian Rd, Carpentersville, IL 60110</div></div></div>
+  <header><div class="header-inner"><button class="logo-button js-scroll-top" aria-label="Go to top"><img class="site-logo-img" src="logo.png" alt="Toros Auto Care logo"></button><nav><a href="#services">Services</a><a href="#deals">Deals</a><a href="#why-choose-us">Why Choose Us</a><a href="#contact">Contact</a></nav><div class="header-actions"><button class="btn btn-primary js-call mobile-header-call desktop-header-call">Call Now</button><button class="btn btn-primary js-scroll-booking desktop-header-book">Book Service</button></div></div></header>
+  <main>
+    <section id="book-service" class="hero"><div class="hero-inner"><div><div class="badges"><div class="badge">✓ ASE Master Certified</div><div class="badge">✓ 30+ Years of Experience</div></div><h1>Auto Repair & Service Without the Bull</h1><p>From routine maintenance to major repairs — Toros Auto Care keeps your vehicle safe, reliable, and ready for the road.</p></div><div><div class="card booking-card"><div class="card-content"><div class="booking-title"><div><p class="eyebrow">Book service</p><h2 style="font-size:24px">Request an Appointment</h2></div><span style="font-size:40px">📅</span></div><div id="bookingContent"></div></div></div></div></div></section>
+    <section id="services" class="section gray"><div class="container"><div class="section-center"><p class="eyebrow">Our services</p><h2>Everything your vehicle needs, all in one place.</h2></div><div id="servicesGrid" class="services-grid"></div></div></section>
+    <section id="deals" class="section"><div class="container"><div class="section-center"><p class="eyebrow">Current deals</p><h2>Service specials made simple.</h2></div><div id="dealsGrid" class="deals-grid"></div></div></section>
+    <section id="why-choose-us" class="section gray"><div class="container trust-layout"><div><p class="eyebrow">Why choose us</p><h2>Don't Just Take Our Word for it</h2><p style="color:#475569;line-height:1.75">Toros Auto Care is built around honest communication, dependable repairs, and making auto service feel less stressful.</p></div><div class="card quote" id="reviewCard"><div class="stars" id="reviewStars">★★★★★</div><div class="google-review-badge"><span class="google-g">G</span><span>Reviews from Google</span></div><blockquote id="reviewQuote">“Clear, honest, and easy to work with. Exactly what you want from a local repair shop.”</blockquote><p id="reviewText" style="color:#475569;line-height:1.75">Add real Google reviews here once the site goes live. This section builds trust quickly and helps visitors feel comfortable booking service.</p><div class="stats"><div class="stat"><strong id="positiveReviewsCount">0+</strong><span>Positive Reviews</span></div><div class="stat"><strong>Family</strong><span>Owned</span></div><div class="stat"><strong>Trusted</strong><span>Repairs</span></div></div></div></div></section>
+    <section id="contact-details" class="section"><div class="container"><div class="section-center"><p class="eyebrow">Come visit us</p><h2>Easy to reach, easy to schedule.</h2><p>Stop by, call, or request an appointment online and we’ll help get your vehicle taken care of.</p></div><div class="contact-grid"><div class="card info-card" id="addressCard"><div style="font-size:40px;margin-bottom:16px">📍</div><h3>Address</h3><p>8 Lake Marian Rd, Carpentersville, IL 60110</p><p id="addressStatus" style="color:#ae2b27;font-weight:900;font-size:14px">Click to Copy Address</p></div><div class="card info-card" id="phoneCard"><div style="font-size:40px;margin-bottom:16px">☎️</div><h3>Phone</h3><p>(847) 608-0236</p><p id="phoneStatus" style="color:#ae2b27;font-weight:900;font-size:14px">Click to Copy Phone Number</p></div><div class="card info-card"><div style="font-size:40px;margin-bottom:16px">⏰</div><h3>Open Hours</h3><p>Monday–Friday: 9:00 AM – 6:00 PM<br>Saturday: Closed<br>Sunday: Closed</p></div></div></div></section>
+  </main>
+  <footer id="contact"><div class="footer-grid"><div><button class="footer-logo-button js-scroll-top" aria-label="Go to top"><img class="site-logo-img" src="logo.png" alt="Toros Auto Care logo"></button><p>Auto Repair & Service Without the Bull</p></div><div><h3>Location</h3><p>8 Lake Marian Rd, Carpentersville, IL 60110</p></div><div><h3>Hours</h3><p>Monday–Friday: 9:00 AM – 6:00 PM<br>Saturday: Closed<br>Sunday: Closed</p></div><div><h3>Contact</h3><p>(847) 608-0236</p><button class="btn btn-red js-scroll-booking">Schedule Appointment</button></div></div><div class="copyright">© 2026 Toros Auto Care — Carpentersville, IL. All rights reserved.</div></footer>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const services = [
+      { title: "Oil Change", description: "Premium oil service using Mobil 1 full synthetic oil to keep your engine protected and running smooth.", detail: "Every service includes a complimentary safety inspection, with clear explanations and recommendations focused only on what truly matters.", icon: "🛢️" },
+      { title: "Brakes", description: "We provide complete brake services, including inspections, pad and rotor replacement, and brake fluid flushes.", detail: "Reliable stopping power with premium parts, backed by full warranty protection.", icon: "🛑" },
+      { title: "Suspension", description: "Suspension inspections, steering concerns, shocks, struts, and ride quality issues.", detail: "Smooth, controlled driving with premium parts, built for comfort, backed by full warranty protection.", icon: "🛞" },
+      { title: "AC & Heating", description: "Heating and cooling diagnostics so your car is comfortable year-round.", detail: "Stay comfortable in every season with reliable climate control performance.", icon: "❄️" },
+      { title: "Emission Testing Prep", description: "Prepare your vehicle to pass emissions testing with inspections, diagnostics, and necessary repairs.", detail: "Ensure your vehicle meets emissions standards with proper diagnostics and repair solutions.", icon: "🌍" },
+      { title: "Fleet", description: "Maintenance and repair support for business vehicles and small local fleets.", detail: "Keep your business moving with reliable maintenance and priority service.", icon: "🚐" },
+      { title: "Other", description: "Anything else your vehicle needs — diagnostics, concerns, or custom service requests.", detail: "Honest diagnostics and straightforward solutions for any issue your vehicle has.", icon: "🔧" }
+    ];
+    const reviews = [
+  {
+    quote: "Excellent! Great pricing, prompt service & great communication.",
+    text: "They did all 4 of my brakes & rotors and an oil change. What I was quoted was what I was charged. Very clean organized shop. Highly recommend 🙂",
+    name: "Sarah Bogle",
+    meta: "Local Guide • 99 reviews • a year ago"
+  },
+  {
+    quote: "They did a great job and gave us a fair quote.",
+    text: "We had a car checked out by them and they were honest about what needed attention. Said it was a good car for the price. Highly recommend bringing your car here.",
+    name: "Andy Lehmann",
+    meta: "Local Guide • 65 reviews • 2 years ago"
+  },
+  {
+    quote: "They explained everything clearly and delivered exactly as promised.",
+    text: "They checked out my daughter’s car, explained what needed to be done now vs later, and provided pricing for everything. The car was ready as promised and running beautifully.",
+    name: "Deanna Kirchner",
+    meta: "Local Guide • 19 reviews • 10 months ago"
+  },
+  {
+    quote: "Down to earth family 🌍",
+    text: "Friendly, honest, and easy to work with. You can tell they care about their customers.",
+    name: "Kit Rajamsay",
+    meta: "3 reviews • 2 years ago"
+  },
+  {
+    quote: "Great price, fast and honest service.",
+    text: "Brought in my Nissan for an oil change. They were quick, honest, and never tried to upsell anything. 100% recommend!",
+    name: "John Del Rosario",
+    meta: "1 review • a week ago"
+  }
+];
+    let currentReviewIndex = 0;
+    let currentTopBarIndex = 0;
+    let positiveReviewsAnimated = false;
+    const businessInfo = { address: "8 Lake Marian Rd, Carpentersville, IL 60110", phone: "(847) 608-0236" };
+    const deals = [ { icon:"🛢️", title:"Mobil 1 Synthetic Oil Change Special", text:"Get 10% off your next oil change when you sign up for email and text offers." }, { icon:"🎖️", title:"5% Off Appreciation Discount", text:"Available for military, teachers, medical workers, nurses, and students." } ];
+    const form = { name:"", phone:"", email:"", year:"", make:"", model:"", service:"", date:"", time:"", marketingOptIn:false, dropOff:false, message:"" };
+    let models = [], isLoadingModels = false, showErrors = false, appointmentStep = 1, appointmentConfirmed = false, appointmentFinalized = false, calendarMonth = new Date();
+    let unavailableTimes = [];
+    let isLoadingTimes = false;
+    const appointmentTimes = ["9:00 AM","9:30 AM","10:00 AM","10:30 AM","11:00 AM","11:30 AM","12:00 PM","12:30 PM","1:00 PM","1:30 PM","2:00 PM","2:30 PM","3:00 PM"];
+    const commonMakes = ["Acura","Audi","BMW","Buick","Cadillac","Chevrolet","Chrysler","Dodge","Ford","GMC","Honda","Hyundai","Infiniti","Jeep","Kia","Land Rover","Lexus","Lincoln","Mazda","Mercedes-Benz","Mini","Mitsubishi","Nissan","Porsche","Ram","Subaru","Tesla","Toyota","Volkswagen","Volvo"];
+    const commonModelsByMake = {
+      Acura:["ILX","Integra","MDX","RDX","TLX"], Audi:["A3","A4","A5","A6","A7","A8","Q3","Q5","Q7","Q8"], BMW:["2 Series","3 Series","4 Series","5 Series","7 Series","X1","X3","X5","X7"], Buick:["Encore","Encore GX","Envision","Enclave","LaCrosse","Regal"], Cadillac:["ATS","CT4","CT5","CTS","Escalade","XT4","XT5","XT6"], Chevrolet:["Silverado 1500","Malibu","Equinox","Tahoe","Traverse","Camaro","Colorado","Suburban","Trailblazer","Trax"], Chrysler:["200","300","Pacifica","Town & Country","Voyager"], Dodge:["Challenger","Charger","Durango","Grand Caravan","Journey"], Ford:["F-150","Escape","Explorer","Fusion","Edge","Mustang","Ranger","Bronco","Expedition","Maverick"], GMC:["Acadia","Canyon","Sierra 1500","Terrain","Yukon"], Honda:["Civic","Accord","CR-V","Pilot","Odyssey","HR-V","Ridgeline","Passport"], Hyundai:["Elantra","Sonata","Tucson","Santa Fe","Palisade","Kona","Venue","Santa Cruz"], Infiniti:["Q50","Q60","QX50","QX55","QX60","QX80"], Jeep:["Wrangler","Grand Cherokee","Cherokee","Compass","Renegade","Gladiator","Wagoneer"], Kia:["Forte","K5","Sorento","Sportage","Telluride","Soul","Carnival","Seltos"], "Land Rover":["Defender","Discovery","Discovery Sport","Range Rover","Range Rover Evoque","Range Rover Sport","Range Rover Velar"], Lexus:["ES","GS","GX","IS","LS","LX","NX","RX","UX"], Lincoln:["Aviator","Continental","Corsair","MKC","MKS","MKT","MKX","MKZ","Navigator","Nautilus"], Mazda:["Mazda3","Mazda6","CX-3","CX-30","CX-5","CX-50","CX-9","MX-5 Miata"], "Mercedes-Benz":["A-Class","C-Class","E-Class","S-Class","CLA","CLS","GLA","GLB","GLC","GLE","GLS"], Mini:["Cooper","Cooper Clubman","Cooper Countryman"], Mitsubishi:["Eclipse Cross","Lancer","Mirage","Outlander","Outlander Sport"], Nissan:["Altima","Sentra","Rogue","Pathfinder","Murano","Frontier","Maxima","Versa","Titan","Armada"], Porsche:["911","718 Boxster","718 Cayman","Cayenne","Macan","Panamera","Taycan"], Ram:["1500","2500","3500","ProMaster","ProMaster City"], Subaru:["Ascent","BRZ","Crosstrek","Forester","Impreza","Legacy","Outback","WRX"], Tesla:["Model 3","Model S","Model X","Model Y","Cybertruck"], Toyota:["Camry","Corolla","RAV4","Highlander","Tacoma","Tundra","Prius","Sienna","4Runner","Avalon","C-HR","Venza"], Volkswagen:["Atlas","Atlas Cross Sport","Beetle","Golf","GTI","Jetta","Passat","Taos","Tiguan"], Volvo:["S60","S90","V60","V90","XC40","XC60","XC90"]
+    };
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/'/g, '&#39;')
+        .replace(/"/g, '&quot;');
+    }
+    function scrollToTop(){ window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    function scrollToBooking(){
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const target = isMobile ? document.querySelector('.booking-card') : $('book-service');
+      if (!target) return;
+
+      if (isMobile) {
+        const offset = 95;
+        const targetTop = target.getBoundingClientRect().top + window.pageYOffset - offset;
+        window.scrollTo({ top: targetTop, behavior: 'smooth' });
+      } else {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    function scrollToAppointmentConfirmation(){
+      const target = document.querySelector('.booking-card');
+      if (!target) return;
+      const offset = window.matchMedia('(max-width: 768px)').matches ? 120 : 90;
+      const targetTop = target.getBoundingClientRect().top + window.pageYOffset - offset;
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: targetTop, behavior: 'smooth' });
+      });
+    }
+    function centerField(element, yBias = 0){
+      if (!element) return;
+      setTimeout(() => {
+        const elementCenter = element.getBoundingClientRect().top + window.pageYOffset + (element.offsetHeight / 2);
+        const viewportCenter = (window.innerHeight / 2) + yBias;
+        window.scrollTo({ top: elementCenter - viewportCenter, behavior: 'smooth' });
+      }, 250);
+    }
+    function callNow(){ window.location.href='tel:8476080236'; }
+
+    // ===== APPOINTMENT SUBMISSION =====
+    const formspreeEndpoint = 'https://formspree.io/f/xwvylvwb';
+
+    // After you deploy the Google Apps Script web app, paste its URL here.
+    // This is what prevents double booking by checking Google Calendar first.
+    const googleBookingEndpoint = 'https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec';
+
+    async function sendAppointmentToFormspree(){
+      const appointmentData = {
+        name: form.name,
+        phone: form.phone,
+        email: form.email || 'Not provided',
+        vehicle: `${form.year} ${form.make} ${form.model}`,
+        service: form.service,
+        preferred_date: selectedDateLabel(),
+        preferred_time: form.time,
+        drop_off: form.dropOff ? 'Yes' : 'No',
+        message: form.message || 'No message provided',
+        marketing_opt_in: form.marketingOptIn ? 'Yes' : 'No',
+        submitted_from: 'Toros Auto Care Website'
+      };
+
+      const response = await fetch(formspreeEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(appointmentData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Appointment submission failed');
+      }
+
+      return response.json();
+    }
+
+    function normalizeTimeKey(timeText){
+      if (!timeText) return '';
+      const cleaned = String(timeText).replace(new RegExp('[\u202f\u00a0]', 'g'), ' ').trim();
+      const match = cleaned.match(/([0-9]{1,2}):([0-9]{2})[ ]*(AM|PM)/i);
+      if (!match) return cleaned;
+
+      let hour = Number(match[1]);
+      const minute = match[2];
+      const ampm = match[3].toUpperCase();
+
+      if (ampm === 'PM' && hour !== 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+
+      return String(hour).padStart(2, '0') + ':' + minute;
+    }
+
+    async function getUnavailableTimes(dateRaw){
+      if (!dateRaw || googleBookingEndpoint.includes('PASTE_GOOGLE_APPS_SCRIPT')) return [];
+      try {
+        isLoadingTimes = true;
+        const url = googleBookingEndpoint + '?action=availability&date=' + encodeURIComponent(dateRaw) + '&v=' + Date.now();
+        const response = await fetch(url);
+        const result = await response.json();
+        isLoadingTimes = false;
+
+        const unavailable = result.unavailable_times || [];
+        return unavailable.map(normalizeTimeKey);
+      } catch (error) {
+        isLoadingTimes = false;
+        console.log('Availability check failed', error);
+        return [];
+      }
+    }
+
+    async function sendAppointmentToGoogleBooking(){
+      const appointmentData = {
+        name: form.name,
+        phone: form.phone,
+        email: form.email || '',
+        year: form.year,
+        make: form.make,
+        model: form.model,
+        vehicle: `${form.year} ${form.make} ${form.model}`,
+        service: form.service,
+        preferred_date_raw: form.date,
+        preferred_date: selectedDateLabel(),
+        preferred_time: form.time,
+        drop_off: form.dropOff ? 'Yes' : 'No',
+        message: form.message || '',
+        marketing_opt_in: form.marketingOptIn ? 'Yes' : 'No',
+        submitted_from: 'Toros Auto Care Website'
+      };
+
+      if (googleBookingEndpoint.includes('PASTE_GOOGLE_APPS_SCRIPT')) {
+        await sendAppointmentToFormspree();
+        return { status: 'success', fallback: true };
+      }
+
+      const response = await fetch(googleBookingEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(appointmentData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.status === 'error') {
+        throw new Error(result.message || 'Appointment submission failed');
+      }
+
+      return result;
+    }
+
+    // ===== CALENDLY INTEGRATION =====
+    function openCalendly(){
+      const calendlyUrl = 'https://calendly.com/torosautocare/30min';
+
+      // Until your real Calendly link is added, keep the form working normally.
+      if (calendlyUrl.includes('YOUR-LINK')) {
+        appointmentConfirmed = true;
+        renderBooking();
+        scrollToAppointmentConfirmation();
+        return;
+      }
+
+      window.open(calendlyUrl, '_blank');
+    }
+
+    // ===== KLAVIYO INTEGRATION =====
+    async function sendToKlaviyo(email, phone, name){
+      try{
+        await fetch('https://a.klaviyo.com/api/profiles/',{
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'Authorization':'Klaviyo-API-Key YOUR_API_KEY'
+          },
+          body:JSON.stringify({
+            data:{
+              type:'profile',
+              attributes:{
+                email:email,
+                phone_number:phone,
+                first_name:name
+              }
+            }
+          })
+        });
+      }catch(e){ console.log('Klaviyo error', e); }
+    }
+    function getAddressPrompt(){ return window.matchMedia('(max-width: 768px)').matches ? 'Click to Copy or Open in Maps App' : 'Click to Copy Address'; }
+    function getPhonePrompt(){ return window.matchMedia('(max-width: 768px)').matches ? 'Click to Copy Phone Number or Call' : 'Click to Copy Phone Number'; }
+    function updateAddressPrompt(){ if($('addressStatus')) $('addressStatus').textContent = getAddressPrompt(); }
+    function updatePhonePrompt(){ if($('phoneStatus')) $('phoneStatus').textContent = getPhonePrompt(); }
+    async function copyText(text, target, resetTextFn, success, after){ try { if(navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text); else { const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); ta.remove(); } if(after) after(); target.textContent = success; setTimeout(()=>target.textContent = resetTextFn(),1800); } catch(e){ window.prompt('Copy this:', text); } }
+    function isWeekend(dateString){ if(!dateString) return false; const d=new Date(dateString+'T12:00:00'); return d.getDay()===0 || d.getDay()===6; }
+    function formatDateValue(date){ return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+    function isPastDate(date){ const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1); return formatDateValue(date) < formatDateValue(tomorrow); }
+    function selectedDateLabel(){ return form.date ? new Date(form.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) : 'Preferred Date'; }
+    function appointmentDateError(){ return isWeekend(form.date) ? 'We’re closed on weekends. Please choose a Monday–Friday appointment date.' : ''; }
+    function stepOneComplete(){ return form.name && form.phone; }
+    function stepTwoComplete(){ return form.year && form.make && form.model && form.service && form.date && form.time && !appointmentDateError(); }
+    function fieldError(field){ return showErrors && !form[field] ? 'error' : ''; }
+    function currentYearList(){ const current = new Date().getFullYear()+1; return Array.from({length: current-1980+1},(_,i)=>(current-i).toString()); }
+    async function loadModels(){
+      if(!form.year || !form.make){ models=[]; renderBooking(); return; }
+
+      // Keep the appointment form limited to normal Class D passenger vehicles.
+      // This avoids motorcycles, powersports, trailers, buses, and heavy commercial options.
+      models = (commonModelsByMake[form.make] || []).slice().sort((a,b)=>a.localeCompare(b));
+      isLoadingModels = false;
+      renderBooking();
+    }
+    function renderBooking(){ const root=$('bookingContent'); if(appointmentFinalized){ root.innerHTML=`<div class="success"><h3>Appointment Request Confirmed</h3><p>Thanks, ${escapeHTML(form.name)}. Your request for <strong>${selectedDateLabel()} at ${form.time}</strong> has been received.</p><div class="muted-box" style="text-align:left"><p><strong>Service:</strong> ${form.service}</p><p><strong>Vehicle:</strong> ${form.year} ${form.make} ${form.model}</p><p><strong>Phone:</strong> ${form.phone}</p></div></div>`; return; } if(appointmentConfirmed){ root.innerHTML=`<div class="confirmed-box"><div class="confirmed-top"><div style="font-size:34px">📅</div><h3 style="font-size:28px">${selectedDateLabel()} at ${form.time}</h3><p style="color:#64748b;font-style:italic">This will secure the next available bay upon your arrival.</p><p style="font-weight:900;text-transform:uppercase;color:#334155;font-size:13px">${businessInfo.address}</p><button id="changeAppt" style="background:transparent;color:#1F73D1;font-weight:800">Change appointment ›</button></div><div class="confirmed-row"><strong>${form.service}</strong></div><div class="confirmed-row"><strong>Vehicle: </strong><span style="font-weight:900;color:#1a3455">${form.year} ${form.make} ${form.model}</span></div><div class="confirmed-row"><strong>Drop-off: </strong><span style="font-weight:900;color:#1a3455">${form.dropOff?'Yes':'No'}</span></div><div style="display:flex;gap:12px;justify-content:center;padding:20px;flex-wrap:wrap"><button class="btn btn-outline" id="backDetails">Back</button><button class="btn btn-red" id="confirmFinal">Confirm Appointment</button></div></div>`; $('changeAppt').onclick=$('backDetails').onclick=()=>{appointmentConfirmed=false;appointmentFinalized=false;renderBooking();}; $('confirmFinal').onclick=()=>{appointmentFinalized=true;renderBooking();}; return; }
+      root.innerHTML = `<div class="tabs"><button class="tab ${appointmentStep===1?'active':''}" id="tab1">1. Contact</button><button class="tab ${appointmentStep===2?'active':''}" id="tab2">2. Vehicle</button></div><div class="form-grid" id="formArea"></div><p style="text-align:center;color:#64748b;font-size:12px">A team member will contact you to confirm availability. You can also call ${businessInfo.phone}.</p>`;
+      $('tab1').onclick=()=>{appointmentStep=1;renderBooking();}; $('tab2').onclick=()=>{ if(!stepOneComplete()){showErrors=true;renderBooking();} else {showErrors=false;appointmentStep=2;renderBooking();} };
+      const area=$('formArea');
+      if(appointmentStep===1){ area.innerHTML=`<input id="name" class="${fieldError('name')}" placeholder="Your Name" value="${escapeHTML(form.name)}"><input id="phone" class="${fieldError('phone')}" placeholder="Phone Number" value="${escapeHTML(form.phone)}"><input id="email" type="email" placeholder="Email Address (Optional)" value="${escapeHTML(form.email)}"><label class="checkbox-row"><input id="marketing" type="checkbox" ${form.marketingOptIn?'checked':''}><span style="font-weight:800;color:#1a3455">Check if you would like to opt in for exclusive offers, special savings, and shop updates.</span></label><button class="btn btn-primary" id="nextBtn" style="padding:18px">Next: Vehicle Details</button>`; ['name','phone','email'].forEach(id=>$(id).oninput=e=>form[id]=e.target.value); $('marketing').onchange=e=>form.marketingOptIn=e.target.checked; $('nextBtn').onclick=()=>{
+          if(!stepOneComplete()){
+            showErrors=true;
+            renderBooking();
+          } else {
+            showErrors=false;
+
+            // send to Klaviyo if opted in
+            if(form.marketingOptIn && form.email){
+              sendToKlaviyo(form.email, form.phone, form.name);
+            }
+
+            appointmentStep=2;
+            renderBooking();
+          }
+        }; }
+      else { const years=currentYearList(); area.innerHTML=`<div class="muted-box"><strong style="color:#1a3455">Contact Info</strong><br>${escapeHTML(form.name)} • ${escapeHTML(form.phone)} • ${escapeHTML(form.email)}</div><div class="vehicle-grid"><select id="year" class="${fieldError('year')}"><option value="">Year</option>${years.map(y=>`<option ${form.year===y?'selected':''}>${y}</option>`).join('')}</select><select id="make" class="${fieldError('make')}" ${!form.year?'disabled':''}><option value="">Make</option>${commonMakes.map(m=>`<option ${form.make===m?'selected':''}>${m}</option>`).join('')}</select><select id="model" class="${fieldError('model')}" ${!form.make||isLoadingModels?'disabled':''}><option value="">${isLoadingModels?'Loading...':'Model'}</option>${models.map(m=>`<option ${form.model===m?'selected':''}>${m}</option>`).join('')}</select></div><select id="service" class="${fieldError('service')}"><option value="">Select Service Needed</option>${services.map(s=>`<option ${form.service===s.title?'selected':''}>${s.title}</option>`).join('')}</select><div class="relative"><button id="dateBtn" class="btn btn-outline ${showErrors&&!form.date?'error':''}" style="width:100%;justify-content:space-between;color:${form.date?'#334155':'#94a3b8'}"><span>${selectedDateLabel()}</span><span>📅</span></button><div id="calendarDropdown" class="dropdown hidden"></div></div>${appointmentDateError()?`<p style="color:#ae2b27;font-weight:700;margin:0">${appointmentDateError()}</p>`:''}<div class="relative"><button id="timeBtn" class="btn btn-outline ${showErrors&&!form.time?'error':''}" style="width:100%;justify-content:space-between;color:${form.time?'#334155':'#94a3b8'}" ${!form.date || appointmentDateError()?'disabled':''}><span>${form.time || 'Preferred Appointment Time'}</span><span>⌄</span></button><div id="timeDropdown" class="dropdown time-list hidden"></div></div><p class="note">Appointments are available Monday–Friday from 9:00 AM to 3:00 PM. Same-day booking is not available.</p><label class="checkbox-row" style="background:#F5F7FA;border:0"><input id="dropOff" type="checkbox" ${form.dropOff?'checked':''}><span><strong style="display:block;color:#1a3455">Want to drop your car off? (Optional)</strong>Your vehicle will be in good hands with us so you can continue on with your day.</span></label><textarea id="message" placeholder="Tell us what’s going on with your vehicle">${escapeHTML(form.message)}</textarea><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><button class="btn btn-outline" id="backBtn" style="padding:18px">Back</button><button class="btn btn-primary" id="submitBtn" style="padding:18px">Submit</button></div>`;
+        $('year').addEventListener('focus', e => centerField(e.target)); $('make').addEventListener('focus', e => centerField(e.target)); $('model').addEventListener('focus', e => centerField(e.target)); $('year').addEventListener('touchstart', e => centerField(e.currentTarget), { passive: true }); $('make').addEventListener('touchstart', e => centerField(e.currentTarget), { passive: true }); $('model').addEventListener('touchstart', e => centerField(e.currentTarget), { passive: true }); $('year').onchange = e => { form.year=e.target.value; form.make=''; form.model=''; loadModels(); }; $('make').onchange = e => { form.make=e.target.value; form.model=''; loadModels(); }; $('model').onchange = e => form.model=e.target.value; $('service').addEventListener('focus', e => centerField(e.target)); $('service').addEventListener('touchstart', e => centerField(e.currentTarget), { passive: true }); $('service').onchange = e => form.service=e.target.value; $('dropOff').onchange = e => form.dropOff=e.target.checked; $('message').oninput = e => form.message=e.target.value; $('backBtn').onclick = () => { appointmentStep=1; renderBooking(); }; $('submitBtn').onclick = async () => {
+          if (!stepTwoComplete()) {
+            showErrors=true;
+            renderBooking();
+          } else {
+            showErrors=false;
+            const submitBtn = $('submitBtn');
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
+
+            try {
+              const result = await sendAppointmentToGoogleBooking();
+
+              if (result.status === 'unavailable') {
+                alert('That appointment time was just booked. Please choose a different time.');
+                submitBtn.textContent = 'Submit';
+                submitBtn.disabled = false;
+                return;
+              }
+
+              appointmentConfirmed = true;
+              renderBooking();
+              scrollToAppointmentConfirmation();
+            } catch (error) {
+              alert('Something went wrong sending your appointment request. Please call us at (847) 608-0236.');
+              submitBtn.textContent = 'Submit';
+              submitBtn.disabled = false;
+            }
+          }
+        }; $('dateBtn').onclick = renderCalendar; $('timeBtn').onclick = renderTimes;
+      }}
+    function renderCalendar() { const dd = $('calendarDropdown'); dd.classList.toggle('hidden'); centerField($('dateBtn'), -120); const year = calendarMonth.getFullYear(), month = calendarMonth.getMonth(); const firstDay = new Date(year, month, 1); const startDay = firstDay.getDay(); const daysInMonth = new Date(year, month+1, 0).getDate(); let cells = ''; for (let i=0;i<startDay;i++) cells += '<div></div>'; for (let day=1;day<=daysInMonth;day++) { const date = new Date(year, month, day); const val = formatDateValue(date); const disabled = isPastDate(date) || isWeekend(val); const selected = form.date === val; cells += `<button class="date-btn ${selected?'selected':''} ${disabled?'disabled':''}" ${disabled?'disabled':''} data-date="${val}">${day}</button>`; } dd.innerHTML = `<div class="calendar-head"><button class="small-nav" id="prevMonth">←</button><span>${calendarMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</span><button class="small-nav" id="nextMonth">→</button></div><div class="calendar-labels"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div><div class="calendar-grid">${cells}</div><p style="font-size:12px;color:#64748b">Gray dates are unavailable. Weekend appointments are disabled.</p>`; $('prevMonth').onclick = () => { calendarMonth = new Date(year, month-1, 1); renderCalendar(); }; $('nextMonth').onclick = () => { calendarMonth = new Date(year, month+1, 1); renderCalendar(); }; dd.querySelectorAll('[data-date]').forEach(b => b.onclick = async () => { form.date = b.dataset.date; form.time = ''; unavailableTimes = await getUnavailableTimes(form.date); renderBooking(); }); }
+    async function renderTimes() {
+      const dd = $('timeDropdown');
+      dd.classList.toggle('hidden');
+      centerField($('timeBtn'), -80);
+
+      if (!form.date) return;
+      unavailableTimes = await getUnavailableTimes(form.date);
+
+      dd.innerHTML = appointmentTimes.map(t => {
+        const unavailable = unavailableTimes.includes(normalizeTimeKey(t));
+        return `<button class="${form.time===t?'selected':''} ${unavailable?'disabled':''}" ${unavailable?'disabled':''} data-time="${t}">${t}${unavailable ? ' — Booked' : ''}</button>`;
+      }).join('');
+
+      dd.querySelectorAll('[data-time]:not(.disabled)').forEach(b => b.onclick = () => { form.time = b.dataset.time; renderBooking(); });
+    }
+    function openServiceModal(service) { const root = $('modalRoot'); root.innerHTML = `<div class="modal-backdrop"><div class="modal"><div class="modal-head"><h3>${service.title}</h3><button class="close-btn" id="modalClose">✕</button></div><p style="color:#475569;line-height:1.7">${service.description}</p><p style="font-size:14px;color:#64748b;line-height:1.6">${service.detail}</p><button class="btn btn-primary" id="modalSchedule" style="width:100%;margin-top:16px">Schedule Now</button></div></div>`; $('modalClose').onclick = () => root.innerHTML=''; $('modalSchedule').onclick = () => { root.innerHTML=''; scrollToBooking(); }; }
+    function openCouponModal(deal) { let submitted = false; const root = $('modalRoot'); function render() { root.innerHTML = `<div class="modal-backdrop"><div class="modal" style="position:relative"><button class="coupon-close" id="couponClose">×</button><div style="display:flex;justify-content:center"><img class="coupon-logo-img" src="logo.png" alt="Toros Auto Care logo"></div><div class="coupon-box"><div class="coupon-inner"><strong>${deal.title.includes('10%')?'10% Off':deal.title.includes('5%')?'5% Off':'Coupon'}</strong><p style="font-weight:900;color:#475569">${deal.title}</p><p style="font-size:14px;line-height:1.6;color:#475569">${deal.text}</p></div></div>${submitted?`<div class="success"><h3>Coupon Request Sent</h3><p style="font-size:14px;color:#475569">Thanks! Your coupon request was submitted.</p></div>`:`<label style="font-size:14px;font-weight:700;color:#334155">Email Address to Receive Coupon *</label><input id="couponEmail" type="email" placeholder="Enter Email Address" style="margin-top:8px;border-radius:0;padding:16px"><p style="font-size:12px;color:#64748b;line-height:1.6">By clicking “Email the Coupon” I agree to receive marketing emails from Toros Auto Care at the address provided above. Message frequency varies. Unsubscribe at any time.</p><button class="btn btn-primary" id="sendCoupon" style="width:100%;padding:16px;text-transform:uppercase">Email the Coupon</button>`}</div></div>`; $('couponClose').onclick = () => root.innerHTML=''; if (!submitted) $('sendCoupon').onclick = () => { if (!$('couponEmail').value.trim()) return; submitted=true; render(); }; } render(); }
+    function openAddressOptions() { const root = $('modalRoot'); root.innerHTML = `<div class="mobile-sheet"><div class="sheet-content"><button id="appleMaps">Open in Apple Maps</button><button id="googleMaps">Open in Google Maps</button><button id="copyAddress">Copy Address</button><button class="cancel" id="cancelSheet">Cancel</button></div></div>`; $('appleMaps').onclick = () => { window.location.href = 'http://maps.apple.com/?q='+encodeURIComponent(businessInfo.address); }; $('googleMaps').onclick = () => { window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(businessInfo.address), '_blank'); }; $('copyAddress').onclick = () => copyText(businessInfo.address, $('addressStatus'), getAddressPrompt, 'Address copied!', () => root.innerHTML=''); $('cancelSheet').onclick = () => root.innerHTML=''; }
+    function openPhoneOptions() { const root = $('modalRoot'); root.innerHTML = `<div class="mobile-sheet"><div class="sheet-content"><button id="callPhone">Call Toros Auto Care</button><button id="copyPhone">Copy Phone Number</button><button class="cancel" id="cancelPhoneSheet">Cancel</button></div></div>`; $('callPhone').onclick = () => { window.location.href = 'tel:8476080236'; }; $('copyPhone').onclick = () => copyText(businessInfo.phone, $('phoneStatus'), getPhonePrompt, 'Phone copied!', () => root.innerHTML=''); $('cancelPhoneSheet').onclick = () => root.innerHTML=''; }
+    function renderStatic() { $('servicesGrid').innerHTML = services.map(s=>`<div class="card service-card ${s.title==='Other'?'service-other':''}" data-service="${s.title}"><div class="service-icon">${s.icon}</div><h3>${s.title}</h3><p>${s.description}</p><button class="learn">Learn more →</button></div>`).join(''); document.querySelectorAll('[data-service]').forEach(card => card.onclick = () => openServiceModal(services.find(s=>s.title===card.dataset.service))); $('dealsGrid').innerHTML = deals.map((d,i)=>`<div class="deal-card"><div class="deal-icon">${d.icon}</div><h3>${d.title}</h3><p>${d.text}</p>${d.title !== '5% Off Appreciation Discount' ? `<button class="btn btn-primary" data-coupon="${i}" style="width:100%">Email Coupon</button>` : ''}</div>`).join(''); document.querySelectorAll('[data-coupon]').forEach(b => b.onclick = e => { e.stopPropagation(); openCouponModal(deals[Number(b.dataset.coupon)]); }); }
+    document.querySelectorAll('.js-scroll-booking').forEach(b => b.addEventListener('click', scrollToBooking)); document.querySelectorAll('.js-scroll-top').forEach(b => b.addEventListener('click', scrollToTop)); document.querySelectorAll('.js-call').forEach(b => b.addEventListener('click', callNow));
+    $('addressCard').onclick = () => { if (window.matchMedia('(max-width: 768px)').matches) openAddressOptions(); else copyText(businessInfo.address, $('addressStatus'), getAddressPrompt, 'Address copied!'); };
+    $('phoneCard').onclick = () => { if (window.matchMedia('(max-width: 768px)').matches) openPhoneOptions(); else copyText(businessInfo.phone, $('phoneStatus'), getPhonePrompt, 'Phone copied!'); };
+    updateAddressPrompt(); updatePhonePrompt(); window.addEventListener('resize', () => { updateAddressPrompt(); updatePhonePrompt(); });
+    function renderReview(index) {
+      const card = $('reviewCard');
+      const quote = $('reviewQuote');
+      const text = $('reviewText');
+
+      if (!card || !quote || !text) return;
+
+      card.classList.add('review-changing');
+
+      setTimeout(() => {
+        const review = reviews[index];
+
+        quote.textContent = `“${review.quote}”`;
+        text.innerHTML = `
+          ${escapeHTML(review.text)}<br><br>
+          <strong style="color:#1a3455">${escapeHTML(review.name)}</strong><br>
+          <span style="font-size:12px;color:#64748b">${escapeHTML(review.meta)}</span>
+        `;
+
+        card.classList.remove('review-changing');
+      }, 250);
+    }
+    function startReviewRotation() { renderReview(currentReviewIndex); setInterval(() => { currentReviewIndex = (currentReviewIndex + 1) % reviews.length; renderReview(currentReviewIndex); }, 4500); }
+    function startTopBarRotation() {
+      const items = document.querySelectorAll('.top-bar-item');
+      if (!items.length) return;
+      setInterval(() => {
+        if (!window.matchMedia('(max-width: 639px)').matches) return;
+        items[currentTopBarIndex].classList.remove('active');
+        currentTopBarIndex = (currentTopBarIndex + 1) % items.length;
+        items[currentTopBarIndex].classList.add('active');
+      }, 2800);
+    }
+    function animatePositiveReviewsCount() {
+      const countEl = $('positiveReviewsCount');
+      if (!countEl || positiveReviewsAnimated) return;
+      positiveReviewsAnimated = true;
+
+      const end = 154;
+      const duration = 2600;
+      const startTime = performance.now();
+
+      function update(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(eased * end);
+        countEl.textContent = current + '+';
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+
+      requestAnimationFrame(update);
+    }
+    function setupPositiveReviewsObserver() {
+      const section = $('why-choose-us');
+      if (!section) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animatePositiveReviewsCount();
+            observer.disconnect();
+          }
+        });
+      }, { threshold: 0.35 });
+
+      observer.observe(section);
+    }
+    renderStatic(); renderBooking(); startReviewRotation(); startTopBarRotation(); setupPositiveReviewsObserver();
+  </script>
+</body>
+</html>
