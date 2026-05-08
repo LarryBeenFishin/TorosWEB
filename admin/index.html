@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Toro's Auto Care Admin</title>
 
   <style>
@@ -29,6 +30,28 @@
 
     button:hover { background: #911f1f; }
 
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d8dee9;
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: Arial, sans-serif;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      margin: 10px 0 6px;
+      color: #163051;
+    }
+
     .login-screen {
       min-height: 100vh;
       display: flex;
@@ -51,15 +74,6 @@
     .login-card img {
       max-width: 220px;
       margin-bottom: 20px;
-    }
-
-    .login-card input {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #d8dee9;
-      border-radius: 12px;
-      font-size: 16px;
-      margin: 12px 0;
     }
 
     .admin {
@@ -125,10 +139,25 @@
       font-size: 30px;
     }
 
-    .today-btn {
+    .today-btn, .secondary-btn {
       background: #163051;
-      padding: 9px 15px;
-      font-size: 14px;
+    }
+
+    .light-btn {
+      background: #eef3fa;
+      color: #163051;
+    }
+
+    .light-btn:hover {
+      background: #dfe8f4;
+    }
+
+    .success-btn {
+      background: #1d7f4f;
+    }
+
+    .success-btn:hover {
+      background: #17683f;
     }
 
     .calendar-grid {
@@ -215,6 +244,17 @@
       margin-top: 3px;
     }
 
+    .status-pill {
+      display: inline-block;
+      margin-top: 7px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eaf0f7;
+      color: #163051;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
     .empty {
       color: #7b8797;
       font-size: 14px;
@@ -224,6 +264,12 @@
       color: #af2727;
       font-size: 14px;
       margin-top: 8px;
+    }
+
+    .notice {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: bold;
     }
 
     .modal-overlay {
@@ -239,7 +285,9 @@
 
     .modal {
       width: 100%;
-      max-width: 520px;
+      max-width: 620px;
+      max-height: 92vh;
+      overflow-y: auto;
       background: white;
       border-radius: 20px;
       padding: 24px;
@@ -275,13 +323,18 @@
       flex-wrap: wrap;
     }
 
-    .light-btn {
-      background: #eef3fa;
-      color: #163051;
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
     }
 
-    .light-btn:hover {
-      background: #dfe8f4;
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .hidden {
+      display: none;
     }
 
     @media (max-width: 900px) {
@@ -348,6 +401,14 @@
       .modal {
         padding: 20px;
       }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .full {
+        grid-column: auto;
+      }
     }
 
     @media (max-width: 430px) {
@@ -392,7 +453,9 @@
   <section class="admin" id="adminDashboard">
     <header>
       <img src="/logo.png" alt="Toro's Auto Care Logo">
+
       <div class="header-buttons">
+        <button class="success-btn" onclick="openCreateModal()">+ New Appointment</button>
         <button onclick="loadAppointments()">Refresh Appointments</button>
         <button onclick="logout()">Logout</button>
       </div>
@@ -433,20 +496,193 @@
       <h2 id="modalName">Customer</h2>
       <div class="modal-date" id="modalDate"></div>
 
-      <p><strong>Phone:</strong> <span id="modalPhone"></span></p>
-      <p><strong>Email:</strong> <span id="modalEmail"></span></p>
-      <p><strong>Vehicle:</strong> <span id="modalVehicle"></span></p>
-      <p><strong>Service:</strong> <span id="modalService"></span></p>
-      <p><strong>Drop-off:</strong> <span id="modalDropOff"></span></p>
-      <p><strong>Marketing Opt-In:</strong> <span id="modalOptIn"></span></p>
-      <p><strong>Notes:</strong> <span id="modalNotes"></span></p>
-      <p><strong>Source:</strong> <span id="modalSource"></span></p>
+      <div id="viewMode">
+        <p><strong>Phone:</strong> <span id="modalPhone"></span></p>
+        <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+        <p><strong>Vehicle:</strong> <span id="modalVehicle"></span></p>
+        <p><strong>Service:</strong> <span id="modalService"></span></p>
+        <p><strong>Drop-off:</strong> <span id="modalDropOff"></span></p>
+        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+        <p><strong>Customer Notes:</strong> <span id="modalNotes"></span></p>
+        <p><strong>Shop Notes:</strong> <span id="modalShopNotes"></span></p>
+        <p><strong>Source:</strong> <span id="modalSource"></span></p>
+
+        <div class="modal-actions">
+          <button id="callBtn">Call Customer</button>
+          <button class="light-btn" id="emailBtn">Email</button>
+          <button class="secondary-btn" onclick="switchToEditMode()">Edit / Reschedule</button>
+          <button class="light-btn" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+
+      <div id="editMode" class="hidden">
+        <div class="form-grid">
+          <div>
+            <label>Name</label>
+            <input id="editName">
+          </div>
+
+          <div>
+            <label>Phone</label>
+            <input id="editPhone">
+          </div>
+
+          <div>
+            <label>Email</label>
+            <input id="editEmail">
+          </div>
+
+          <div>
+            <label>Vehicle</label>
+            <input id="editVehicle">
+          </div>
+
+          <div>
+            <label>Service</label>
+            <input id="editService">
+          </div>
+
+          <div>
+            <label>Drop-off / Wait</label>
+            <select id="editDropOff">
+              <option value="">Select</option>
+              <option>Drop Off</option>
+              <option>Waiting</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Date</label>
+            <input id="editDate" type="date">
+          </div>
+
+          <div>
+            <label>Time</label>
+            <select id="editTime"></select>
+          </div>
+
+          <div>
+            <label>Status</label>
+            <select id="editStatus">
+              <option>New</option>
+              <option>Confirmed</option>
+              <option>Checked In</option>
+              <option>In Progress</option>
+              <option>Waiting Approval</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+          </div>
+
+          <div class="full">
+            <label>Customer Notes</label>
+            <textarea id="editMessage"></textarea>
+          </div>
+
+          <div class="full">
+            <label>Internal Shop Notes</label>
+            <textarea id="editShopNotes"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="success-btn" onclick="saveAppointmentEdit()">Save Changes</button>
+          <button class="light-btn" onclick="switchToViewMode()">Cancel</button>
+        </div>
+
+        <div class="notice" id="editNotice"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="createModal">
+    <div class="modal">
+      <h2>New Appointment</h2>
+      <div class="modal-date">Create an appointment from the admin portal</div>
+
+      <div class="form-grid">
+        <div>
+          <label>Name</label>
+          <input id="newName" placeholder="Customer name">
+        </div>
+
+        <div>
+          <label>Phone</label>
+          <input id="newPhone" placeholder="Phone number">
+        </div>
+
+        <div>
+          <label>Email</label>
+          <input id="newEmail" placeholder="Optional">
+        </div>
+
+        <div>
+          <label>Vehicle</label>
+          <input id="newVehicle" placeholder="Year Make Model">
+        </div>
+
+        <div>
+          <label>Service</label>
+          <input id="newService" placeholder="Oil Change, Brakes, etc.">
+        </div>
+
+        <div>
+          <label>Drop-off / Wait</label>
+          <select id="newDropOff">
+            <option value="">Select</option>
+            <option>Drop Off</option>
+            <option>Waiting</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Date</label>
+          <input id="newDate" type="date">
+        </div>
+
+        <div>
+          <label>Time</label>
+          <select id="newTime"></select>
+        </div>
+
+        <div>
+          <label>Status</label>
+          <select id="newStatus">
+            <option>New</option>
+            <option>Confirmed</option>
+            <option>Checked In</option>
+            <option>In Progress</option>
+            <option>Waiting Approval</option>
+            <option>Completed</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Send Confirmation Email?</label>
+          <select id="newSendConfirmation">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label>Customer Notes</label>
+          <textarea id="newMessage"></textarea>
+        </div>
+
+        <div class="full">
+          <label>Internal Shop Notes</label>
+          <textarea id="newShopNotes"></textarea>
+        </div>
+      </div>
 
       <div class="modal-actions">
-        <button id="callBtn">Call Customer</button>
-        <button class="light-btn" id="emailBtn">Email</button>
-        <button class="light-btn" onclick="closeModal()">Close</button>
+        <button class="success-btn" onclick="createAppointment()">Create Appointment</button>
+        <button class="light-btn" onclick="closeCreateModal()">Cancel</button>
       </div>
+
+      <div class="notice" id="createNotice"></div>
     </div>
   </div>
 
@@ -456,6 +692,15 @@
 
     let appointments = [];
     let currentDate = new Date();
+    let selectedAppointment = null;
+
+    const appointmentTimes = [
+      "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM",
+      "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+      "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM",
+      "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM",
+      "4:00 PM", "4:30 PM", "5:00 PM"
+    ];
 
     function login() {
       const password = document.getElementById("passwordInput").value;
@@ -491,6 +736,15 @@
         document.getElementById("upcomingAppointments").innerHTML = "Could not load appointments.";
         renderCalendar();
       }
+    }
+
+    async function postToScript(payload) {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      return await response.json();
     }
 
     function renderCalendar() {
@@ -595,11 +849,15 @@
           <small>${app.vehicle || ""}</small>
           <small>${app.service || app.reason || ""}</small>
           <small>${app.phone || ""}</small>
+          <span class="status-pill">${app.status || "New"}</span>
         </div>
       `;
     }
 
     function openModal(app) {
+      selectedAppointment = app;
+      switchToViewMode();
+
       const phone = app.phone || "";
       const email = app.email || "";
 
@@ -610,8 +868,9 @@
       document.getElementById("modalVehicle").textContent = app.vehicle || "Not provided";
       document.getElementById("modalService").textContent = app.service || app.reason || "Not provided";
       document.getElementById("modalDropOff").textContent = app.dropOff || app.drop_off || "Not provided";
-      document.getElementById("modalOptIn").textContent = app.marketingOptIn || app.marketing_opt_in || "Not provided";
+      document.getElementById("modalStatus").textContent = app.status || "New";
       document.getElementById("modalNotes").textContent = app.message || app.notes || "None";
+      document.getElementById("modalShopNotes").textContent = app.shopNotes || "None";
       document.getElementById("modalSource").textContent = app.source || "Website";
 
       document.getElementById("callBtn").onclick = () => {
@@ -625,8 +884,163 @@
       document.getElementById("appointmentModal").style.display = "flex";
     }
 
+    function switchToEditMode() {
+      if (!selectedAppointment) return;
+
+      fillTimeOptions("editTime", selectedAppointment.time);
+
+      document.getElementById("editName").value = selectedAppointment.name || "";
+      document.getElementById("editPhone").value = selectedAppointment.phone || "";
+      document.getElementById("editEmail").value = selectedAppointment.email || "";
+      document.getElementById("editVehicle").value = selectedAppointment.vehicle || "";
+      document.getElementById("editService").value = selectedAppointment.service || "";
+      document.getElementById("editDropOff").value = selectedAppointment.dropOff || "";
+      document.getElementById("editDate").value = formatAppointmentDate(selectedAppointment);
+      document.getElementById("editStatus").value = selectedAppointment.status || "New";
+      document.getElementById("editMessage").value = selectedAppointment.message || "";
+      document.getElementById("editShopNotes").value = selectedAppointment.shopNotes || "";
+      document.getElementById("editNotice").textContent = "";
+
+      document.getElementById("viewMode").classList.add("hidden");
+      document.getElementById("editMode").classList.remove("hidden");
+    }
+
+    function switchToViewMode() {
+      document.getElementById("viewMode").classList.remove("hidden");
+      document.getElementById("editMode").classList.add("hidden");
+    }
+
+    async function saveAppointmentEdit() {
+      if (!selectedAppointment) return;
+
+      const notice = document.getElementById("editNotice");
+      notice.textContent = "Saving...";
+      notice.style.color = "#163051";
+
+      const payload = {
+        action: "updateAppointment",
+        password: ADMIN_PASSWORD,
+        eventId: selectedAppointment.eventId || "",
+        source: selectedAppointment.source || "Admin",
+        name: document.getElementById("editName").value,
+        phone: document.getElementById("editPhone").value,
+        email: document.getElementById("editEmail").value,
+        vehicle: document.getElementById("editVehicle").value,
+        service: document.getElementById("editService").value,
+        dropOff: document.getElementById("editDropOff").value,
+        date: document.getElementById("editDate").value,
+        time: document.getElementById("editTime").value,
+        status: document.getElementById("editStatus").value,
+        message: document.getElementById("editMessage").value,
+        shopNotes: document.getElementById("editShopNotes").value,
+        marketingOptIn: selectedAppointment.marketingOptIn || ""
+      };
+
+      try {
+        const result = await postToScript(payload);
+
+        if (result.status === "success") {
+          notice.textContent = "Saved.";
+          notice.style.color = "#1d7f4f";
+          await loadAppointments();
+          closeModal();
+        } else {
+          notice.textContent = result.message || "Could not save.";
+          notice.style.color = "#af2727";
+        }
+      } catch (err) {
+        notice.textContent = "Could not save.";
+        notice.style.color = "#af2727";
+      }
+    }
+
+    function openCreateModal() {
+      clearCreateForm();
+      fillTimeOptions("newTime", "9:00 AM");
+      document.getElementById("newDate").value = formatDate(new Date());
+      document.getElementById("createModal").style.display = "flex";
+    }
+
+    function closeCreateModal() {
+      document.getElementById("createModal").style.display = "none";
+    }
+
+    function clearCreateForm() {
+      ["newName", "newPhone", "newEmail", "newVehicle", "newService", "newMessage", "newShopNotes"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+
+      document.getElementById("newDropOff").value = "";
+      document.getElementById("newStatus").value = "New";
+      document.getElementById("newSendConfirmation").value = "false";
+      document.getElementById("createNotice").textContent = "";
+    }
+
+    async function createAppointment() {
+      const notice = document.getElementById("createNotice");
+      notice.textContent = "Creating...";
+      notice.style.color = "#163051";
+
+      const payload = {
+        action: "createAppointment",
+        password: ADMIN_PASSWORD,
+        name: document.getElementById("newName").value,
+        phone: document.getElementById("newPhone").value,
+        email: document.getElementById("newEmail").value,
+        vehicle: document.getElementById("newVehicle").value,
+        service: document.getElementById("newService").value,
+        dropOff: document.getElementById("newDropOff").value,
+        date: document.getElementById("newDate").value,
+        time: document.getElementById("newTime").value,
+        status: document.getElementById("newStatus").value,
+        message: document.getElementById("newMessage").value,
+        shopNotes: document.getElementById("newShopNotes").value,
+        sendConfirmation: document.getElementById("newSendConfirmation").value === "true"
+      };
+
+      if (!payload.name || !payload.phone || !payload.date || !payload.time) {
+        notice.textContent = "Name, phone, date, and time are required.";
+        notice.style.color = "#af2727";
+        return;
+      }
+
+      try {
+        const result = await postToScript(payload);
+
+        if (result.status === "success") {
+          notice.textContent = "Appointment created.";
+          notice.style.color = "#1d7f4f";
+          await loadAppointments();
+          closeCreateModal();
+        } else {
+          notice.textContent = result.message || "Could not create appointment.";
+          notice.style.color = "#af2727";
+        }
+      } catch (err) {
+        notice.textContent = "Could not create appointment.";
+        notice.style.color = "#af2727";
+      }
+    }
+
     function closeModal() {
       document.getElementById("appointmentModal").style.display = "none";
+    }
+
+    function fillTimeOptions(selectId, selectedValue) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = "";
+
+      appointmentTimes.forEach(time => {
+        const option = document.createElement("option");
+        option.value = time;
+        option.textContent = time;
+
+        if (time === selectedValue) {
+          option.selected = true;
+        }
+
+        select.appendChild(option);
+      });
     }
 
     function formatDate(date) {
@@ -672,11 +1086,17 @@
     }
 
     window.onclick = function(event) {
-      const modal = document.getElementById("appointmentModal");
-      if (event.target === modal) closeModal();
+      const appointmentModal = document.getElementById("appointmentModal");
+      const createModal = document.getElementById("createModal");
+
+      if (event.target === appointmentModal) closeModal();
+      if (event.target === createModal) closeCreateModal();
     };
 
     window.onload = function () {
+      fillTimeOptions("newTime", "9:00 AM");
+      fillTimeOptions("editTime", "9:00 AM");
+
       if (localStorage.getItem("torosAdminLoggedIn") === "true") {
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminDashboard").style.display = "block";
@@ -685,10 +1105,10 @@
     };
 
     document.getElementById("passwordInput").addEventListener("keydown", function(event) {
-  if (event.key === "Enter") {
-    login();
-  }
-});
+      if (event.key === "Enter") {
+        login();
+      }
+    });
   </script>
 
 </body>
