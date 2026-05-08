@@ -6,16 +6,28 @@
   <title>Toro's Auto Care Admin</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f4f7fb;
       color: #163051;
+      overflow-x: hidden;
     }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      background: #af2727;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover { background: #911f1f; }
 
     .login-screen {
       min-height: 100vh;
@@ -50,21 +62,6 @@
       margin: 12px 0;
     }
 
-    button {
-      border: none;
-      border-radius: 12px;
-      padding: 12px 18px;
-      background: #af2727;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 15px;
-    }
-
-    button:hover {
-      background: #911f1f;
-    }
-
     .admin {
       display: none;
       min-height: 100vh;
@@ -73,10 +70,12 @@
     header {
       background: #163051;
       color: white;
-      padding: 18px 24px;
+      padding: 16px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
     header img {
@@ -86,11 +85,19 @@
       border-radius: 10px;
     }
 
+    .header-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     .dashboard {
       padding: 24px;
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
       gap: 22px;
+      max-width: 1500px;
+      margin: 0 auto;
     }
 
     .card {
@@ -98,19 +105,37 @@
       border-radius: 18px;
       padding: 20px;
       box-shadow: 0 8px 24px rgba(22,48,81,0.08);
+      min-width: 0;
     }
 
     .calendar-header {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .calendar-title-wrap {
+      text-align: center;
+    }
+
+    .calendar-title-wrap h2 {
+      margin: 0 0 10px;
+      font-size: 30px;
+    }
+
+    .today-btn {
+      background: #163051;
+      padding: 9px 15px;
+      font-size: 14px;
     }
 
     .calendar-grid {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       gap: 8px;
+      width: 100%;
     }
 
     .day-name {
@@ -118,15 +143,18 @@
       font-weight: bold;
       font-size: 13px;
       color: #61708a;
+      padding: 4px 0;
     }
 
     .day {
-      min-height: 86px;
+      min-height: 92px;
       border: 1px solid #e4e9f2;
       border-radius: 12px;
       padding: 8px;
       background: #fbfcff;
       font-size: 13px;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .day.today {
@@ -143,18 +171,24 @@
       background: #163051;
       color: white;
       border-radius: 8px;
-      padding: 4px 6px;
+      padding: 5px 7px;
       margin-top: 4px;
       font-size: 11px;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .appointment-dot:hover {
+      background: #af2727;
     }
 
     .side {
       display: flex;
       flex-direction: column;
       gap: 22px;
+      min-width: 0;
     }
 
     .appointment {
@@ -163,6 +197,11 @@
       padding: 12px;
       border-radius: 12px;
       margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .appointment:hover {
+      background: #eef4ff;
     }
 
     .appointment strong {
@@ -187,18 +226,151 @@
       margin-top: 8px;
     }
 
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 520px;
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal h2 {
+      margin: 0 0 8px;
+      color: #163051;
+    }
+
+    .modal-date {
+      color: #af2727;
+      font-weight: bold;
+      margin-bottom: 12px;
+      font-size: 17px;
+    }
+
+    .modal p {
+      margin: 5px 0;
+      color: #40506a;
+      font-size: 14px;
+    }
+
+    .modal p strong {
+      color: #163051;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .light-btn {
+      background: #eef3fa;
+      color: #163051;
+    }
+
+    .light-btn:hover {
+      background: #dfe8f4;
+    }
+
     @media (max-width: 900px) {
+      header {
+        justify-content: center;
+        text-align: center;
+        padding: 24px 14px;
+      }
+
+      header img {
+        height: 70px;
+      }
+
+      .header-buttons {
+        justify-content: center;
+        width: 100%;
+      }
+
       .dashboard {
         grid-template-columns: 1fr;
+        padding: 14px;
+        gap: 16px;
+      }
+
+      .card {
+        padding: 14px;
+        border-radius: 16px;
+      }
+
+      .calendar-header {
+        grid-template-columns: 44px 1fr 44px;
+        gap: 8px;
+      }
+
+      .calendar-header button {
+        padding: 10px;
+        min-width: 44px;
+      }
+
+      .calendar-title-wrap h2 {
+        font-size: 24px;
+      }
+
+      .calendar-grid {
+        gap: 5px;
+      }
+
+      .day-name {
+        font-size: 11px;
       }
 
       .day {
-        min-height: 70px;
+        min-height: 74px;
+        padding: 5px;
+        font-size: 12px;
+        border-radius: 10px;
       }
 
-      header {
-        flex-direction: column;
-        gap: 12px;
+      .appointment-dot {
+        font-size: 10px;
+        padding: 4px 5px;
+      }
+
+      .modal {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .dashboard {
+        padding: 10px;
+      }
+
+      .calendar-grid {
+        gap: 4px;
+      }
+
+      .day {
+        min-height: 62px;
+        padding: 4px;
+      }
+
+      .appointment-dot {
+        font-size: 9px;
+      }
+
+      .header-buttons button {
+        font-size: 14px;
+        padding: 12px 14px;
       }
     }
   </style>
@@ -209,36 +381,33 @@
   <section class="login-screen" id="loginScreen">
     <div class="login-card">
       <img src="/logo.png" alt="Toro's Auto Care Logo">
-
       <h2>Admin Login</h2>
       <p>Private appointment dashboard</p>
-
       <input type="password" id="passwordInput" placeholder="Enter password" />
-
       <button onclick="login()">Login</button>
-
       <div class="error" id="loginError"></div>
     </div>
   </section>
 
   <section class="admin" id="adminDashboard">
     <header>
-      <div>
-        <img src="/logo.png" alt="Toro's Auto Care Logo">
-      </div>
-
-      <div>
+      <img src="/logo.png" alt="Toro's Auto Care Logo">
+      <div class="header-buttons">
         <button onclick="loadAppointments()">Refresh Appointments</button>
         <button onclick="logout()">Logout</button>
       </div>
     </header>
 
     <main class="dashboard">
-
       <div class="card">
         <div class="calendar-header">
           <button onclick="changeMonth(-1)">←</button>
-          <h2 id="monthTitle">Calendar</h2>
+
+          <div class="calendar-title-wrap">
+            <h2 id="monthTitle">Calendar</h2>
+            <button class="today-btn" onclick="goToToday()">Today</button>
+          </div>
+
           <button onclick="changeMonth(1)">→</button>
         </div>
 
@@ -246,7 +415,6 @@
       </div>
 
       <div class="side">
-
         <div class="card">
           <h2>Today's Appointments</h2>
           <div id="todayAppointments" class="empty">Loading...</div>
@@ -256,94 +424,82 @@
           <h2>Upcoming Appointments</h2>
           <div id="upcomingAppointments" class="empty">Loading...</div>
         </div>
-
       </div>
-
     </main>
   </section>
 
+  <div class="modal-overlay" id="appointmentModal">
+    <div class="modal">
+      <h2 id="modalName">Customer</h2>
+      <div class="modal-date" id="modalDate"></div>
+
+      <p><strong>Phone:</strong> <span id="modalPhone"></span></p>
+      <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+      <p><strong>Vehicle:</strong> <span id="modalVehicle"></span></p>
+      <p><strong>Service:</strong> <span id="modalService"></span></p>
+      <p><strong>Drop-off:</strong> <span id="modalDropOff"></span></p>
+      <p><strong>Marketing Opt-In:</strong> <span id="modalOptIn"></span></p>
+      <p><strong>Notes:</strong> <span id="modalNotes"></span></p>
+      <p><strong>Source:</strong> <span id="modalSource"></span></p>
+
+      <div class="modal-actions">
+        <button id="callBtn">Call Customer</button>
+        <button class="light-btn" id="emailBtn">Email</button>
+        <button class="light-btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-
     const ADMIN_PASSWORD = "toros123";
-
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
 
     let appointments = [];
-
     let currentDate = new Date();
 
     function login() {
-
       const password = document.getElementById("passwordInput").value;
-
       const error = document.getElementById("loginError");
 
       if (password === ADMIN_PASSWORD) {
-
         localStorage.setItem("torosAdminLoggedIn", "true");
-
         document.getElementById("loginScreen").style.display = "none";
-
         document.getElementById("adminDashboard").style.display = "block";
-
         loadAppointments();
-
       } else {
-
         error.textContent = "Incorrect password.";
-
       }
-
     }
 
     function logout() {
-
       localStorage.removeItem("torosAdminLoggedIn");
-
       location.reload();
-
     }
 
     async function loadAppointments() {
-
       try {
-
         const response = await fetch(SCRIPT_URL + "?action=getAppointments");
-
         const data = await response.json();
 
-        appointments = Array.isArray(data)
-          ? data
-          : data.appointments || [];
+        appointments = Array.isArray(data) ? data : data.appointments || [];
 
         renderCalendar();
-
         renderLists();
-
       } catch (error) {
-
         console.error(error);
-
-        document.getElementById("todayAppointments").innerHTML =
-          "Could not load appointments.";
-
-        document.getElementById("upcomingAppointments").innerHTML =
-          "Could not load appointments.";
-
+        document.getElementById("todayAppointments").innerHTML = "Could not load appointments.";
+        document.getElementById("upcomingAppointments").innerHTML = "Could not load appointments.";
+        renderCalendar();
       }
-
     }
 
     function renderCalendar() {
-
       const grid = document.getElementById("calendarGrid");
-
       const monthTitle = document.getElementById("monthTitle");
 
       grid.innerHTML = "";
 
       const year = currentDate.getFullYear();
-
       const month = currentDate.getMonth();
 
       monthTitle.textContent = currentDate.toLocaleDateString("en-US", {
@@ -354,91 +510,63 @@
       const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
       dayNames.forEach(day => {
-
         const div = document.createElement("div");
-
         div.className = "day-name";
-
         div.textContent = day;
-
         grid.appendChild(div);
-
       });
 
       const firstDay = new Date(year, month, 1).getDay();
-
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
       for (let i = 0; i < firstDay; i++) {
-
         const blank = document.createElement("div");
-
+        blank.className = "day";
+        blank.style.visibility = "hidden";
         grid.appendChild(blank);
-
       }
 
       for (let day = 1; day <= daysInMonth; day++) {
-
         const dateBox = document.createElement("div");
-
         dateBox.className = "day";
 
         const fullDate = new Date(year, month, day);
-
         const dateKey = formatDate(fullDate);
-
         const todayKey = formatDate(new Date());
 
         if (dateKey === todayKey) {
-
           dateBox.classList.add("today");
-
         }
 
         dateBox.innerHTML = `<div class="day-number">${day}</div>`;
 
         const dayAppointments = appointments.filter(app => {
-
           return formatAppointmentDate(app) === dateKey;
-
         });
 
         dayAppointments.slice(0, 3).forEach(app => {
-
           const dot = document.createElement("div");
-
           dot.className = "appointment-dot";
-
-          dot.textContent =
-            `${app.time || ""} ${app.name || app.customer || "Appointment"}`;
-
+          dot.textContent = `${app.time || ""} ${app.name || app.customer || "Appointment"}`;
+          dot.onclick = () => openModal(app);
           dateBox.appendChild(dot);
-
         });
 
         grid.appendChild(dateBox);
-
       }
-
     }
 
     function renderLists() {
-
-      const todayContainer =
-        document.getElementById("todayAppointments");
-
-      const upcomingContainer =
-        document.getElementById("upcomingAppointments");
+      const todayContainer = document.getElementById("todayAppointments");
+      const upcomingContainer = document.getElementById("upcomingAppointments");
 
       const todayKey = formatDate(new Date());
 
-      const todayApps = appointments.filter(app =>
-        formatAppointmentDate(app) === todayKey
-      );
+      const todayApps = appointments.filter(app => formatAppointmentDate(app) === todayKey);
 
       const upcomingApps = appointments
         .filter(app => formatAppointmentDate(app) > todayKey)
-        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .sort((a, b) => new Date(formatAppointmentDate(a)) - new Date(formatAppointmentDate(b)))
         .slice(0, 8);
 
       todayContainer.innerHTML = todayApps.length
@@ -449,78 +577,112 @@
         ? upcomingApps.map(renderAppointment).join("")
         : `<p class="empty">No upcoming appointments.</p>`;
 
+      document.querySelectorAll("[data-app-index]").forEach(el => {
+        el.addEventListener("click", () => {
+          const index = Number(el.getAttribute("data-app-index"));
+          openModal(appointments[index]);
+        });
+      });
     }
 
     function renderAppointment(app) {
+      const index = appointments.indexOf(app);
 
       return `
-        <div class="appointment">
-
+        <div class="appointment" data-app-index="${index}">
           <strong>${app.name || app.customer || "Customer"}</strong>
-
           <small>${app.date || ""} ${app.time || ""}</small>
-
           <small>${app.vehicle || ""}</small>
-
           <small>${app.service || app.reason || ""}</small>
-
           <small>${app.phone || ""}</small>
-
         </div>
       `;
+    }
 
+    function openModal(app) {
+      const phone = app.phone || "";
+      const email = app.email || "";
+
+      document.getElementById("modalName").textContent = app.name || app.customer || "Customer";
+      document.getElementById("modalDate").textContent = `${formatDisplayDate(app)} • ${app.time || ""}`;
+      document.getElementById("modalPhone").textContent = phone || "Not provided";
+      document.getElementById("modalEmail").textContent = email || "Not provided";
+      document.getElementById("modalVehicle").textContent = app.vehicle || "Not provided";
+      document.getElementById("modalService").textContent = app.service || app.reason || "Not provided";
+      document.getElementById("modalDropOff").textContent = app.dropOff || app.drop_off || "Not provided";
+      document.getElementById("modalOptIn").textContent = app.marketingOptIn || app.marketing_opt_in || "Not provided";
+      document.getElementById("modalNotes").textContent = app.message || app.notes || "None";
+      document.getElementById("modalSource").textContent = app.source || "Website";
+
+      document.getElementById("callBtn").onclick = () => {
+        if (phone) window.location.href = "tel:" + phone.replace(/\D/g, "");
+      };
+
+      document.getElementById("emailBtn").onclick = () => {
+        if (email) window.location.href = "mailto:" + email;
+      };
+
+      document.getElementById("appointmentModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("appointmentModal").style.display = "none";
     }
 
     function formatDate(date) {
-
       const y = date.getFullYear();
-
       const m = String(date.getMonth() + 1).padStart(2, "0");
-
       const d = String(date.getDate()).padStart(2, "0");
-
       return `${y}-${m}-${d}`;
-
     }
 
     function formatAppointmentDate(app) {
-
       if (!app.date) return "";
 
-      const date = new Date(app.date);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(app.date)) return app.date;
 
+      const date = new Date(app.date);
       if (isNaN(date)) return app.date;
 
       return formatDate(date);
+    }
 
+    function formatDisplayDate(app) {
+      const dateKey = formatAppointmentDate(app);
+      const date = new Date(dateKey + "T12:00:00");
+
+      if (isNaN(date)) return app.date || "";
+
+      return date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      });
     }
 
     function changeMonth(amount) {
-
       currentDate.setMonth(currentDate.getMonth() + amount);
-
       renderCalendar();
-
     }
 
-    window.onload = function () {
+    function goToToday() {
+      currentDate = new Date();
+      renderCalendar();
+    }
 
-      if (
-        localStorage.getItem("torosAdminLoggedIn") === "true"
-      ) {
-
-        document.getElementById("loginScreen").style.display =
-          "none";
-
-        document.getElementById("adminDashboard").style.display =
-          "block";
-
-        loadAppointments();
-
-      }
-
+    window.onclick = function(event) {
+      const modal = document.getElementById("appointmentModal");
+      if (event.target === modal) closeModal();
     };
 
+    window.onload = function () {
+      if (localStorage.getItem("torosAdminLoggedIn") === "true") {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminDashboard").style.display = "block";
+        loadAppointments();
+      }
+    };
   </script>
 
 </body>
