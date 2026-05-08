@@ -147,26 +147,116 @@
     }
 
     @media print {
+      @page {
+        size: letter;
+        margin: 0.35in;
+      }
+
       body {
-        background: white;
-        padding: 0;
+        background: white !important;
+        padding: 0 !important;
+        font-size: 10px;
+        color: black !important;
+      }
+
+      .report,
+      .info-card,
+      .inspection-item,
+      .recommendations {
+        background: white !important;
+        box-shadow: none !important;
       }
 
       .report {
-        box-shadow: none;
         border-radius: 0;
         max-width: 100%;
         padding: 0;
       }
 
       .print-btn {
-        display: none;
+        display: none !important;
+      }
+
+      .topbar {
+        margin-bottom: 8px;
+      }
+
+      .logo {
+        max-width: 125px;
+        filter: grayscale(100%);
+      }
+
+      h1 {
+        font-size: 20px;
+        margin-bottom: 3px;
+        color: black !important;
+      }
+
+      .subtitle {
+        margin-bottom: 8px;
+        font-size: 10px;
+        color: black !important;
+      }
+
+      .section {
+        margin-bottom: 8px;
+        break-inside: avoid;
+      }
+
+      .section h2 {
+        font-size: 14px;
+        margin-bottom: 6px;
+        padding-bottom: 3px;
+        border-bottom: 1px solid black;
+        color: black !important;
+      }
+
+      .info-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+      }
+
+      .info-card {
+        padding: 5px;
+        border: 1px solid black;
+        font-size: 9px;
+        border-radius: 0;
+        color: black !important;
+      }
+
+      .inspection-item {
+        padding: 6px;
+        margin-bottom: 4px;
+        border: 1px solid black;
+        border-radius: 0;
+        break-inside: avoid;
+        color: black !important;
+      }
+
+      .inspection-header {
+        margin-bottom: 2px;
+      }
+
+      .inspection-title {
+        font-size: 11px;
+        color: black !important;
       }
 
       .status {
+        font-size: 8px;
+        padding: 2px 5px;
+        border: 1px solid black;
+        border-radius: 0;
         background: white !important;
         color: black !important;
-        border: 2px solid black !important;
+      }
+
+      .recommendations {
+        padding: 6px;
+        border: 1px solid black;
+        font-size: 9px;
+        line-height: 1.2;
+        color: black !important;
       }
     }
 
