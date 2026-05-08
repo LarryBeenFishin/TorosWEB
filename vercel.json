@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/admin",
-      "destination": "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec?page=admin",
+      "destination": "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec",
       "permanent": false
     }
   ]
