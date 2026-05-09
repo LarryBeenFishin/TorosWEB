@@ -3,335 +3,435 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Toro's Auto Care Admin</title>
 
   <style>
-    * { box-sizing:border-box; }
+    * { box-sizing: border-box; }
 
-    body{
-      margin:0;
-      font-family:Arial,sans-serif;
-      background:#f4f7fb;
-      color:#163051;
-      overflow-x:hidden;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #163051;
+      overflow-x: hidden;
     }
 
-    button{
-      border:none;
-      border-radius:12px;
-      padding:12px 18px;
-      background:#af2727;
-      color:white;
-      font-weight:bold;
-      cursor:pointer;
-      font-size:15px;
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      background: #af2727;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
     }
 
-    button:hover{
-      background:#911f1f;
+    button:hover { background: #911f1f; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d8dee9;
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: Arial, sans-serif;
     }
 
-    input,select,textarea{
-      width:100%;
-      padding:12px;
-      border:1px solid #d8dee9;
-      border-radius:12px;
-      font-size:15px;
-      font-family:Arial,sans-serif;
+    textarea {
+      min-height: 90px;
+      resize: vertical;
     }
 
-    textarea{
-      min-height:90px;
-      resize:vertical;
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      margin: 10px 0 6px;
+      color: #163051;
     }
 
-    label{
-      display:block;
-      font-size:13px;
-      font-weight:bold;
-      margin:10px 0 6px;
-      color:#163051;
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #163051, #0c1b30);
     }
 
-    .login-screen{
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      background:linear-gradient(135deg,#163051,#0c1b30);
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      padding: 32px;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      text-align: center;
     }
 
-    .login-card{
-      width:100%;
-      max-width:420px;
-      background:white;
-      padding:32px;
-      border-radius:20px;
-      box-shadow:0 20px 50px rgba(0,0,0,0.25);
-      text-align:center;
+    .login-card img {
+      max-width: 220px;
+      margin-bottom: 20px;
     }
 
-    .login-card img{
-      max-width:220px;
-      margin-bottom:20px;
+    .admin {
+      display: none;
+      min-height: 100vh;
     }
 
-    .admin{
-      display:none;
-      min-height:100vh;
+    header {
+      background: #163051;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
-    header{
-      background:#163051;
-      color:white;
-      padding:16px 24px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      flex-wrap:wrap;
+    header img {
+      height: 54px;
+      background: white;
+      padding: 6px;
+      border-radius: 10px;
     }
 
-    header img{
-      height:54px;
-      background:white;
-      padding:6px;
-      border-radius:10px;
+    .header-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .header-buttons{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+    .dashboard {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+      gap: 22px;
+      max-width: 1500px;
+      margin: 0 auto;
     }
 
-    .dashboard{
-      padding:24px;
-      display:grid;
-      grid-template-columns:minmax(0,1.2fr) minmax(320px,0.8fr);
-      gap:22px;
-      max-width:1500px;
-      margin:0 auto;
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(22,48,81,0.08);
+      min-width: 0;
     }
 
-    .card{
-      background:white;
-      border-radius:18px;
-      padding:20px;
-      box-shadow:0 8px 24px rgba(22,48,81,0.08);
-      min-width:0;
+    .calendar-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
-    .calendar-header{
-      display:grid;
-      grid-template-columns:auto 1fr auto;
-      align-items:center;
-      gap:12px;
-      margin-bottom:12px;
+    .calendar-title-wrap {
+      text-align: center;
     }
 
-    .calendar-title-wrap{
-      text-align:center;
+    .calendar-title-wrap h2 {
+      margin: 0 0 10px;
+      font-size: 30px;
     }
 
-    .calendar-title-wrap h2{
-      margin:0 0 10px;
-      font-size:30px;
+    .today-btn, .secondary-btn {
+      background: #163051;
     }
 
-    .today-btn{
-      background:#163051;
+    .light-btn {
+      background: #eef3fa;
+      color: #163051;
     }
 
-    .light-btn{
-      background:#eef3fa;
-      color:#163051;
+    .light-btn:hover {
+      background: #dfe8f4;
     }
 
-    .light-btn:hover{
-      background:#dfe8f4;
+    .success-btn {
+      background: #1d7f4f;
     }
 
-    .success-btn{
-      background:#1d7f4f;
+    .success-btn:hover {
+      background: #17683f;
     }
 
-    .success-btn:hover{
-      background:#17683f;
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
     }
 
-    .calendar-grid{
-      display:grid;
-      grid-template-columns:repeat(7,minmax(0,1fr));
-      gap:8px;
-      width:100%;
+    .day-name {
+      text-align: center;
+      font-weight: bold;
+      font-size: 13px;
+      color: #61708a;
+      padding: 4px 0;
     }
 
-    .day-name{
-      text-align:center;
-      font-weight:bold;
-      font-size:13px;
-      color:#61708a;
-      padding:4px 0;
+    .day {
+      min-height: 92px;
+      border: 1px solid #e4e9f2;
+      border-radius: 12px;
+      padding: 8px;
+      background: #fbfcff;
+      font-size: 13px;
+      min-width: 0;
+      overflow: hidden;
     }
 
-    .day{
-      min-height:92px;
-      border:1px solid #e4e9f2;
-      border-radius:12px;
-      padding:8px;
-      background:#fbfcff;
-      font-size:13px;
-      min-width:0;
-      overflow:hidden;
+    .day.today {
+      border: 2px solid #af2727;
+      background: #fff7f7;
     }
 
-    .day.today{
-      border:2px solid #af2727;
-      background:#fff7f7;
+    .day-number {
+      font-weight: bold;
+      margin-bottom: 6px;
     }
 
-    .day-number{
-      font-weight:bold;
-      margin-bottom:6px;
+    .appointment-dot {
+      background: #163051;
+      color: white;
+      border-radius: 8px;
+      padding: 5px 7px;
+      margin-top: 4px;
+      font-size: 11px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      cursor: pointer;
     }
 
-    .appointment-dot{
-      background:#163051;
-      color:white;
-      border-radius:8px;
-      padding:5px 7px;
-      margin-top:4px;
-      font-size:11px;
-      overflow:hidden;
-      white-space:nowrap;
-      text-overflow:ellipsis;
-      cursor:pointer;
+    .appointment-dot:hover {
+      background: #af2727;
     }
 
-    .appointment-dot:hover{
-      background:#af2727;
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      min-width: 0;
     }
 
-    .side{
-      display:flex;
-      flex-direction:column;
-      gap:22px;
-      min-width:0;
+    .appointment {
+      border-left: 4px solid #af2727;
+      background: #f8fafd;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
     }
 
-    .appointment{
-      border-left:4px solid #af2727;
-      background:#f8fafd;
-      padding:12px;
-      border-radius:12px;
-      margin-bottom:10px;
-      cursor:pointer;
+    .appointment:hover {
+      background: #eef4ff;
     }
 
-    .appointment:hover{
-      background:#eef4ff;
+    .appointment strong {
+      display: block;
+      margin-bottom: 4px;
     }
 
-    .appointment strong{
-      display:block;
-      margin-bottom:4px;
+    .appointment small {
+      color: #60708a;
+      display: block;
+      margin-top: 3px;
     }
 
-    .appointment small{
-      color:#60708a;
-      display:block;
-      margin-top:3px;
+    .status-pill {
+      display: inline-block;
+      margin-top: 7px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eaf0f7;
+      color: #163051;
+      font-size: 11px;
+      font-weight: bold;
     }
 
-    .status-pill{
-      display:inline-block;
-      margin-top:7px;
-      padding:4px 8px;
-      border-radius:999px;
-      background:#eaf0f7;
-      color:#163051;
-      font-size:11px;
-      font-weight:bold;
+    .empty {
+      color: #7b8797;
+      font-size: 14px;
     }
 
-    .empty{
-      color:#7b8797;
-      font-size:14px;
+    .error {
+      color: #af2727;
+      font-size: 14px;
+      margin-top: 8px;
     }
 
-    .error{
-      color:#af2727;
-      font-size:14px;
-      margin-top:8px;
+    .notice {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: bold;
     }
 
-    @media(max-width:900px){
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
 
-      header{
-        justify-content:center;
-        text-align:center;
-        padding:24px 14px;
+    .modal {
+      width: 100%;
+      max-width: 620px;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal h2 {
+      margin: 0 0 8px;
+      color: #163051;
+    }
+
+    .modal-date {
+      color: #af2727;
+      font-weight: bold;
+      margin-bottom: 12px;
+      font-size: 17px;
+    }
+
+    .modal p {
+      margin: 5px 0;
+      color: #40506a;
+      font-size: 14px;
+    }
+
+    .modal p strong {
+      color: #163051;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      header {
+        justify-content: center;
+        text-align: center;
+        padding: 24px 14px;
       }
 
-      header img{
-        height:70px;
+      header img {
+        height: 70px;
       }
 
-      .header-buttons{
-        justify-content:center;
-        width:100%;
+      .header-buttons {
+        justify-content: center;
+        width: 100%;
       }
 
-      .dashboard{
-        grid-template-columns:1fr;
-        padding:14px;
-        gap:16px;
+      .dashboard {
+        grid-template-columns: 1fr;
+        padding: 14px;
+        gap: 16px;
       }
 
-      .card{
-        padding:14px;
-        border-radius:16px;
+      .card {
+        padding: 14px;
+        border-radius: 16px;
       }
 
-      .calendar-header{
-        grid-template-columns:44px 1fr 44px;
-        gap:8px;
+      .calendar-header {
+        grid-template-columns: 44px 1fr 44px;
+        gap: 8px;
       }
 
-      .calendar-header button{
-        padding:10px;
-        min-width:44px;
+      .calendar-header button {
+        padding: 10px;
+        min-width: 44px;
       }
 
-      .calendar-title-wrap h2{
-        font-size:24px;
+      .calendar-title-wrap h2 {
+        font-size: 24px;
       }
 
-      .calendar-grid{
-        gap:5px;
+      .calendar-grid {
+        gap: 5px;
       }
 
-      .day-name{
-        font-size:11px;
+      .day-name {
+        font-size: 11px;
       }
 
-      .day{
-        min-height:74px;
-        padding:5px;
-        font-size:12px;
-        border-radius:10px;
+      .day {
+        min-height: 74px;
+        padding: 5px;
+        font-size: 12px;
+        border-radius: 10px;
       }
 
-      .appointment-dot{
-        font-size:10px;
-        padding:4px 5px;
+      .appointment-dot {
+        font-size: 10px;
+        padding: 4px 5px;
       }
 
-      .header-buttons button{
-        font-size:14px;
-        padding:12px 14px;
+      .modal {
+        padding: 20px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .full {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .dashboard {
+        padding: 10px;
+      }
+
+      .calendar-grid {
+        gap: 4px;
+      }
+
+      .day {
+        min-height: 62px;
+        padding: 4px;
+      }
+
+      .appointment-dot {
+        font-size: 9px;
+      }
+
+      .header-buttons button {
+        font-size: 14px;
+        padding: 12px 14px;
       }
     }
   </style>
@@ -339,142 +439,682 @@
 
 <body>
 
-<section class="login-screen" id="loginScreen">
-  <div class="login-card">
-    <img src="/logo.png" alt="Toro's Auto Care Logo">
-    <h2>Admin Login</h2>
-    <p>Private appointment dashboard</p>
-
-    <input type="password" id="passwordInput" placeholder="Enter password" />
-
-    <button onclick="login()">Login</button>
-
-    <div class="error" id="loginError"></div>
-  </div>
-</section>
-
-<section class="admin" id="adminDashboard">
-
-  <header>
-
-    <img src="/logo.png" alt="Toro's Auto Care Logo">
-
-    <div class="header-buttons">
-
-      <button class="success-btn" onclick="openCreateModal()">
-        + New Appointment
-      </button>
-
-      <a href="/admin/inspection" style="text-decoration:none;">
-        <button class="success-btn">
-          Inspection Form
-        </button>
-      </a>
-
-      <button onclick="loadAppointments()">
-        Refresh Appointments
-      </button>
-
-      <button class="today-btn" onclick="goToToday()">
-        Today
-      </button>
-
-      <button onclick="logout()">
-        Logout
-      </button>
-
+  <section class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <img src="/logo.png" alt="Toro's Auto Care Logo">
+      <h2>Admin Login</h2>
+      <p>Private appointment dashboard</p>
+      <input type="password" id="passwordInput" placeholder="Enter password" />
+      <button onclick="login()">Login</button>
+      <div class="error" id="loginError"></div>
     </div>
+  </section>
 
-  </header>
+  <section class="admin" id="adminDashboard">
+    <header>
+      <img src="/logo.png" alt="Toro's Auto Care Logo">
 
-  <main class="dashboard">
+      <div class="header-buttons">
+        <button class="success-btn" onclick="openCreateModal()">+ New Appointment</button>
 
-    <div class="card">
+        <a href="/admin/inspection" style="text-decoration:none;">
+          <button class="success-btn">Inspection Form</button>
+        </a>
 
-      <div class="calendar-header">
+        <button onclick="loadAppointments()">Refresh Appointments</button>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </header>
 
-        <button onclick="changeMonth(-1)">←</button>
+    <main class="dashboard">
+      <div class="card">
+        <div class="calendar-header">
+          <button onclick="changeMonth(-1)">←</button>
 
-        <div class="calendar-title-wrap">
-          <h2 id="monthTitle">Calendar</h2>
+          <div class="calendar-title-wrap">
+            <h2 id="monthTitle">Calendar</h2>
+            <button class="today-btn" onclick="goToToday()">Today</button>
+          </div>
+
+          <button onclick="changeMonth(1)">→</button>
         </div>
 
-        <button onclick="changeMonth(1)">→</button>
-
+        <div class="calendar-grid" id="calendarGrid"></div>
       </div>
 
-      <div class="calendar-grid" id="calendarGrid"></div>
+      <div class="side">
+        <div class="card">
+          <h2>Today's Appointments</h2>
+          <div id="todayAppointments" class="empty">Loading...</div>
+        </div>
 
+        <div class="card">
+          <h2>Upcoming Appointments</h2>
+          <div id="upcomingAppointments" class="empty">Loading...</div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <div class="modal-overlay" id="appointmentModal">
+    <div class="modal">
+      <h2 id="modalName">Customer</h2>
+      <div class="modal-date" id="modalDate"></div>
+
+      <div id="viewMode">
+        <p><strong>Phone:</strong> <span id="modalPhone"></span></p>
+        <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+        <p><strong>Vehicle:</strong> <span id="modalVehicle"></span></p>
+        <p><strong>Service:</strong> <span id="modalService"></span></p>
+        <p><strong>Drop-off:</strong> <span id="modalDropOff"></span></p>
+        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+        <p><strong>Customer Notes:</strong> <span id="modalNotes"></span></p>
+        <p><strong>Shop Notes:</strong> <span id="modalShopNotes"></span></p>
+        <p><strong>Source:</strong> <span id="modalSource"></span></p>
+
+        <div class="modal-actions">
+          <button id="callBtn">Call Customer</button>
+          <button class="light-btn" id="emailBtn">Email</button>
+          <button class="secondary-btn" onclick="switchToEditMode()">Edit / Reschedule</button>
+          <button class="light-btn" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+
+      <div id="editMode" class="hidden">
+        <div class="form-grid">
+          <div>
+            <label>Name</label>
+            <input id="editName">
+          </div>
+
+          <div>
+            <label>Phone</label>
+            <input id="editPhone">
+          </div>
+
+          <div>
+            <label>Email</label>
+            <input id="editEmail">
+          </div>
+
+          <div>
+            <label>Vehicle</label>
+            <input id="editVehicle">
+          </div>
+
+          <div>
+            <label>Service</label>
+            <input id="editService">
+          </div>
+
+          <div>
+            <label>Drop-off / Wait</label>
+            <select id="editDropOff">
+              <option value="">Select</option>
+              <option>Drop Off</option>
+              <option>Waiting</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Date</label>
+            <input id="editDate" type="date">
+          </div>
+
+          <div>
+            <label>Time</label>
+            <select id="editTime"></select>
+          </div>
+
+          <div>
+            <label>Status</label>
+            <select id="editStatus">
+              <option>New</option>
+              <option>Confirmed</option>
+              <option>Checked In</option>
+              <option>In Progress</option>
+              <option>Waiting Approval</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+          </div>
+
+          <div class="full">
+            <label>Customer Notes</label>
+            <textarea id="editMessage"></textarea>
+          </div>
+
+          <div class="full">
+            <label>Internal Shop Notes</label>
+            <textarea id="editShopNotes"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="success-btn" onclick="saveAppointmentEdit()">Save Changes</button>
+          <button class="light-btn" onclick="switchToViewMode()">Cancel</button>
+        </div>
+
+        <div class="notice" id="editNotice"></div>
+      </div>
     </div>
+  </div>
 
-    <div class="side">
+  <div class="modal-overlay" id="createModal">
+    <div class="modal">
+      <h2>New Appointment</h2>
+      <div class="modal-date">Create an appointment from the admin portal</div>
 
-      <div class="card">
-        <h2>Today's Appointments</h2>
-        <div id="todayAppointments" class="empty">Loading...</div>
+      <div class="form-grid">
+        <div>
+          <label>Name</label>
+          <input id="newName" placeholder="Customer name">
+        </div>
+
+        <div>
+          <label>Phone</label>
+          <input id="newPhone" placeholder="Phone number">
+        </div>
+
+        <div>
+          <label>Email</label>
+          <input id="newEmail" placeholder="Optional">
+        </div>
+
+        <div>
+          <label>Vehicle</label>
+          <input id="newVehicle" placeholder="Year Make Model">
+        </div>
+
+        <div>
+          <label>Service</label>
+          <input id="newService" placeholder="Oil Change, Brakes, etc.">
+        </div>
+
+        <div>
+          <label>Drop-off / Wait</label>
+          <select id="newDropOff">
+            <option value="">Select</option>
+            <option>Drop Off</option>
+            <option>Waiting</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Date</label>
+          <input id="newDate" type="date">
+        </div>
+
+        <div>
+          <label>Time</label>
+          <select id="newTime"></select>
+        </div>
+
+        <div>
+          <label>Status</label>
+          <select id="newStatus">
+            <option>New</option>
+            <option>Confirmed</option>
+            <option>Checked In</option>
+            <option>In Progress</option>
+            <option>Waiting Approval</option>
+            <option>Completed</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Send Confirmation Email?</label>
+          <select id="newSendConfirmation">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label>Customer Notes</label>
+          <textarea id="newMessage"></textarea>
+        </div>
+
+        <div class="full">
+          <label>Internal Shop Notes</label>
+          <textarea id="newShopNotes"></textarea>
+        </div>
       </div>
 
-      <div class="card">
-        <h2>Upcoming Appointments</h2>
-        <div id="upcomingAppointments" class="empty">Loading...</div>
+      <div class="modal-actions">
+        <button class="success-btn" onclick="createAppointment()">Create Appointment</button>
+        <button class="light-btn" onclick="closeCreateModal()">Cancel</button>
       </div>
 
+      <div class="notice" id="createNotice"></div>
     </div>
+  </div>
 
-  </main>
+  <script>
+    const ADMIN_PASSWORD = "toros123";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
 
-</section>
+    let appointments = [];
+    let currentDate = new Date();
+    let selectedAppointment = null;
 
-<script>
-const ADMIN_PASSWORD = "toros123";
+    const appointmentTimes = [
+      "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM",
+      "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+      "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM",
+      "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM",
+      "4:00 PM", "4:30 PM", "5:00 PM"
+    ];
 
-function login(){
-  const password=document.getElementById("passwordInput").value;
-  const error=document.getElementById("loginError");
+    function login() {
+      const password = document.getElementById("passwordInput").value;
+      const error = document.getElementById("loginError");
 
-  if(password===ADMIN_PASSWORD){
-    localStorage.setItem("torosAdminLoggedIn","true");
-    document.getElementById("loginScreen").style.display="none";
-    document.getElementById("adminDashboard").style.display="block";
-  }else{
-    error.textContent="Incorrect password.";
-  }
-}
+      if (password === ADMIN_PASSWORD) {
+        localStorage.setItem("torosAdminLoggedIn", "true");
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminDashboard").style.display = "block";
+        loadAppointments();
+      } else {
+        error.textContent = "Incorrect password.";
+      }
+    }
 
-function logout(){
-  localStorage.removeItem("torosAdminLoggedIn");
-  location.reload();
-}
+    function logout() {
+      localStorage.removeItem("torosAdminLoggedIn");
+      location.reload();
+    }
 
-function goToToday(){
-  location.reload();
-}
+    async function loadAppointments() {
+      try {
+        const response = await fetch(SCRIPT_URL + "?action=getAppointments");
+        const data = await response.json();
 
-function openCreateModal(){
-  alert("Create appointment modal still connected.");
-}
+        appointments = Array.isArray(data) ? data : data.appointments || [];
 
-function loadAppointments(){
-  console.log("Appointments loading...");
-}
+        renderCalendar();
+        renderLists();
+      } catch (error) {
+        console.error(error);
+        document.getElementById("todayAppointments").innerHTML = "Could not load appointments.";
+        document.getElementById("upcomingAppointments").innerHTML = "Could not load appointments.";
+        renderCalendar();
+      }
+    }
 
-function changeMonth(amount){
-  console.log("Month changed:", amount);
-}
+    async function postToScript(payload) {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
 
-window.onload=function(){
-  if(localStorage.getItem("torosAdminLoggedIn")==="true"){
-    document.getElementById("loginScreen").style.display="none";
-    document.getElementById("adminDashboard").style.display="block";
-  }
-};
+      return await response.json();
+    }
 
-document.addEventListener("keydown",function(e){
-  if(e.key==="Enter" && document.activeElement.id==="passwordInput"){
-    login();
-  }
-});
-</script>
+    function renderCalendar() {
+      const grid = document.getElementById("calendarGrid");
+      const monthTitle = document.getElementById("monthTitle");
+
+      grid.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      monthTitle.textContent = currentDate.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric"
+      });
+
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+      dayNames.forEach(day => {
+        const div = document.createElement("div");
+        div.className = "day-name";
+        div.textContent = day;
+        grid.appendChild(div);
+      });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const blank = document.createElement("div");
+        blank.className = "day";
+        blank.style.visibility = "hidden";
+        grid.appendChild(blank);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateBox = document.createElement("div");
+        dateBox.className = "day";
+
+        const fullDate = new Date(year, month, day);
+        const dateKey = formatDate(fullDate);
+        const todayKey = formatDate(new Date());
+
+        if (dateKey === todayKey) {
+          dateBox.classList.add("today");
+        }
+
+        dateBox.innerHTML = `<div class="day-number">${day}</div>`;
+
+        const dayAppointments = appointments.filter(app => {
+          return formatAppointmentDate(app) === dateKey;
+        });
+
+        dayAppointments.slice(0, 3).forEach(app => {
+          const dot = document.createElement("div");
+          dot.className = "appointment-dot";
+          dot.textContent = `${app.time || ""} ${app.name || app.customer || "Appointment"}`;
+          dot.onclick = () => openModal(app);
+          dateBox.appendChild(dot);
+        });
+
+        grid.appendChild(dateBox);
+      }
+    }
+
+    function renderLists() {
+      const todayContainer = document.getElementById("todayAppointments");
+      const upcomingContainer = document.getElementById("upcomingAppointments");
+
+      const todayKey = formatDate(new Date());
+
+      const todayApps = appointments.filter(app => formatAppointmentDate(app) === todayKey);
+
+      const upcomingApps = appointments
+        .filter(app => formatAppointmentDate(app) > todayKey)
+        .sort((a, b) => new Date(formatAppointmentDate(a)) - new Date(formatAppointmentDate(b)))
+        .slice(0, 8);
+
+      todayContainer.innerHTML = todayApps.length
+        ? todayApps.map(renderAppointment).join("")
+        : `<p class="empty">No appointments today.</p>`;
+
+      upcomingContainer.innerHTML = upcomingApps.length
+        ? upcomingApps.map(renderAppointment).join("")
+        : `<p class="empty">No upcoming appointments.</p>`;
+
+      document.querySelectorAll("[data-app-index]").forEach(el => {
+        el.addEventListener("click", () => {
+          const index = Number(el.getAttribute("data-app-index"));
+          openModal(appointments[index]);
+        });
+      });
+    }
+
+    function renderAppointment(app) {
+      const index = appointments.indexOf(app);
+
+      return `
+        <div class="appointment" data-app-index="${index}">
+          <strong>${app.name || app.customer || "Customer"}</strong>
+          <small>${app.date || ""} ${app.time || ""}</small>
+          <small>${app.vehicle || ""}</small>
+          <small>${app.service || app.reason || ""}</small>
+          <small>${app.phone || ""}</small>
+          <span class="status-pill">${app.status || "New"}</span>
+        </div>
+      `;
+    }
+
+    function openModal(app) {
+      selectedAppointment = app;
+      switchToViewMode();
+
+      const phone = app.phone || "";
+      const email = app.email || "";
+
+      document.getElementById("modalName").textContent = app.name || app.customer || "Customer";
+      document.getElementById("modalDate").textContent = `${formatDisplayDate(app)} • ${app.time || ""}`;
+      document.getElementById("modalPhone").textContent = phone || "Not provided";
+      document.getElementById("modalEmail").textContent = email || "Not provided";
+      document.getElementById("modalVehicle").textContent = app.vehicle || "Not provided";
+      document.getElementById("modalService").textContent = app.service || app.reason || "Not provided";
+      document.getElementById("modalDropOff").textContent = app.dropOff || app.drop_off || "Not provided";
+      document.getElementById("modalStatus").textContent = app.status || "New";
+      document.getElementById("modalNotes").textContent = app.message || app.notes || "None";
+      document.getElementById("modalShopNotes").textContent = app.shopNotes || "None";
+      document.getElementById("modalSource").textContent = app.source || "Website";
+
+      document.getElementById("callBtn").onclick = () => {
+        if (phone) window.location.href = "tel:" + phone.replace(/\D/g, "");
+      };
+
+      document.getElementById("emailBtn").onclick = () => {
+        if (email) window.location.href = "mailto:" + email;
+      };
+
+      document.getElementById("appointmentModal").style.display = "flex";
+    }
+
+    function switchToEditMode() {
+      if (!selectedAppointment) return;
+
+      fillTimeOptions("editTime", selectedAppointment.time);
+
+      document.getElementById("editName").value = selectedAppointment.name || "";
+      document.getElementById("editPhone").value = selectedAppointment.phone || "";
+      document.getElementById("editEmail").value = selectedAppointment.email || "";
+      document.getElementById("editVehicle").value = selectedAppointment.vehicle || "";
+      document.getElementById("editService").value = selectedAppointment.service || "";
+      document.getElementById("editDropOff").value = selectedAppointment.dropOff || "";
+      document.getElementById("editDate").value = formatAppointmentDate(selectedAppointment);
+      document.getElementById("editStatus").value = selectedAppointment.status || "New";
+      document.getElementById("editMessage").value = selectedAppointment.message || "";
+      document.getElementById("editShopNotes").value = selectedAppointment.shopNotes || "";
+      document.getElementById("editNotice").textContent = "";
+
+      document.getElementById("viewMode").classList.add("hidden");
+      document.getElementById("editMode").classList.remove("hidden");
+    }
+
+    function switchToViewMode() {
+      document.getElementById("viewMode").classList.remove("hidden");
+      document.getElementById("editMode").classList.add("hidden");
+    }
+
+    async function saveAppointmentEdit() {
+      if (!selectedAppointment) return;
+
+      const notice = document.getElementById("editNotice");
+      notice.textContent = "Saving...";
+      notice.style.color = "#163051";
+
+      const payload = {
+        action: "updateAppointment",
+        password: ADMIN_PASSWORD,
+        eventId: selectedAppointment.eventId || "",
+        source: selectedAppointment.source || "Admin",
+        name: document.getElementById("editName").value,
+        phone: document.getElementById("editPhone").value,
+        email: document.getElementById("editEmail").value,
+        vehicle: document.getElementById("editVehicle").value,
+        service: document.getElementById("editService").value,
+        dropOff: document.getElementById("editDropOff").value,
+        date: document.getElementById("editDate").value,
+        time: document.getElementById("editTime").value,
+        status: document.getElementById("editStatus").value,
+        message: document.getElementById("editMessage").value,
+        shopNotes: document.getElementById("editShopNotes").value,
+        marketingOptIn: selectedAppointment.marketingOptIn || ""
+      };
+
+      try {
+        const result = await postToScript(payload);
+
+        if (result.status === "success") {
+          notice.textContent = "Saved.";
+          notice.style.color = "#1d7f4f";
+          await loadAppointments();
+          closeModal();
+        } else {
+          notice.textContent = result.message || "Could not save.";
+          notice.style.color = "#af2727";
+        }
+      } catch (err) {
+        notice.textContent = "Could not save.";
+        notice.style.color = "#af2727";
+      }
+    }
+
+    function openCreateModal() {
+      clearCreateForm();
+      fillTimeOptions("newTime", "9:00 AM");
+      document.getElementById("newDate").value = formatDate(new Date());
+      document.getElementById("createModal").style.display = "flex";
+    }
+
+    function closeCreateModal() {
+      document.getElementById("createModal").style.display = "none";
+    }
+
+    function clearCreateForm() {
+      ["newName", "newPhone", "newEmail", "newVehicle", "newService", "newMessage", "newShopNotes"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+
+      document.getElementById("newDropOff").value = "";
+      document.getElementById("newStatus").value = "New";
+      document.getElementById("newSendConfirmation").value = "false";
+      document.getElementById("createNotice").textContent = "";
+    }
+
+    async function createAppointment() {
+      const notice = document.getElementById("createNotice");
+      notice.textContent = "Creating...";
+      notice.style.color = "#163051";
+
+      const payload = {
+        action: "createAppointment",
+        password: ADMIN_PASSWORD,
+        name: document.getElementById("newName").value,
+        phone: document.getElementById("newPhone").value,
+        email: document.getElementById("newEmail").value,
+        vehicle: document.getElementById("newVehicle").value,
+        service: document.getElementById("newService").value,
+        dropOff: document.getElementById("newDropOff").value,
+        date: document.getElementById("newDate").value,
+        time: document.getElementById("newTime").value,
+        status: document.getElementById("newStatus").value,
+        message: document.getElementById("newMessage").value,
+        shopNotes: document.getElementById("newShopNotes").value,
+        sendConfirmation: document.getElementById("newSendConfirmation").value === "true"
+      };
+
+      if (!payload.name || !payload.phone || !payload.date || !payload.time) {
+        notice.textContent = "Name, phone, date, and time are required.";
+        notice.style.color = "#af2727";
+        return;
+      }
+
+      try {
+        const result = await postToScript(payload);
+
+        if (result.status === "success") {
+          notice.textContent = "Appointment created.";
+          notice.style.color = "#1d7f4f";
+          await loadAppointments();
+          closeCreateModal();
+        } else {
+          notice.textContent = result.message || "Could not create appointment.";
+          notice.style.color = "#af2727";
+        }
+      } catch (err) {
+        notice.textContent = "Could not create appointment.";
+        notice.style.color = "#af2727";
+      }
+    }
+
+    function closeModal() {
+      document.getElementById("appointmentModal").style.display = "none";
+    }
+
+    function fillTimeOptions(selectId, selectedValue) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = "";
+
+      appointmentTimes.forEach(time => {
+        const option = document.createElement("option");
+        option.value = time;
+        option.textContent = time;
+
+        if (time === selectedValue) {
+          option.selected = true;
+        }
+
+        select.appendChild(option);
+      });
+    }
+
+    function formatDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatAppointmentDate(app) {
+      if (!app.date) return "";
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(app.date)) return app.date;
+
+      const date = new Date(app.date);
+      if (isNaN(date)) return app.date;
+
+      return formatDate(date);
+    }
+
+    function formatDisplayDate(app) {
+      const dateKey = formatAppointmentDate(app);
+      const date = new Date(dateKey + "T12:00:00");
+
+      if (isNaN(date)) return app.date || "";
+
+      return date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      });
+    }
+
+    function changeMonth(amount) {
+      currentDate.setMonth(currentDate.getMonth() + amount);
+      renderCalendar();
+    }
+
+    function goToToday() {
+      currentDate = new Date();
+      renderCalendar();
+    }
+
+    window.onclick = function(event) {
+      const appointmentModal = document.getElementById("appointmentModal");
+      const createModal = document.getElementById("createModal");
+
+      if (event.target === appointmentModal) closeModal();
+      if (event.target === createModal) closeCreateModal();
+    };
+
+    window.onload = function () {
+      fillTimeOptions("newTime", "9:00 AM");
+      fillTimeOptions("editTime", "9:00 AM");
+
+      if (localStorage.getItem("torosAdminLoggedIn") === "true") {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminDashboard").style.display = "block";
+        loadAppointments();
+      }
+    };
+
+    document.getElementById("passwordInput").addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        login();
+      }
+    });
+  </script>
 
 </body>
 </html>
