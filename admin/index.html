@@ -1,808 +1,910 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create Inspection</title>
+const CALENDAR_ID = 'primary';
+const SHOP_EMAIL = 'torosautocare@gmail.com';
+const SHOP_PHONE = '(847) 608-0236';
+const SHOP_ADDRESS = '8 Lake Marian Rd, Carpentersville, IL 60110';
 
-  <style>
-    * { box-sizing: border-box; }
+const KLAVIYO_PRIVATE_KEY = 'PASTE_YOUR_REAL_KEY_HERE';
+const KLAVIYO_LIST_ID = 'VShr4R';
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f7fb;
-      color: #163051;
-      padding: 18px;
+const ADMIN_PASSWORD = 'toros123';
+const APPOINTMENT_SHEET_NAME = 'Appointments';
+const INSPECTION_SHEET_NAME = 'Inspections';
+
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'getAppointments') {
+    return json(getAppointments(ADMIN_PASSWORD));
+  }
+
+  if (e && e.parameter && e.parameter.action === 'getInspection') {
+    return json(getInspectionById(e.parameter.id));
+  }
+
+  if (e && e.parameter && e.parameter.action === 'availability') {
+    const dateRaw = e.parameter.date;
+    const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
+
+    const dayStart = new Date(dateRaw + 'T00:00:00');
+    const dayEnd = new Date(dateRaw + 'T23:59:59');
+    const events = calendar.getEvents(dayStart, dayEnd);
+
+    const unavailable_times = events.map(event =>
+      Utilities.formatDate(event.getStartTime(), Session.getScriptTimeZone(), 'HH:mm')
+    );
+
+    return json({ status: 'success', unavailable_times });
+  }
+
+  return json({ status: 'success', message: 'Toros Auto Care API is running.' });
+}
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents || '{}');
+
+    if (data.action === 'createInspection') {
+      return json(createInspection(data));
     }
 
-    .wrap {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    if (data.action === 'createAppointment') {
+      return json(createAppointmentFromAdmin(data));
     }
 
-    .top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 22px;
+    if (data.action === 'updateAppointment') {
+      return json(updateAppointmentFromAdmin(data));
     }
 
-    img {
-      max-width: 220px;
+    if (data.source === 'Coupon Signup' && data.email) {
+      subscribeToKlaviyo({
+        email: data.email,
+        name: '',
+        phone: '',
+        vehicle: '',
+        service: '10% Off Oil Change Coupon',
+        preferred_date: '',
+        preferred_date_raw: '',
+        preferred_time: '',
+        drop_off: '',
+        marketing_opt_in: 'Yes'
+      });
+
+      return json({ status: 'coupon_saved' });
     }
 
-    h1 {
-      margin: 12px 0 4px;
-    }
+    return json(createAppointmentFromWebsite(data));
 
-    p {
-      color: #60708a;
-    }
+  } catch (err) {
+    return json({ status: 'error', message: err.message });
+  }
+}
 
-    label {
-      display: block;
-      font-weight: bold;
-      margin: 14px 0 6px;
-    }
+/* =========================
+   INSPECTION SYSTEM
+========================= */
 
-    input, select, textarea {
-      width: 100%;
-      padding: 13px;
-      border: 1px solid #d8dee9;
-      border-radius: 12px;
-      font-size: 16px;
-      font-family: Arial, sans-serif;
-    }
+function createInspection(data) {
+  if (data.password !== ADMIN_PASSWORD) {
+    return { status: 'error', message: 'Unauthorized' };
+  }
 
-    textarea {
-      min-height: 90px;
-      resize: vertical;
-    }
+  const inspectionId = 'INS-' + new Date().getTime();
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+  const inspection = {
+    inspectionId,
+    createdAt: new Date(),
+    customerName: data.customerName || '',
+    phone: data.phone || '',
+    email: data.email || '',
+    vehicle: data.vehicle || '',
+    mileage: data.mileage || '',
+    technician: data.technician || '',
+    overallStatus: data.overallStatus || 'Monitor',
+    brakesStatus: data.brakesStatus || '',
+    brakesNotes: data.brakesNotes || '',
+    tiresStatus: data.tiresStatus || '',
+    tiresNotes: data.tiresNotes || '',
+    suspensionStatus: data.suspensionStatus || '',
+    suspensionNotes: data.suspensionNotes || '',
+    fluidsStatus: data.fluidsStatus || '',
+    fluidsNotes: data.fluidsNotes || '',
+    batteryStatus: data.batteryStatus || '',
+    batteryNotes: data.batteryNotes || '',
+    lightsStatus: data.lightsStatus || '',
+    lightsNotes: data.lightsNotes || '',
+    wipersStatus: data.wipersStatus || '',
+    wipersNotes: data.wipersNotes || '',
+    filtersStatus: data.filtersStatus || '',
+    filtersNotes: data.filtersNotes || '',
+    leaksStatus: data.leaksStatus || '',
+    leaksNotes: data.leaksNotes || '',
+    recommendations: data.recommendations || '',
+    reportUrl: data.reportUrl || ''
+  };
 
-    .item {
-      border: 1px solid #e3eaf4;
-      border-radius: 16px;
-      padding: 16px;
-      margin: 14px 0;
-      background: #fbfcff;
-    }
+  saveInspectionToSheet(inspection);
 
-    .item h3 {
-      margin: 0 0 10px;
-    }
+  return {
+    status: 'success',
+    inspectionId,
+    inspection
+  };
+}
 
-    button, .btn {
-      border: none;
-      border-radius: 12px;
-      padding: 13px 18px;
-      background: #af2727;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 15px;
-      text-decoration: none;
-      display: inline-block;
-    }
+function getInspectionById(id) {
+  if (!id) {
+    return { status: 'error', message: 'Missing inspection ID' };
+  }
 
-    .blue {
-      background: #163051;
-    }
+  const sheet = getInspectionSheet();
+  const rows = sheet.getDataRange().getValues();
 
-    .green {
-      background: #1d7f4f;
-    }
+  if (rows.length <= 1) {
+    return { status: 'not_found' };
+  }
 
-    .light {
-      background: #eef3fa;
-      color: #163051;
-    }
+  const headers = rows[0];
 
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 22px;
-    }
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
 
-    .result {
-      display: none;
-      margin-top: 22px;
-      padding: 18px;
-      border-radius: 16px;
-      background: #f7faff;
-      border: 1px solid #d8e3f2;
-    }
-
-    .result input {
-      margin-top: 8px;
-    }
-
-    .notice {
-      margin-top: 14px;
-      font-weight: bold;
-    }
-
-    @media (max-width: 700px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .wrap {
-        padding: 18px;
-      }
-
-      button, .btn {
-        width: 100%;
-        text-align: center;
-      }
-
-      .actions {
-        flex-direction: column;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="wrap">
-    <div class="top">
-      <img src="/logo.png" alt="Toro's Auto Care">
-      <a class="btn blue" href="/admin">Back to Admin</a>
-    </div>
-
-    <h1>Create Vehicle Inspection</h1>
-    <p>Fill this out, create the report, then print or copy the customer link.</p>
-
-    <div class="grid">
-      <div>
-        <label>Customer Name</label>
-        <input id="customerName">
-      </div>
-
-      <div>
-        <label>Phone</label>
-        <input id="phone">
-      </div>
-
-      <div>
-        <label>Email</label>
-        <input id="email">
-      </div>
-
-      <div>
-        <label>Vehicle</label>
-        <input id="vehicle" placeholder="2017 Honda Ridgeline">
-      </div>
-
-      <div>
-        <label>Mileage</label>
-        <input id="mileage">
-      </div>
-
-      <div>
-        <label>Technician</label>
-        <input id="technician">
-      </div>
-
-      <div>
-        <label>Overall Status</label>
-        <select id="overallStatus">
-          <option>Good</option>
-          <option selected>Monitor</option>
-          <option>Needs Attention</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="inspectionItems"></div>
-
-    <label>Recommendations</label>
-    <textarea id="recommendations" placeholder="Example: Recommend front brake pads and rotors. Rear tires should be monitored."></textarea>
-
-    <div class="actions">
-      <button class="green" onclick="createInspection()">Create Inspection Report</button>
-      <a class="btn light" href="/admin">Cancel</a>
-    </div>
-
-    <div class="notice" id="notice"></div>
-
-    <div class="result" id="resultBox">
-      <h2>Inspection Created</h2>
-      <p>Customer report link:</p>
-      <input id="reportLink" readonly>
-
-      <div class="actions">
-        <button class="blue" onclick="copyLink()">Copy Link</button>
-        <a class="btn green" id="openReport" target="_blank">Open Report</a>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const ADMIN_PASSWORD = "toros123";
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
-
-    const items = [
-      "Brakes",
-      "Tires",
-      "Suspension",
-      "Fluids",
-      "Battery",
-      "Lights",
-      "Wipers",
-      "Filters",
-      "Leaks"
-    ];
-
-    function buildItems() {
-      const container = document.getElementById("inspectionItems");
-
-      container.innerHTML = items.map(item => {
-        const key = item.toLowerCase();
-
-        return `
-          <div class="item">
-            <h3>${item}</h3>
-
-            <label>Status</label>
-            <select id="${key}Status">
-              <option>Good</option>
-              <option selected>Monitor</option>
-              <option>Needs Attention</option>
-            </select>
-
-            <label>Notes</label>
-            <textarea id="${key}Notes" placeholder="Add notes for ${item.toLowerCase()}..."></textarea>
-          </div>
-        `;
-      }).join("");
-    }
-
-    async function createInspection() {
-      const notice = document.getElementById("notice");
-      const resultBox = document.getElementById("resultBox");
-
-      notice.textContent = "Creating inspection...";
-      notice.style.color = "#163051";
-      resultBox.style.display = "none";
-
-      const payload = {
-        action: "createInspection",
-        password: ADMIN_PASSWORD,
-
-        customerName: document.getElementById("customerName").value,
-        phone: document.getElementById("phone").value,
-        email: document.getElementById("email").value,
-        vehicle: document.getElementById("vehicle").value,
-        mileage: document.getElementById("mileage").value,
-        technician: document.getElementById("technician").value,
-        overallStatus: document.getElementById("overallStatus").value,
-
-        brakesStatus: document.getElementById("brakesStatus").value,
-        brakesNotes: document.getElementById("brakesNotes").value,
-
-        tiresStatus: document.getElementById("tiresStatus").value,
-        tiresNotes: document.getElementById("tiresNotes").value,
-
-        suspensionStatus: document.getElementById("suspensionStatus").value,
-        suspensionNotes: document.getElementById("suspensionNotes").value,
-
-        fluidsStatus: document.getElementById("fluidsStatus").value,
-        fluidsNotes: document.getElementById("fluidsNotes").value,
-
-        batteryStatus: document.getElementById("batteryStatus").value,
-        batteryNotes: document.getElementById("batteryNotes").value,
-
-        lightsStatus: document.getElementById("lightsStatus").value,
-        lightsNotes: document.getElementById("lightsNotes").value,
-
-        wipersStatus: document.getElementById("wipersStatus").value,
-        wipersNotes: document.getElementById("wipersNotes").value,
-
-        filtersStatus: document.getElementById("filtersStatus").value,
-        filtersNotes: document.getElementById("filtersNotes").value,
-
-        leaksStatus: document.getElementById("leaksStatus").value,
-        leaksNotes: document.getElementById("leaksNotes").value,
-
-        recommendations: document.getElementById("recommendations").value
+    if (String(getCell(headers, row, 'Inspection ID')) === String(id)) {
+      return {
+        status: 'success',
+        inspection: {
+          inspectionId: getCell(headers, row, 'Inspection ID'),
+          createdAt: normalizeDateTimeValue(getCell(headers, row, 'Created At')),
+          customerName: getCell(headers, row, 'Customer Name'),
+          phone: getCell(headers, row, 'Phone'),
+          email: getCell(headers, row, 'Email'),
+          vehicle: getCell(headers, row, 'Vehicle'),
+          mileage: getCell(headers, row, 'Mileage'),
+          technician: getCell(headers, row, 'Technician'),
+          overallStatus: getCell(headers, row, 'Overall Status'),
+          brakesStatus: getCell(headers, row, 'Brakes Status'),
+          brakesNotes: getCell(headers, row, 'Brakes Notes'),
+          tiresStatus: getCell(headers, row, 'Tires Status'),
+          tiresNotes: getCell(headers, row, 'Tires Notes'),
+          suspensionStatus: getCell(headers, row, 'Suspension Status'),
+          suspensionNotes: getCell(headers, row, 'Suspension Notes'),
+          fluidsStatus: getCell(headers, row, 'Fluids Status'),
+          fluidsNotes: getCell(headers, row, 'Fluids Notes'),
+          batteryStatus: getCell(headers, row, 'Battery Status'),
+          batteryNotes: getCell(headers, row, 'Battery Notes'),
+          lightsStatus: getCell(headers, row, 'Lights Status'),
+          lightsNotes: getCell(headers, row, 'Lights Notes'),
+          wipersStatus: getCell(headers, row, 'Wipers Status'),
+          wipersNotes: getCell(headers, row, 'Wipers Notes'),
+          filtersStatus: getCell(headers, row, 'Filters Status'),
+          filtersNotes: getCell(headers, row, 'Filters Notes'),
+          leaksStatus: getCell(headers, row, 'Leaks Status'),
+          leaksNotes: getCell(headers, row, 'Leaks Notes'),
+          recommendations: getCell(headers, row, 'Recommendations'),
+          reportUrl: getCell(headers, row, 'Report URL')
+        }
       };
+    }
+  }
 
-      if (!payload.customerName || !payload.vehicle) {
-        notice.textContent = "Customer name and vehicle are required.";
-        notice.style.color = "#af2727";
-        return;
-      }
+  return { status: 'not_found' };
+}
 
-      try {
-        const response = await fetch(SCRIPT_URL, {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
+function getInspectionSheet() {
+  let ss;
 
-        const data = await response.json();
+  const savedId = PropertiesService.getScriptProperties().getProperty('TOROS_APPOINTMENT_SHEET_ID');
 
-        if (data.status !== "success") {
-          notice.textContent = data.message || "Could not create inspection.";
-          notice.style.color = "#af2727";
-          return;
+  if (savedId) {
+    ss = SpreadsheetApp.openById(savedId);
+  } else {
+    const active = SpreadsheetApp.getActiveSpreadsheet();
+
+    if (active) {
+      ss = active;
+    } else {
+      ss = SpreadsheetApp.create('Toros Auto Care Appointments');
+    }
+
+    PropertiesService.getScriptProperties().setProperty('TOROS_APPOINTMENT_SHEET_ID', ss.getId());
+  }
+
+  let sheet = ss.getSheetByName(INSPECTION_SHEET_NAME);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(INSPECTION_SHEET_NAME);
+  }
+
+  ensureInspectionSheetHeaders(sheet);
+
+  return sheet;
+}
+
+function ensureInspectionSheetHeaders(sheet) {
+  const headers = [
+    'Inspection ID',
+    'Created At',
+    'Customer Name',
+    'Phone',
+    'Email',
+    'Vehicle',
+    'Mileage',
+    'Technician',
+    'Overall Status',
+    'Brakes Status',
+    'Brakes Notes',
+    'Tires Status',
+    'Tires Notes',
+    'Suspension Status',
+    'Suspension Notes',
+    'Fluids Status',
+    'Fluids Notes',
+    'Battery Status',
+    'Battery Notes',
+    'Lights Status',
+    'Lights Notes',
+    'Wipers Status',
+    'Wipers Notes',
+    'Filters Status',
+    'Filters Notes',
+    'Leaks Status',
+    'Leaks Notes',
+    'Recommendations',
+    'Report URL'
+  ];
+
+  if (sheet.getLastColumn() < 1) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return;
+  }
+
+  const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  headers.forEach(header => {
+    if (!currentHeaders.includes(header)) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(header);
+    }
+  });
+}
+
+function saveInspectionToSheet(data) {
+  const sheet = getInspectionSheet();
+  ensureInspectionSheetHeaders(sheet);
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  const row = headers.map(header => {
+    switch (header) {
+      case 'Inspection ID': return data.inspectionId || '';
+      case 'Created At': return data.createdAt || new Date();
+      case 'Customer Name': return data.customerName || '';
+      case 'Phone': return data.phone || '';
+      case 'Email': return data.email || '';
+      case 'Vehicle': return data.vehicle || '';
+      case 'Mileage': return data.mileage || '';
+      case 'Technician': return data.technician || '';
+      case 'Overall Status': return data.overallStatus || '';
+      case 'Brakes Status': return data.brakesStatus || '';
+      case 'Brakes Notes': return data.brakesNotes || '';
+      case 'Tires Status': return data.tiresStatus || '';
+      case 'Tires Notes': return data.tiresNotes || '';
+      case 'Suspension Status': return data.suspensionStatus || '';
+      case 'Suspension Notes': return data.suspensionNotes || '';
+      case 'Fluids Status': return data.fluidsStatus || '';
+      case 'Fluids Notes': return data.fluidsNotes || '';
+      case 'Battery Status': return data.batteryStatus || '';
+      case 'Battery Notes': return data.batteryNotes || '';
+      case 'Lights Status': return data.lightsStatus || '';
+      case 'Lights Notes': return data.lightsNotes || '';
+      case 'Wipers Status': return data.wipersStatus || '';
+      case 'Wipers Notes': return data.wipersNotes || '';
+      case 'Filters Status': return data.filtersStatus || '';
+      case 'Filters Notes': return data.filtersNotes || '';
+      case 'Leaks Status': return data.leaksStatus || '';
+      case 'Leaks Notes': return data.leaksNotes || '';
+      case 'Recommendations': return data.recommendations || '';
+      case 'Report URL': return data.reportUrl || '';
+      default: return '';
+    }
+  });
+
+  sheet.appendRow(row);
+}
+
+/* =========================
+   APPOINTMENT SYSTEM
+========================= */
+
+function createAppointmentFromWebsite(data) {
+  const start = buildDate(data.preferred_date_raw, data.preferred_time);
+  const end = new Date(start.getTime() + 30 * 60 * 1000);
+
+  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
+  const conflicts = calendar.getEvents(start, end);
+
+  if (conflicts.length > 0) {
+    return { status: 'unavailable' };
+  }
+
+  const description = buildAppointmentDescription({
+    name: data.name,
+    phone: data.phone,
+    email: data.email || 'Not provided',
+    vehicle: data.vehicle,
+    service: data.service,
+    date: data.preferred_date_raw || data.preferred_date,
+    time: data.preferred_time,
+    dropOff: data.drop_off,
+    message: data.message || 'No message',
+    marketingOptIn: data.marketing_opt_in || '',
+    shopNotes: '',
+    status: 'New'
+  });
+
+  const event = calendar.createEvent(`Toros Appointment - ${data.name}`, start, end, {
+    description,
+    location: SHOP_ADDRESS
+  });
+
+  saveAppointmentToSheet({
+    eventId: event.getId(),
+    name: data.name || '',
+    phone: data.phone || '',
+    email: data.email || '',
+    vehicle: data.vehicle || '',
+    service: data.service || '',
+    date: data.preferred_date_raw || data.preferred_date || '',
+    time: data.preferred_time || '',
+    dropOff: data.drop_off || '',
+    message: data.message || '',
+    marketingOptIn: data.marketing_opt_in || '',
+    shopNotes: '',
+    status: 'New',
+    source: 'Website'
+  });
+
+  MailApp.sendEmail({
+    to: SHOP_EMAIL,
+    subject: `New Appointment Request - ${data.name}`,
+    body: description
+  });
+
+  return { status: 'success' };
+}
+
+function createAppointmentFromAdmin(data) {
+  if (data.password !== ADMIN_PASSWORD) {
+    return { status: 'error', message: 'Unauthorized' };
+  }
+
+  const start = buildDate(data.date, data.time);
+  const end = new Date(start.getTime() + 30 * 60 * 1000);
+
+  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
+
+  const description = buildAppointmentDescription({
+    name: data.name,
+    phone: data.phone,
+    email: data.email || 'Not provided',
+    vehicle: data.vehicle,
+    service: data.service,
+    date: data.date,
+    time: data.time,
+    dropOff: data.dropOff || '',
+    message: data.message || '',
+    marketingOptIn: '',
+    shopNotes: data.shopNotes || '',
+    status: data.status || 'New'
+  });
+
+  const event = calendar.createEvent(`Toros Appointment - ${data.name}`, start, end, {
+    description,
+    location: SHOP_ADDRESS
+  });
+
+  saveAppointmentToSheet({
+    eventId: event.getId(),
+    name: data.name || '',
+    phone: data.phone || '',
+    email: data.email || '',
+    vehicle: data.vehicle || '',
+    service: data.service || '',
+    date: data.date || '',
+    time: data.time || '',
+    dropOff: data.dropOff || '',
+    message: data.message || '',
+    marketingOptIn: '',
+    shopNotes: data.shopNotes || '',
+    status: data.status || 'New',
+    source: 'Admin'
+  });
+
+  if (data.sendConfirmation && data.email) {
+    MailApp.sendEmail({
+      to: data.email,
+      subject: 'Your Toros Auto Care Appointment is Confirmed',
+      body:
+`Hi ${data.name},
+
+Your appointment with Toros Auto Care is confirmed.
+
+Appointment Details:
+Date: ${formatPrettyDate(start)}
+Time: ${data.time}
+Service: ${data.service}
+Vehicle: ${data.vehicle}
+
+Location:
+${SHOP_ADDRESS}
+
+If anything changes, please call us at ${SHOP_PHONE}.
+
+Thank you,
+Toros Auto Care`
+    });
+  }
+
+  return { status: 'success', eventId: event.getId() };
+}
+
+function updateAppointmentFromAdmin(data) {
+  if (data.password !== ADMIN_PASSWORD) {
+    return { status: 'error', message: 'Unauthorized' };
+  }
+
+  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
+  let event = null;
+
+  if (data.eventId) {
+    try {
+      event = calendar.getEventById(data.eventId);
+    } catch (err) {}
+  }
+
+  const start = buildDate(data.date, data.time);
+  const end = new Date(start.getTime() + 30 * 60 * 1000);
+
+  const description = buildAppointmentDescription({
+    name: data.name,
+    phone: data.phone,
+    email: data.email || 'Not provided',
+    vehicle: data.vehicle,
+    service: data.service,
+    date: data.date,
+    time: data.time,
+    dropOff: data.dropOff || '',
+    message: data.message || '',
+    marketingOptIn: data.marketingOptIn || '',
+    shopNotes: data.shopNotes || '',
+    status: data.status || 'New'
+  });
+
+  if (event) {
+    event.setTitle(`Toros Appointment - ${data.name}`);
+    event.setTime(start, end);
+    event.setDescription(description);
+    event.setLocation(SHOP_ADDRESS);
+  }
+
+  updateAppointmentInSheet({
+    eventId: data.eventId || '',
+    name: data.name || '',
+    phone: data.phone || '',
+    email: data.email || '',
+    vehicle: data.vehicle || '',
+    service: data.service || '',
+    date: data.date || '',
+    time: data.time || '',
+    dropOff: data.dropOff || '',
+    message: data.message || '',
+    marketingOptIn: data.marketingOptIn || '',
+    shopNotes: data.shopNotes || '',
+    status: data.status || 'New',
+    source: data.source || 'Admin'
+  });
+
+  return { status: 'success' };
+}
+
+function getAppointments(password) {
+  if (password !== ADMIN_PASSWORD) {
+    return { success: false, appointments: [] };
+  }
+
+  ensureAppointmentSheet();
+
+  const sheetAppointments = getAppointmentsFromSheet();
+  const calendarAppointments = getAppointmentsFromCalendar();
+
+  const combined = calendarAppointments.concat(sheetAppointments);
+  const unique = removeDuplicateAppointments(combined);
+
+  return {
+    success: true,
+    appointments: unique
+  };
+}
+
+function getAppointmentsFromSheet() {
+  const sheet = getAppointmentSheet();
+  const rows = sheet.getDataRange().getValues();
+
+  if (rows.length <= 1) return [];
+
+  const headers = rows[0];
+
+  return rows.slice(1).map(row => ({
+    source: getCell(headers, row, 'Source') || 'Sheet',
+    submittedAt: getCell(headers, row, 'Submitted At'),
+    eventId: getCell(headers, row, 'Calendar Event ID'),
+    name: getCell(headers, row, 'Name'),
+    phone: getCell(headers, row, 'Phone'),
+    email: getCell(headers, row, 'Email'),
+    vehicle: getCell(headers, row, 'Vehicle'),
+    service: getCell(headers, row, 'Service'),
+    date: normalizeDateValue(getCell(headers, row, 'Date')),
+    time: getCell(headers, row, 'Time'),
+    dropOff: getCell(headers, row, 'Drop-off'),
+    message: getCell(headers, row, 'Message'),
+    marketingOptIn: getCell(headers, row, 'Marketing Opt-In'),
+    shopNotes: getCell(headers, row, 'Shop Notes'),
+    status: getCell(headers, row, 'Status') || 'New',
+    lastUpdated: getCell(headers, row, 'Last Updated')
+  })).filter(a => a.name || a.phone || a.date);
+}
+
+function getAppointmentsFromCalendar() {
+  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
+
+  const start = new Date();
+  start.setDate(start.getDate() - 30);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date();
+  end.setDate(end.getDate() + 180);
+  end.setHours(23, 59, 59, 999);
+
+  const events = calendar.getEvents(start, end);
+
+  return events
+    .filter(event => event.getTitle().includes('Toros Appointment'))
+    .map(event => {
+      const description = event.getDescription() || '';
+
+      return {
+        source: 'Calendar',
+        submittedAt: '',
+        eventId: event.getId(),
+        name: getDescriptionValue(description, 'Name') || event.getTitle().replace('Toros Appointment - ', ''),
+        phone: getDescriptionValue(description, 'Phone'),
+        email: getDescriptionValue(description, 'Email'),
+        vehicle: getDescriptionValue(description, 'Vehicle'),
+        service: getDescriptionValue(description, 'Service'),
+        date: Utilities.formatDate(event.getStartTime(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+        time: Utilities.formatDate(event.getStartTime(), Session.getScriptTimeZone(), 'h:mm a'),
+        dropOff: getDescriptionValue(description, 'Drop-off'),
+        message: getDescriptionValue(description, 'Message'),
+        marketingOptIn: getDescriptionValue(description, 'Marketing opt-in'),
+        shopNotes: getDescriptionValue(description, 'Shop Notes'),
+        status: getDescriptionValue(description, 'Status') || 'New',
+        lastUpdated: ''
+      };
+    });
+}
+
+function buildAppointmentDescription(data) {
+  return `Name: ${data.name || ''}
+Phone: ${data.phone || ''}
+Email: ${data.email || ''}
+Vehicle: ${data.vehicle || ''}
+Service: ${data.service || ''}
+Date: ${data.date || ''}
+Time: ${data.time || ''}
+Drop-off: ${data.dropOff || ''}
+Message: ${data.message || ''}
+Marketing opt-in: ${data.marketingOptIn || ''}
+Shop Notes: ${data.shopNotes || ''}
+Status: ${data.status || 'New'}`;
+}
+
+function getDescriptionValue(description, label) {
+  const regex = new RegExp(label + ':\\s*(.*)', 'i');
+  const match = description.match(regex);
+  return match ? match[1].trim() : '';
+}
+
+function removeDuplicateAppointments(appointments) {
+  const seen = {};
+
+  return appointments.filter(a => {
+    const key = a.eventId || [
+      a.name,
+      a.phone,
+      a.date,
+      a.time,
+      a.service
+    ].join('|').toLowerCase();
+
+    if (seen[key]) return false;
+
+    seen[key] = true;
+    return true;
+  });
+}
+
+function buildDate(dateRaw, timeText) {
+  const parts = String(dateRaw).split('-');
+  const year = Number(parts[0]);
+  const month = Number(parts[1]) - 1;
+  const day = Number(parts[2]);
+
+  const match = String(timeText).match(/(\d+):(\d+)\s?(AM|PM)/i);
+
+  if (!match) {
+    throw new Error('Time must look like 9:00 AM');
+  }
+
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const ampm = match[3].toUpperCase();
+
+  if (ampm === 'PM' && hour !== 12) hour += 12;
+  if (ampm === 'AM' && hour === 12) hour = 0;
+
+  return new Date(year, month, day, hour, minute);
+}
+
+/* =========================
+   SHARED SHEET HELPERS
+========================= */
+
+function getAppointmentSheet() {
+  let ss;
+
+  const savedId = PropertiesService.getScriptProperties().getProperty('TOROS_APPOINTMENT_SHEET_ID');
+
+  if (savedId) {
+    ss = SpreadsheetApp.openById(savedId);
+  } else {
+    const active = SpreadsheetApp.getActiveSpreadsheet();
+
+    if (active) {
+      ss = active;
+    } else {
+      ss = SpreadsheetApp.create('Toros Auto Care Appointments');
+    }
+
+    PropertiesService.getScriptProperties().setProperty('TOROS_APPOINTMENT_SHEET_ID', ss.getId());
+  }
+
+  let sheet = ss.getSheetByName(APPOINTMENT_SHEET_NAME);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(APPOINTMENT_SHEET_NAME);
+  }
+
+  ensureAppointmentSheetHeaders(sheet);
+
+  return sheet;
+}
+
+function ensureAppointmentSheet() {
+  const sheet = getAppointmentSheet();
+  ensureAppointmentSheetHeaders(sheet);
+}
+
+function ensureAppointmentSheetHeaders(sheet) {
+  const headers = [
+    'Submitted At',
+    'Calendar Event ID',
+    'Name',
+    'Phone',
+    'Email',
+    'Vehicle',
+    'Service',
+    'Date',
+    'Time',
+    'Drop-off',
+    'Message',
+    'Marketing Opt-In',
+    'Shop Notes',
+    'Status',
+    'Source',
+    'Last Updated'
+  ];
+
+  if (sheet.getLastColumn() < 1) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return;
+  }
+
+  const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  headers.forEach(header => {
+    if (!currentHeaders.includes(header)) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(header);
+    }
+  });
+}
+
+function saveAppointmentToSheet(data) {
+  const sheet = getAppointmentSheet();
+  ensureAppointmentSheetHeaders(sheet);
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  const row = headers.map(header => {
+    switch (header) {
+      case 'Submitted At': return new Date();
+      case 'Calendar Event ID': return data.eventId || '';
+      case 'Name': return data.name || '';
+      case 'Phone': return data.phone || '';
+      case 'Email': return data.email || '';
+      case 'Vehicle': return data.vehicle || '';
+      case 'Service': return data.service || '';
+      case 'Date': return data.date || '';
+      case 'Time': return data.time || '';
+      case 'Drop-off': return data.dropOff || '';
+      case 'Message': return data.message || '';
+      case 'Marketing Opt-In': return data.marketingOptIn || '';
+      case 'Shop Notes': return data.shopNotes || '';
+      case 'Status': return data.status || 'New';
+      case 'Source': return data.source || 'Website';
+      case 'Last Updated': return new Date();
+      default: return '';
+    }
+  });
+
+  sheet.appendRow(row);
+}
+
+function updateAppointmentInSheet(data) {
+  const sheet = getAppointmentSheet();
+  ensureAppointmentSheetHeaders(sheet);
+
+  const rows = sheet.getDataRange().getValues();
+
+  if (rows.length <= 1) {
+    saveAppointmentToSheet(data);
+    return;
+  }
+
+  const headers = rows[0];
+  const eventIdIndex = headers.indexOf('Calendar Event ID');
+  let rowIndex = -1;
+
+  if (data.eventId && eventIdIndex !== -1) {
+    rowIndex = rows.findIndex((row, index) => index > 0 && row[eventIdIndex] === data.eventId);
+  }
+
+  if (rowIndex === -1) {
+    rowIndex = rows.findIndex((row, index) => {
+      if (index === 0) return false;
+
+      return String(getCell(headers, row, 'Name')).toLowerCase() === String(data.name).toLowerCase()
+        && String(getCell(headers, row, 'Phone')) === String(data.phone);
+    });
+  }
+
+  if (rowIndex === -1) {
+    saveAppointmentToSheet(data);
+    return;
+  }
+
+  const rowNumber = rowIndex + 1;
+
+  setCell(sheet, headers, rowNumber, 'Calendar Event ID', data.eventId || '');
+  setCell(sheet, headers, rowNumber, 'Name', data.name || '');
+  setCell(sheet, headers, rowNumber, 'Phone', data.phone || '');
+  setCell(sheet, headers, rowNumber, 'Email', data.email || '');
+  setCell(sheet, headers, rowNumber, 'Vehicle', data.vehicle || '');
+  setCell(sheet, headers, rowNumber, 'Service', data.service || '');
+  setCell(sheet, headers, rowNumber, 'Date', data.date || '');
+  setCell(sheet, headers, rowNumber, 'Time', data.time || '');
+  setCell(sheet, headers, rowNumber, 'Drop-off', data.dropOff || '');
+  setCell(sheet, headers, rowNumber, 'Message', data.message || '');
+  setCell(sheet, headers, rowNumber, 'Marketing Opt-In', data.marketingOptIn || '');
+  setCell(sheet, headers, rowNumber, 'Shop Notes', data.shopNotes || '');
+  setCell(sheet, headers, rowNumber, 'Status', data.status || 'New');
+  setCell(sheet, headers, rowNumber, 'Source', data.source || 'Admin');
+  setCell(sheet, headers, rowNumber, 'Last Updated', new Date());
+}
+
+function getCell(headers, row, headerName) {
+  const index = headers.indexOf(headerName);
+  return index === -1 ? '' : row[index];
+}
+
+function setCell(sheet, headers, rowNumber, headerName, value) {
+  const index = headers.indexOf(headerName);
+
+  if (index !== -1) {
+    sheet.getRange(rowNumber, index + 1).setValue(value);
+  }
+}
+
+function normalizeDateValue(value) {
+  if (!value) return '';
+
+  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value)) {
+    return Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+
+  return String(value);
+}
+
+function normalizeDateTimeValue(value) {
+  if (!value) return '';
+
+  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value)) {
+    return Utilities.formatDate(value, Session.getScriptTimeZone(), 'EEE, MMM d, yyyy h:mm a');
+  }
+
+  return String(value);
+}
+
+function formatPrettyDate(date) {
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), 'EEE, MMM d, yyyy');
+}
+
+function subscribeToKlaviyo(data) {
+  const payload = {
+    data: {
+      type: 'profile-subscription-bulk-create-job',
+      attributes: {
+        custom_source: data.service || 'Toros Auto Care Website',
+        profiles: {
+          data: [
+            {
+              type: 'profile',
+              attributes: {
+                email: data.email,
+                subscriptions: {
+                  email: {
+                    marketing: {
+                      consent: 'SUBSCRIBED'
+                    }
+                  }
+                }
+              }
+            }
+          ]
         }
-
-        const link = `${window.location.origin}/inspection?id=${data.inspectionId}`;
-
-        document.getElementById("reportLink").value = link;
-        document.getElementById("openReport").href = link;
-
-        notice.textContent = "Inspection created successfully.";
-        notice.style.color = "#1d7f4f";
-        resultBox.style.display = "block";
-
-      } catch (err) {
-        notice.textContent = "Could not create inspection.";
-        notice.style.color = "#af2727";
-      }
-    }
-
-    function copyLink() {
-      const input = document.getElementById("reportLink");
-      input.select();
-      input.setSelectionRange(0, 99999);
-      document.execCommand("copy");
-
-      document.getElementById("notice").textContent = "Link copied.";
-      document.getElementById("notice").style.color = "#1d7f4f";
-    }
-
-    buildItems();
-  </script>
-
-</body>
-</html>
-  <title>Vehicle Inspection Report</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      background: #f4f7fb;
-      font-family: Arial, sans-serif;
-      color: #163051;
-      padding: 24px;
-    }
-
-    .report {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      border-radius: 20px;
-      padding: 32px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 30px;
-      flex-wrap: wrap;
-    }
-
-    .logo {
-      max-width: 220px;
-    }
-
-    .print-btn {
-      background: #163051;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      padding: 14px 20px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 15px;
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 34px;
-    }
-
-    .subtitle {
-      color: #60708a;
-      margin-bottom: 24px;
-    }
-
-    .section {
-      margin-bottom: 28px;
-    }
-
-    .section h2 {
-      border-bottom: 2px solid #e5ebf3;
-      padding-bottom: 10px;
-      margin-bottom: 18px;
-      font-size: 22px;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-    }
-
-    .info-card {
-      background: #f7faff;
-      border: 1px solid #e3eaf4;
-      border-radius: 14px;
-      padding: 14px;
-    }
-
-    .info-card strong {
-      display: block;
-      margin-bottom: 6px;
-      color: #163051;
-    }
-
-    .inspection-item {
-      border: 1px solid #e2e7ef;
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 14px;
-    }
-
-    .inspection-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .inspection-title {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .status {
-      border: 2px solid black;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: bold;
-      letter-spacing: 0.5px;
-      background: white;
-      color: black;
-    }
-
-    .recommendations {
-      white-space: pre-wrap;
-      line-height: 1.6;
-      background: #f7faff;
-      border: 1px solid #e3eaf4;
-      padding: 16px;
-      border-radius: 14px;
-    }
-
-    .loading {
-      text-align: center;
-      font-size: 18px;
-      padding: 60px 20px;
-    }
-
-    .error {
-      text-align: center;
-      color: #af2727;
-      font-size: 18px;
-      padding: 60px 20px;
-    }
-
-    @media print {
-      @page {
-        size: letter;
-        margin: 0.35in;
-      }
-
-      body {
-        background: white !important;
-        padding: 0 !important;
-        font-size: 10px;
-        color: black !important;
-      }
-
-      .report,
-      .info-card,
-      .inspection-item,
-      .recommendations {
-        background: white !important;
-        box-shadow: none !important;
-      }
-
-      .report {
-        border-radius: 0;
-        max-width: 100%;
-        padding: 0;
-      }
-
-      .print-btn {
-        display: none !important;
-      }
-
-      .topbar {
-        margin-bottom: 8px;
-      }
-
-      .logo {
-        max-width: 125px;
-        filter: grayscale(100%);
-      }
-
-      h1 {
-        font-size: 20px;
-        margin-bottom: 3px;
-        color: black !important;
-      }
-
-      .subtitle {
-        margin-bottom: 8px;
-        font-size: 10px;
-        color: black !important;
-      }
-
-      .section {
-        margin-bottom: 8px;
-        break-inside: avoid;
-      }
-
-      .section h2 {
-        font-size: 14px;
-        margin-bottom: 6px;
-        padding-bottom: 3px;
-        border-bottom: 1px solid black;
-        color: black !important;
-      }
-
-      .info-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 5px;
-      }
-
-      .info-card {
-        padding: 5px;
-        border: 1px solid black;
-        font-size: 9px;
-        border-radius: 0;
-        color: black !important;
-      }
-
-      .inspection-item {
-        padding: 6px;
-        margin-bottom: 4px;
-        border: 1px solid black;
-        border-radius: 0;
-        break-inside: avoid;
-        color: black !important;
-      }
-
-      .inspection-header {
-        margin-bottom: 2px;
-      }
-
-      .inspection-title {
-        font-size: 11px;
-        color: black !important;
-      }
-
-      .status {
-        font-size: 8px;
-        padding: 2px 5px;
-        border: 1px solid black;
-        border-radius: 0;
-        background: white !important;
-        color: black !important;
-      }
-
-      .recommendations {
-        padding: 6px;
-        border: 1px solid black;
-        font-size: 9px;
-        line-height: 1.2;
-        color: black !important;
-      }
-    }
-
-    @media (max-width: 700px) {
-      body {
-        padding: 14px;
-      }
-
-      .report {
-        padding: 22px;
-      }
-
-      h1 {
-        font-size: 28px;
-      }
-
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .print-btn {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="report" id="report">
-    <div class="loading">Loading inspection report...</div>
-  </div>
-
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
-
-    const params = new URLSearchParams(window.location.search);
-    const inspectionId = params.get("id");
-
-    async function loadInspection() {
-      const report = document.getElementById("report");
-
-      if (!inspectionId) {
-        report.innerHTML = `<div class="error">Missing inspection ID.</div>`;
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `${SCRIPT_URL}?action=getInspection&id=${inspectionId}`
-        );
-
-        const data = await response.json();
-
-        if (data.status !== "success") {
-          report.innerHTML = `<div class="error">Inspection not found.</div>`;
-          return;
+      },
+      relationships: {
+        list: {
+          data: {
+            type: 'list',
+            id: KLAVIYO_LIST_ID
+          }
         }
-
-        const inspection = data.inspection;
-
-        report.innerHTML = `
-          <div class="topbar">
-            <img class="logo" src="/logo.png" alt="Toro's Auto Care">
-
-            <button class="print-btn" onclick="window.print()">
-              Print Report
-            </button>
-          </div>
-
-          <h1>Vehicle Inspection Report</h1>
-
-          <div class="subtitle">
-            Inspection ID: ${inspection.inspectionId}
-          </div>
-
-          <div class="section">
-            <h2>Customer & Vehicle Information</h2>
-
-            <div class="info-grid">
-              <div class="info-card">
-                <strong>Customer</strong>
-                ${inspection.customerName || "-"}
-              </div>
-
-              <div class="info-card">
-                <strong>Phone</strong>
-                ${inspection.phone || "-"}
-              </div>
-
-              <div class="info-card">
-                <strong>Vehicle</strong>
-                ${inspection.vehicle || "-"}
-              </div>
-
-              <div class="info-card">
-                <strong>Mileage</strong>
-                ${inspection.mileage || "-"}
-              </div>
-
-              <div class="info-card">
-                <strong>Technician</strong>
-                ${inspection.technician || "-"}
-              </div>
-
-              <div class="info-card">
-                <strong>Overall Status</strong>
-                <span class="status">${formatStatus(inspection.overallStatus)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h2>Inspection Results</h2>
-
-            ${renderItem("Brakes", inspection.brakesStatus, inspection.brakesNotes)}
-            ${renderItem("Tires", inspection.tiresStatus, inspection.tiresNotes)}
-            ${renderItem("Suspension", inspection.suspensionStatus, inspection.suspensionNotes)}
-            ${renderItem("Fluids", inspection.fluidsStatus, inspection.fluidsNotes)}
-            ${renderItem("Battery", inspection.batteryStatus, inspection.batteryNotes)}
-            ${renderItem("Lights", inspection.lightsStatus, inspection.lightsNotes)}
-            ${renderItem("Wipers", inspection.wipersStatus, inspection.wipersNotes)}
-            ${renderItem("Filters", inspection.filtersStatus, inspection.filtersNotes)}
-            ${renderItem("Leaks", inspection.leaksStatus, inspection.leaksNotes)}
-          </div>
-
-          <div class="section">
-            <h2>Recommendations</h2>
-
-            <div class="recommendations">
-              ${inspection.recommendations || "No recommendations added."}
-            </div>
-          </div>
-        `;
-
-      } catch (err) {
-        report.innerHTML = `<div class="error">Could not load inspection.</div>`;
       }
     }
+  };
 
-    function renderItem(title, status, notes) {
-      return `
-        <div class="inspection-item">
-          <div class="inspection-header">
-            <div class="inspection-title">${title}</div>
-
-            <div class="status">
-              ${formatStatus(status)}
-            </div>
-          </div>
-
-          <div>
-            ${notes || "No notes added."}
-          </div>
-        </div>
-      `;
+  const klaviyoResponse = UrlFetchApp.fetch(
+    'https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/',
+    {
+      method: 'post',
+      contentType: 'application/json',
+      headers: {
+        Authorization: 'Klaviyo-API-Key ' + KLAVIYO_PRIVATE_KEY,
+        revision: '2024-10-15',
+        accept: 'application/json'
+      },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
     }
+  );
 
-    function formatStatus(status) {
-      if (!status) return "-";
+  MailApp.sendEmail({
+    to: SHOP_EMAIL,
+    subject: 'Klaviyo Debug Response',
+    body:
+      'Status Code: ' + klaviyoResponse.getResponseCode() + '\n\n' +
+      'Response Body:\n' + klaviyoResponse.getContentText()
+  });
+}
 
-      const value = status.toLowerCase();
-
-      if (value.includes("good")) return "✓ GOOD";
-      if (value.includes("monitor")) return "! MONITOR";
-      if (value.includes("attention")) return "X NEEDS ATTENTION";
-
-      return status.toUpperCase();
-    }
-
-    loadInspection();
-  </script>
-
-</body>
-</html>
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
