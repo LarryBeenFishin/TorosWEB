@@ -1,910 +1,1120 @@
-const CALENDAR_ID = 'primary';
-const SHOP_EMAIL = 'torosautocare@gmail.com';
-const SHOP_PHONE = '(847) 608-0236';
-const SHOP_ADDRESS = '8 Lake Marian Rd, Carpentersville, IL 60110';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-const KLAVIYO_PRIVATE_KEY = 'PASTE_YOUR_REAL_KEY_HERE';
-const KLAVIYO_LIST_ID = 'VShr4R';
+  <title>Toro's Auto Care Admin</title>
 
-const ADMIN_PASSWORD = 'toros123';
-const APPOINTMENT_SHEET_NAME = 'Appointments';
-const INSPECTION_SHEET_NAME = 'Inspections';
+  <style>
+    * { box-sizing: border-box; }
 
-function doGet(e) {
-  if (e && e.parameter && e.parameter.action === 'getAppointments') {
-    return json(getAppointments(ADMIN_PASSWORD));
-  }
-
-  if (e && e.parameter && e.parameter.action === 'getInspection') {
-    return json(getInspectionById(e.parameter.id));
-  }
-
-  if (e && e.parameter && e.parameter.action === 'availability') {
-    const dateRaw = e.parameter.date;
-    const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
-
-    const dayStart = new Date(dateRaw + 'T00:00:00');
-    const dayEnd = new Date(dateRaw + 'T23:59:59');
-    const events = calendar.getEvents(dayStart, dayEnd);
-
-    const unavailable_times = events.map(event =>
-      Utilities.formatDate(event.getStartTime(), Session.getScriptTimeZone(), 'HH:mm')
-    );
-
-    return json({ status: 'success', unavailable_times });
-  }
-
-  return json({ status: 'success', message: 'Toros Auto Care API is running.' });
-}
-
-function doPost(e) {
-  try {
-    const data = JSON.parse(e.postData.contents || '{}');
-
-    if (data.action === 'createInspection') {
-      return json(createInspection(data));
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #163051;
+      overflow-x: hidden;
     }
 
-    if (data.action === 'createAppointment') {
-      return json(createAppointmentFromAdmin(data));
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      background: #af2727;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
     }
 
-    if (data.action === 'updateAppointment') {
-      return json(updateAppointmentFromAdmin(data));
+    button:hover { background: #911f1f; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d8dee9;
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: Arial, sans-serif;
     }
 
-    if (data.source === 'Coupon Signup' && data.email) {
-      subscribeToKlaviyo({
-        email: data.email,
-        name: '',
-        phone: '',
-        vehicle: '',
-        service: '10% Off Oil Change Coupon',
-        preferred_date: '',
-        preferred_date_raw: '',
-        preferred_time: '',
-        drop_off: '',
-        marketing_opt_in: 'Yes'
-      });
-
-      return json({ status: 'coupon_saved' });
+    textarea {
+      min-height: 90px;
+      resize: vertical;
     }
 
-    return json(createAppointmentFromWebsite(data));
-
-  } catch (err) {
-    return json({ status: 'error', message: err.message });
-  }
-}
-
-/* =========================
-   INSPECTION SYSTEM
-========================= */
-
-function createInspection(data) {
-  if (data.password !== ADMIN_PASSWORD) {
-    return { status: 'error', message: 'Unauthorized' };
-  }
-
-  const inspectionId = 'INS-' + new Date().getTime();
-
-  const inspection = {
-    inspectionId,
-    createdAt: new Date(),
-    customerName: data.customerName || '',
-    phone: data.phone || '',
-    email: data.email || '',
-    vehicle: data.vehicle || '',
-    mileage: data.mileage || '',
-    technician: data.technician || '',
-    overallStatus: data.overallStatus || 'Monitor',
-    brakesStatus: data.brakesStatus || '',
-    brakesNotes: data.brakesNotes || '',
-    tiresStatus: data.tiresStatus || '',
-    tiresNotes: data.tiresNotes || '',
-    suspensionStatus: data.suspensionStatus || '',
-    suspensionNotes: data.suspensionNotes || '',
-    fluidsStatus: data.fluidsStatus || '',
-    fluidsNotes: data.fluidsNotes || '',
-    batteryStatus: data.batteryStatus || '',
-    batteryNotes: data.batteryNotes || '',
-    lightsStatus: data.lightsStatus || '',
-    lightsNotes: data.lightsNotes || '',
-    wipersStatus: data.wipersStatus || '',
-    wipersNotes: data.wipersNotes || '',
-    filtersStatus: data.filtersStatus || '',
-    filtersNotes: data.filtersNotes || '',
-    leaksStatus: data.leaksStatus || '',
-    leaksNotes: data.leaksNotes || '',
-    recommendations: data.recommendations || '',
-    reportUrl: data.reportUrl || ''
-  };
-
-  saveInspectionToSheet(inspection);
-
-  return {
-    status: 'success',
-    inspectionId,
-    inspection
-  };
-}
-
-function getInspectionById(id) {
-  if (!id) {
-    return { status: 'error', message: 'Missing inspection ID' };
-  }
-
-  const sheet = getInspectionSheet();
-  const rows = sheet.getDataRange().getValues();
-
-  if (rows.length <= 1) {
-    return { status: 'not_found' };
-  }
-
-  const headers = rows[0];
-
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-
-    if (String(getCell(headers, row, 'Inspection ID')) === String(id)) {
-      return {
-        status: 'success',
-        inspection: {
-          inspectionId: getCell(headers, row, 'Inspection ID'),
-          createdAt: normalizeDateTimeValue(getCell(headers, row, 'Created At')),
-          customerName: getCell(headers, row, 'Customer Name'),
-          phone: getCell(headers, row, 'Phone'),
-          email: getCell(headers, row, 'Email'),
-          vehicle: getCell(headers, row, 'Vehicle'),
-          mileage: getCell(headers, row, 'Mileage'),
-          technician: getCell(headers, row, 'Technician'),
-          overallStatus: getCell(headers, row, 'Overall Status'),
-          brakesStatus: getCell(headers, row, 'Brakes Status'),
-          brakesNotes: getCell(headers, row, 'Brakes Notes'),
-          tiresStatus: getCell(headers, row, 'Tires Status'),
-          tiresNotes: getCell(headers, row, 'Tires Notes'),
-          suspensionStatus: getCell(headers, row, 'Suspension Status'),
-          suspensionNotes: getCell(headers, row, 'Suspension Notes'),
-          fluidsStatus: getCell(headers, row, 'Fluids Status'),
-          fluidsNotes: getCell(headers, row, 'Fluids Notes'),
-          batteryStatus: getCell(headers, row, 'Battery Status'),
-          batteryNotes: getCell(headers, row, 'Battery Notes'),
-          lightsStatus: getCell(headers, row, 'Lights Status'),
-          lightsNotes: getCell(headers, row, 'Lights Notes'),
-          wipersStatus: getCell(headers, row, 'Wipers Status'),
-          wipersNotes: getCell(headers, row, 'Wipers Notes'),
-          filtersStatus: getCell(headers, row, 'Filters Status'),
-          filtersNotes: getCell(headers, row, 'Filters Notes'),
-          leaksStatus: getCell(headers, row, 'Leaks Status'),
-          leaksNotes: getCell(headers, row, 'Leaks Notes'),
-          recommendations: getCell(headers, row, 'Recommendations'),
-          reportUrl: getCell(headers, row, 'Report URL')
-        }
-      };
-    }
-  }
-
-  return { status: 'not_found' };
-}
-
-function getInspectionSheet() {
-  let ss;
-
-  const savedId = PropertiesService.getScriptProperties().getProperty('TOROS_APPOINTMENT_SHEET_ID');
-
-  if (savedId) {
-    ss = SpreadsheetApp.openById(savedId);
-  } else {
-    const active = SpreadsheetApp.getActiveSpreadsheet();
-
-    if (active) {
-      ss = active;
-    } else {
-      ss = SpreadsheetApp.create('Toros Auto Care Appointments');
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      margin: 10px 0 6px;
+      color: #163051;
     }
 
-    PropertiesService.getScriptProperties().setProperty('TOROS_APPOINTMENT_SHEET_ID', ss.getId());
-  }
-
-  let sheet = ss.getSheetByName(INSPECTION_SHEET_NAME);
-
-  if (!sheet) {
-    sheet = ss.insertSheet(INSPECTION_SHEET_NAME);
-  }
-
-  ensureInspectionSheetHeaders(sheet);
-
-  return sheet;
-}
-
-function ensureInspectionSheetHeaders(sheet) {
-  const headers = [
-    'Inspection ID',
-    'Created At',
-    'Customer Name',
-    'Phone',
-    'Email',
-    'Vehicle',
-    'Mileage',
-    'Technician',
-    'Overall Status',
-    'Brakes Status',
-    'Brakes Notes',
-    'Tires Status',
-    'Tires Notes',
-    'Suspension Status',
-    'Suspension Notes',
-    'Fluids Status',
-    'Fluids Notes',
-    'Battery Status',
-    'Battery Notes',
-    'Lights Status',
-    'Lights Notes',
-    'Wipers Status',
-    'Wipers Notes',
-    'Filters Status',
-    'Filters Notes',
-    'Leaks Status',
-    'Leaks Notes',
-    'Recommendations',
-    'Report URL'
-  ];
-
-  if (sheet.getLastColumn() < 1) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    return;
-  }
-
-  const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-
-  headers.forEach(header => {
-    if (!currentHeaders.includes(header)) {
-      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(header);
-    }
-  });
-}
-
-function saveInspectionToSheet(data) {
-  const sheet = getInspectionSheet();
-  ensureInspectionSheetHeaders(sheet);
-
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-
-  const row = headers.map(header => {
-    switch (header) {
-      case 'Inspection ID': return data.inspectionId || '';
-      case 'Created At': return data.createdAt || new Date();
-      case 'Customer Name': return data.customerName || '';
-      case 'Phone': return data.phone || '';
-      case 'Email': return data.email || '';
-      case 'Vehicle': return data.vehicle || '';
-      case 'Mileage': return data.mileage || '';
-      case 'Technician': return data.technician || '';
-      case 'Overall Status': return data.overallStatus || '';
-      case 'Brakes Status': return data.brakesStatus || '';
-      case 'Brakes Notes': return data.brakesNotes || '';
-      case 'Tires Status': return data.tiresStatus || '';
-      case 'Tires Notes': return data.tiresNotes || '';
-      case 'Suspension Status': return data.suspensionStatus || '';
-      case 'Suspension Notes': return data.suspensionNotes || '';
-      case 'Fluids Status': return data.fluidsStatus || '';
-      case 'Fluids Notes': return data.fluidsNotes || '';
-      case 'Battery Status': return data.batteryStatus || '';
-      case 'Battery Notes': return data.batteryNotes || '';
-      case 'Lights Status': return data.lightsStatus || '';
-      case 'Lights Notes': return data.lightsNotes || '';
-      case 'Wipers Status': return data.wipersStatus || '';
-      case 'Wipers Notes': return data.wipersNotes || '';
-      case 'Filters Status': return data.filtersStatus || '';
-      case 'Filters Notes': return data.filtersNotes || '';
-      case 'Leaks Status': return data.leaksStatus || '';
-      case 'Leaks Notes': return data.leaksNotes || '';
-      case 'Recommendations': return data.recommendations || '';
-      case 'Report URL': return data.reportUrl || '';
-      default: return '';
-    }
-  });
-
-  sheet.appendRow(row);
-}
-
-/* =========================
-   APPOINTMENT SYSTEM
-========================= */
-
-function createAppointmentFromWebsite(data) {
-  const start = buildDate(data.preferred_date_raw, data.preferred_time);
-  const end = new Date(start.getTime() + 30 * 60 * 1000);
-
-  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
-  const conflicts = calendar.getEvents(start, end);
-
-  if (conflicts.length > 0) {
-    return { status: 'unavailable' };
-  }
-
-  const description = buildAppointmentDescription({
-    name: data.name,
-    phone: data.phone,
-    email: data.email || 'Not provided',
-    vehicle: data.vehicle,
-    service: data.service,
-    date: data.preferred_date_raw || data.preferred_date,
-    time: data.preferred_time,
-    dropOff: data.drop_off,
-    message: data.message || 'No message',
-    marketingOptIn: data.marketing_opt_in || '',
-    shopNotes: '',
-    status: 'New'
-  });
-
-  const event = calendar.createEvent(`Toros Appointment - ${data.name}`, start, end, {
-    description,
-    location: SHOP_ADDRESS
-  });
-
-  saveAppointmentToSheet({
-    eventId: event.getId(),
-    name: data.name || '',
-    phone: data.phone || '',
-    email: data.email || '',
-    vehicle: data.vehicle || '',
-    service: data.service || '',
-    date: data.preferred_date_raw || data.preferred_date || '',
-    time: data.preferred_time || '',
-    dropOff: data.drop_off || '',
-    message: data.message || '',
-    marketingOptIn: data.marketing_opt_in || '',
-    shopNotes: '',
-    status: 'New',
-    source: 'Website'
-  });
-
-  MailApp.sendEmail({
-    to: SHOP_EMAIL,
-    subject: `New Appointment Request - ${data.name}`,
-    body: description
-  });
-
-  return { status: 'success' };
-}
-
-function createAppointmentFromAdmin(data) {
-  if (data.password !== ADMIN_PASSWORD) {
-    return { status: 'error', message: 'Unauthorized' };
-  }
-
-  const start = buildDate(data.date, data.time);
-  const end = new Date(start.getTime() + 30 * 60 * 1000);
-
-  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
-
-  const description = buildAppointmentDescription({
-    name: data.name,
-    phone: data.phone,
-    email: data.email || 'Not provided',
-    vehicle: data.vehicle,
-    service: data.service,
-    date: data.date,
-    time: data.time,
-    dropOff: data.dropOff || '',
-    message: data.message || '',
-    marketingOptIn: '',
-    shopNotes: data.shopNotes || '',
-    status: data.status || 'New'
-  });
-
-  const event = calendar.createEvent(`Toros Appointment - ${data.name}`, start, end, {
-    description,
-    location: SHOP_ADDRESS
-  });
-
-  saveAppointmentToSheet({
-    eventId: event.getId(),
-    name: data.name || '',
-    phone: data.phone || '',
-    email: data.email || '',
-    vehicle: data.vehicle || '',
-    service: data.service || '',
-    date: data.date || '',
-    time: data.time || '',
-    dropOff: data.dropOff || '',
-    message: data.message || '',
-    marketingOptIn: '',
-    shopNotes: data.shopNotes || '',
-    status: data.status || 'New',
-    source: 'Admin'
-  });
-
-  if (data.sendConfirmation && data.email) {
-    MailApp.sendEmail({
-      to: data.email,
-      subject: 'Your Toros Auto Care Appointment is Confirmed',
-      body:
-`Hi ${data.name},
-
-Your appointment with Toros Auto Care is confirmed.
-
-Appointment Details:
-Date: ${formatPrettyDate(start)}
-Time: ${data.time}
-Service: ${data.service}
-Vehicle: ${data.vehicle}
-
-Location:
-${SHOP_ADDRESS}
-
-If anything changes, please call us at ${SHOP_PHONE}.
-
-Thank you,
-Toros Auto Care`
-    });
-  }
-
-  return { status: 'success', eventId: event.getId() };
-}
-
-function updateAppointmentFromAdmin(data) {
-  if (data.password !== ADMIN_PASSWORD) {
-    return { status: 'error', message: 'Unauthorized' };
-  }
-
-  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
-  let event = null;
-
-  if (data.eventId) {
-    try {
-      event = calendar.getEventById(data.eventId);
-    } catch (err) {}
-  }
-
-  const start = buildDate(data.date, data.time);
-  const end = new Date(start.getTime() + 30 * 60 * 1000);
-
-  const description = buildAppointmentDescription({
-    name: data.name,
-    phone: data.phone,
-    email: data.email || 'Not provided',
-    vehicle: data.vehicle,
-    service: data.service,
-    date: data.date,
-    time: data.time,
-    dropOff: data.dropOff || '',
-    message: data.message || '',
-    marketingOptIn: data.marketingOptIn || '',
-    shopNotes: data.shopNotes || '',
-    status: data.status || 'New'
-  });
-
-  if (event) {
-    event.setTitle(`Toros Appointment - ${data.name}`);
-    event.setTime(start, end);
-    event.setDescription(description);
-    event.setLocation(SHOP_ADDRESS);
-  }
-
-  updateAppointmentInSheet({
-    eventId: data.eventId || '',
-    name: data.name || '',
-    phone: data.phone || '',
-    email: data.email || '',
-    vehicle: data.vehicle || '',
-    service: data.service || '',
-    date: data.date || '',
-    time: data.time || '',
-    dropOff: data.dropOff || '',
-    message: data.message || '',
-    marketingOptIn: data.marketingOptIn || '',
-    shopNotes: data.shopNotes || '',
-    status: data.status || 'New',
-    source: data.source || 'Admin'
-  });
-
-  return { status: 'success' };
-}
-
-function getAppointments(password) {
-  if (password !== ADMIN_PASSWORD) {
-    return { success: false, appointments: [] };
-  }
-
-  ensureAppointmentSheet();
-
-  const sheetAppointments = getAppointmentsFromSheet();
-  const calendarAppointments = getAppointmentsFromCalendar();
-
-  const combined = calendarAppointments.concat(sheetAppointments);
-  const unique = removeDuplicateAppointments(combined);
-
-  return {
-    success: true,
-    appointments: unique
-  };
-}
-
-function getAppointmentsFromSheet() {
-  const sheet = getAppointmentSheet();
-  const rows = sheet.getDataRange().getValues();
-
-  if (rows.length <= 1) return [];
-
-  const headers = rows[0];
-
-  return rows.slice(1).map(row => ({
-    source: getCell(headers, row, 'Source') || 'Sheet',
-    submittedAt: getCell(headers, row, 'Submitted At'),
-    eventId: getCell(headers, row, 'Calendar Event ID'),
-    name: getCell(headers, row, 'Name'),
-    phone: getCell(headers, row, 'Phone'),
-    email: getCell(headers, row, 'Email'),
-    vehicle: getCell(headers, row, 'Vehicle'),
-    service: getCell(headers, row, 'Service'),
-    date: normalizeDateValue(getCell(headers, row, 'Date')),
-    time: getCell(headers, row, 'Time'),
-    dropOff: getCell(headers, row, 'Drop-off'),
-    message: getCell(headers, row, 'Message'),
-    marketingOptIn: getCell(headers, row, 'Marketing Opt-In'),
-    shopNotes: getCell(headers, row, 'Shop Notes'),
-    status: getCell(headers, row, 'Status') || 'New',
-    lastUpdated: getCell(headers, row, 'Last Updated')
-  })).filter(a => a.name || a.phone || a.date);
-}
-
-function getAppointmentsFromCalendar() {
-  const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
-
-  const start = new Date();
-  start.setDate(start.getDate() - 30);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date();
-  end.setDate(end.getDate() + 180);
-  end.setHours(23, 59, 59, 999);
-
-  const events = calendar.getEvents(start, end);
-
-  return events
-    .filter(event => event.getTitle().includes('Toros Appointment'))
-    .map(event => {
-      const description = event.getDescription() || '';
-
-      return {
-        source: 'Calendar',
-        submittedAt: '',
-        eventId: event.getId(),
-        name: getDescriptionValue(description, 'Name') || event.getTitle().replace('Toros Appointment - ', ''),
-        phone: getDescriptionValue(description, 'Phone'),
-        email: getDescriptionValue(description, 'Email'),
-        vehicle: getDescriptionValue(description, 'Vehicle'),
-        service: getDescriptionValue(description, 'Service'),
-        date: Utilities.formatDate(event.getStartTime(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
-        time: Utilities.formatDate(event.getStartTime(), Session.getScriptTimeZone(), 'h:mm a'),
-        dropOff: getDescriptionValue(description, 'Drop-off'),
-        message: getDescriptionValue(description, 'Message'),
-        marketingOptIn: getDescriptionValue(description, 'Marketing opt-in'),
-        shopNotes: getDescriptionValue(description, 'Shop Notes'),
-        status: getDescriptionValue(description, 'Status') || 'New',
-        lastUpdated: ''
-      };
-    });
-}
-
-function buildAppointmentDescription(data) {
-  return `Name: ${data.name || ''}
-Phone: ${data.phone || ''}
-Email: ${data.email || ''}
-Vehicle: ${data.vehicle || ''}
-Service: ${data.service || ''}
-Date: ${data.date || ''}
-Time: ${data.time || ''}
-Drop-off: ${data.dropOff || ''}
-Message: ${data.message || ''}
-Marketing opt-in: ${data.marketingOptIn || ''}
-Shop Notes: ${data.shopNotes || ''}
-Status: ${data.status || 'New'}`;
-}
-
-function getDescriptionValue(description, label) {
-  const regex = new RegExp(label + ':\\s*(.*)', 'i');
-  const match = description.match(regex);
-  return match ? match[1].trim() : '';
-}
-
-function removeDuplicateAppointments(appointments) {
-  const seen = {};
-
-  return appointments.filter(a => {
-    const key = a.eventId || [
-      a.name,
-      a.phone,
-      a.date,
-      a.time,
-      a.service
-    ].join('|').toLowerCase();
-
-    if (seen[key]) return false;
-
-    seen[key] = true;
-    return true;
-  });
-}
-
-function buildDate(dateRaw, timeText) {
-  const parts = String(dateRaw).split('-');
-  const year = Number(parts[0]);
-  const month = Number(parts[1]) - 1;
-  const day = Number(parts[2]);
-
-  const match = String(timeText).match(/(\d+):(\d+)\s?(AM|PM)/i);
-
-  if (!match) {
-    throw new Error('Time must look like 9:00 AM');
-  }
-
-  let hour = Number(match[1]);
-  const minute = Number(match[2]);
-  const ampm = match[3].toUpperCase();
-
-  if (ampm === 'PM' && hour !== 12) hour += 12;
-  if (ampm === 'AM' && hour === 12) hour = 0;
-
-  return new Date(year, month, day, hour, minute);
-}
-
-/* =========================
-   SHARED SHEET HELPERS
-========================= */
-
-function getAppointmentSheet() {
-  let ss;
-
-  const savedId = PropertiesService.getScriptProperties().getProperty('TOROS_APPOINTMENT_SHEET_ID');
-
-  if (savedId) {
-    ss = SpreadsheetApp.openById(savedId);
-  } else {
-    const active = SpreadsheetApp.getActiveSpreadsheet();
-
-    if (active) {
-      ss = active;
-    } else {
-      ss = SpreadsheetApp.create('Toros Auto Care Appointments');
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #163051, #0c1b30);
     }
 
-    PropertiesService.getScriptProperties().setProperty('TOROS_APPOINTMENT_SHEET_ID', ss.getId());
-  }
-
-  let sheet = ss.getSheetByName(APPOINTMENT_SHEET_NAME);
-
-  if (!sheet) {
-    sheet = ss.insertSheet(APPOINTMENT_SHEET_NAME);
-  }
-
-  ensureAppointmentSheetHeaders(sheet);
-
-  return sheet;
-}
-
-function ensureAppointmentSheet() {
-  const sheet = getAppointmentSheet();
-  ensureAppointmentSheetHeaders(sheet);
-}
-
-function ensureAppointmentSheetHeaders(sheet) {
-  const headers = [
-    'Submitted At',
-    'Calendar Event ID',
-    'Name',
-    'Phone',
-    'Email',
-    'Vehicle',
-    'Service',
-    'Date',
-    'Time',
-    'Drop-off',
-    'Message',
-    'Marketing Opt-In',
-    'Shop Notes',
-    'Status',
-    'Source',
-    'Last Updated'
-  ];
-
-  if (sheet.getLastColumn() < 1) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    return;
-  }
-
-  const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-
-  headers.forEach(header => {
-    if (!currentHeaders.includes(header)) {
-      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(header);
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      padding: 32px;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      text-align: center;
     }
-  });
-}
 
-function saveAppointmentToSheet(data) {
-  const sheet = getAppointmentSheet();
-  ensureAppointmentSheetHeaders(sheet);
-
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-
-  const row = headers.map(header => {
-    switch (header) {
-      case 'Submitted At': return new Date();
-      case 'Calendar Event ID': return data.eventId || '';
-      case 'Name': return data.name || '';
-      case 'Phone': return data.phone || '';
-      case 'Email': return data.email || '';
-      case 'Vehicle': return data.vehicle || '';
-      case 'Service': return data.service || '';
-      case 'Date': return data.date || '';
-      case 'Time': return data.time || '';
-      case 'Drop-off': return data.dropOff || '';
-      case 'Message': return data.message || '';
-      case 'Marketing Opt-In': return data.marketingOptIn || '';
-      case 'Shop Notes': return data.shopNotes || '';
-      case 'Status': return data.status || 'New';
-      case 'Source': return data.source || 'Website';
-      case 'Last Updated': return new Date();
-      default: return '';
+    .login-card img {
+      max-width: 220px;
+      margin-bottom: 20px;
     }
-  });
 
-  sheet.appendRow(row);
-}
+    .admin {
+      display: none;
+      min-height: 100vh;
+    }
 
-function updateAppointmentInSheet(data) {
-  const sheet = getAppointmentSheet();
-  ensureAppointmentSheetHeaders(sheet);
+    header {
+      background: #163051;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
 
-  const rows = sheet.getDataRange().getValues();
+    header img {
+      height: 54px;
+      background: white;
+      padding: 6px;
+      border-radius: 10px;
+    }
 
-  if (rows.length <= 1) {
-    saveAppointmentToSheet(data);
-    return;
-  }
+    .header-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-  const headers = rows[0];
-  const eventIdIndex = headers.indexOf('Calendar Event ID');
-  let rowIndex = -1;
+    .dashboard {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+      gap: 22px;
+      max-width: 1500px;
+      margin: 0 auto;
+    }
 
-  if (data.eventId && eventIdIndex !== -1) {
-    rowIndex = rows.findIndex((row, index) => index > 0 && row[eventIdIndex] === data.eventId);
-  }
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(22,48,81,0.08);
+      min-width: 0;
+    }
 
-  if (rowIndex === -1) {
-    rowIndex = rows.findIndex((row, index) => {
-      if (index === 0) return false;
+    .calendar-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
 
-      return String(getCell(headers, row, 'Name')).toLowerCase() === String(data.name).toLowerCase()
-        && String(getCell(headers, row, 'Phone')) === String(data.phone);
-    });
-  }
+    .calendar-title-wrap {
+      text-align: center;
+    }
 
-  if (rowIndex === -1) {
-    saveAppointmentToSheet(data);
-    return;
-  }
+    .calendar-title-wrap h2 {
+      margin: 0 0 10px;
+      font-size: 30px;
+    }
 
-  const rowNumber = rowIndex + 1;
+    .today-btn, .secondary-btn {
+      background: #163051;
+    }
 
-  setCell(sheet, headers, rowNumber, 'Calendar Event ID', data.eventId || '');
-  setCell(sheet, headers, rowNumber, 'Name', data.name || '');
-  setCell(sheet, headers, rowNumber, 'Phone', data.phone || '');
-  setCell(sheet, headers, rowNumber, 'Email', data.email || '');
-  setCell(sheet, headers, rowNumber, 'Vehicle', data.vehicle || '');
-  setCell(sheet, headers, rowNumber, 'Service', data.service || '');
-  setCell(sheet, headers, rowNumber, 'Date', data.date || '');
-  setCell(sheet, headers, rowNumber, 'Time', data.time || '');
-  setCell(sheet, headers, rowNumber, 'Drop-off', data.dropOff || '');
-  setCell(sheet, headers, rowNumber, 'Message', data.message || '');
-  setCell(sheet, headers, rowNumber, 'Marketing Opt-In', data.marketingOptIn || '');
-  setCell(sheet, headers, rowNumber, 'Shop Notes', data.shopNotes || '');
-  setCell(sheet, headers, rowNumber, 'Status', data.status || 'New');
-  setCell(sheet, headers, rowNumber, 'Source', data.source || 'Admin');
-  setCell(sheet, headers, rowNumber, 'Last Updated', new Date());
-}
+    .light-btn {
+      background: #eef3fa;
+      color: #163051;
+    }
 
-function getCell(headers, row, headerName) {
-  const index = headers.indexOf(headerName);
-  return index === -1 ? '' : row[index];
-}
+    .light-btn:hover {
+      background: #dfe8f4;
+    }
 
-function setCell(sheet, headers, rowNumber, headerName, value) {
-  const index = headers.indexOf(headerName);
+    .success-btn {
+      background: #1d7f4f;
+    }
 
-  if (index !== -1) {
-    sheet.getRange(rowNumber, index + 1).setValue(value);
-  }
-}
+    .success-btn:hover {
+      background: #17683f;
+    }
 
-function normalizeDateValue(value) {
-  if (!value) return '';
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
 
-  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value)) {
-    return Utilities.formatDate(value, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  }
+    .day-name {
+      text-align: center;
+      font-weight: bold;
+      font-size: 13px;
+      color: #61708a;
+      padding: 4px 0;
+    }
 
-  return String(value);
-}
+    .day {
+      min-height: 92px;
+      border: 1px solid #e4e9f2;
+      border-radius: 12px;
+      padding: 8px;
+      background: #fbfcff;
+      font-size: 13px;
+      min-width: 0;
+      overflow: hidden;
+    }
 
-function normalizeDateTimeValue(value) {
-  if (!value) return '';
+    .day.today {
+      border: 2px solid #af2727;
+      background: #fff7f7;
+    }
 
-  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value)) {
-    return Utilities.formatDate(value, Session.getScriptTimeZone(), 'EEE, MMM d, yyyy h:mm a');
-  }
+    .day-number {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
 
-  return String(value);
-}
+    .appointment-dot {
+      background: #163051;
+      color: white;
+      border-radius: 8px;
+      padding: 5px 7px;
+      margin-top: 4px;
+      font-size: 11px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
 
-function formatPrettyDate(date) {
-  return Utilities.formatDate(date, Session.getScriptTimeZone(), 'EEE, MMM d, yyyy');
-}
+    .appointment-dot:hover {
+      background: #af2727;
+    }
 
-function subscribeToKlaviyo(data) {
-  const payload = {
-    data: {
-      type: 'profile-subscription-bulk-create-job',
-      attributes: {
-        custom_source: data.service || 'Toros Auto Care Website',
-        profiles: {
-          data: [
-            {
-              type: 'profile',
-              attributes: {
-                email: data.email,
-                subscriptions: {
-                  email: {
-                    marketing: {
-                      consent: 'SUBSCRIBED'
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      },
-      relationships: {
-        list: {
-          data: {
-            type: 'list',
-            id: KLAVIYO_LIST_ID
-          }
-        }
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      min-width: 0;
+    }
+
+    .appointment {
+      border-left: 4px solid #af2727;
+      background: #f8fafd;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .appointment:hover {
+      background: #eef4ff;
+    }
+
+    .appointment strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .appointment small {
+      color: #60708a;
+      display: block;
+      margin-top: 3px;
+    }
+
+    .status-pill {
+      display: inline-block;
+      margin-top: 7px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eaf0f7;
+      color: #163051;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .empty {
+      color: #7b8797;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #af2727;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .notice {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 620px;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal h2 {
+      margin: 0 0 8px;
+      color: #163051;
+    }
+
+    .modal-date {
+      color: #af2727;
+      font-weight: bold;
+      margin-bottom: 12px;
+      font-size: 17px;
+    }
+
+    .modal p {
+      margin: 5px 0;
+      color: #40506a;
+      font-size: 14px;
+    }
+
+    .modal p strong {
+      color: #163051;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      header {
+        justify-content: center;
+        text-align: center;
+        padding: 24px 14px;
+      }
+
+      header img {
+        height: 70px;
+      }
+
+      .header-buttons {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr;
+        padding: 14px;
+        gap: 16px;
+      }
+
+      .card {
+        padding: 14px;
+        border-radius: 16px;
+      }
+
+      .calendar-header {
+        grid-template-columns: 44px 1fr 44px;
+        gap: 8px;
+      }
+
+      .calendar-header button {
+        padding: 10px;
+        min-width: 44px;
+      }
+
+      .calendar-title-wrap h2 {
+        font-size: 24px;
+      }
+
+      .calendar-grid {
+        gap: 5px;
+      }
+
+      .day-name {
+        font-size: 11px;
+      }
+
+      .day {
+        min-height: 74px;
+        padding: 5px;
+        font-size: 12px;
+        border-radius: 10px;
+      }
+
+      .appointment-dot {
+        font-size: 10px;
+        padding: 4px 5px;
+      }
+
+      .modal {
+        padding: 20px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .full {
+        grid-column: auto;
       }
     }
-  };
 
-  const klaviyoResponse = UrlFetchApp.fetch(
-    'https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/',
-    {
-      method: 'post',
-      contentType: 'application/json',
-      headers: {
-        Authorization: 'Klaviyo-API-Key ' + KLAVIYO_PRIVATE_KEY,
-        revision: '2024-10-15',
-        accept: 'application/json'
-      },
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true
+    @media (max-width: 430px) {
+      .dashboard {
+        padding: 10px;
+      }
+
+      .calendar-grid {
+        gap: 4px;
+      }
+
+      .day {
+        min-height: 62px;
+        padding: 4px;
+      }
+
+      .appointment-dot {
+        font-size: 9px;
+      }
+
+      .header-buttons button {
+        font-size: 14px;
+        padding: 12px 14px;
+      }
     }
-  );
+  </style>
+</head>
 
-  MailApp.sendEmail({
-    to: SHOP_EMAIL,
-    subject: 'Klaviyo Debug Response',
-    body:
-      'Status Code: ' + klaviyoResponse.getResponseCode() + '\n\n' +
-      'Response Body:\n' + klaviyoResponse.getContentText()
-  });
-}
+<body>
 
-function json(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+  <section class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <img src="/logo.png" alt="Toro's Auto Care Logo">
+      <h2>Admin Login</h2>
+      <p>Private appointment dashboard</p>
+      <input type="password" id="passwordInput" placeholder="Enter password" />
+      <button onclick="login()">Login</button>
+      <div class="error" id="loginError"></div>
+    </div>
+  </section>
+
+  <section class="admin" id="adminDashboard">
+    <header>
+      <img src="/logo.png" alt="Toro's Auto Care Logo">
+
+      <div class="header-buttons">
+        <button class="success-btn" onclick="openCreateModal()">+ New Appointment</button>
+
+        <a href="/admin/inspection" style="text-decoration:none;">
+          <button class="success-btn">Inspection Form</button>
+        </a>
+
+        <button onclick="loadAppointments()">Refresh Appointments</button>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <div class="card">
+        <div class="calendar-header">
+          <button onclick="changeMonth(-1)">←</button>
+
+          <div class="calendar-title-wrap">
+            <h2 id="monthTitle">Calendar</h2>
+            <button class="today-btn" onclick="goToToday()">Today</button>
+          </div>
+
+          <button onclick="changeMonth(1)">→</button>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+
+      <div class="side">
+        <div class="card">
+          <h2>Today's Appointments</h2>
+          <div id="todayAppointments" class="empty">Loading...</div>
+        </div>
+
+        <div class="card">
+          <h2>Upcoming Appointments</h2>
+          <div id="upcomingAppointments" class="empty">Loading...</div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <div class="modal-overlay" id="appointmentModal">
+    <div class="modal">
+      <h2 id="modalName">Customer</h2>
+      <div class="modal-date" id="modalDate"></div>
+
+      <div id="viewMode">
+        <p><strong>Phone:</strong> <span id="modalPhone"></span></p>
+        <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+        <p><strong>Vehicle:</strong> <span id="modalVehicle"></span></p>
+        <p><strong>Service:</strong> <span id="modalService"></span></p>
+        <p><strong>Drop-off:</strong> <span id="modalDropOff"></span></p>
+        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+        <p><strong>Customer Notes:</strong> <span id="modalNotes"></span></p>
+        <p><strong>Shop Notes:</strong> <span id="modalShopNotes"></span></p>
+        <p><strong>Source:</strong> <span id="modalSource"></span></p>
+
+        <div class="modal-actions">
+          <button id="callBtn">Call Customer</button>
+          <button class="light-btn" id="emailBtn">Email</button>
+          <button class="secondary-btn" onclick="switchToEditMode()">Edit / Reschedule</button>
+          <button class="light-btn" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+
+      <div id="editMode" class="hidden">
+        <div class="form-grid">
+          <div>
+            <label>Name</label>
+            <input id="editName">
+          </div>
+
+          <div>
+            <label>Phone</label>
+            <input id="editPhone">
+          </div>
+
+          <div>
+            <label>Email</label>
+            <input id="editEmail">
+          </div>
+
+          <div>
+            <label>Vehicle</label>
+            <input id="editVehicle">
+          </div>
+
+          <div>
+            <label>Service</label>
+            <input id="editService">
+          </div>
+
+          <div>
+            <label>Drop-off / Wait</label>
+            <select id="editDropOff">
+              <option value="">Select</option>
+              <option>Drop Off</option>
+              <option>Waiting</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Date</label>
+            <input id="editDate" type="date">
+          </div>
+
+          <div>
+            <label>Time</label>
+            <select id="editTime"></select>
+          </div>
+
+          <div>
+            <label>Status</label>
+            <select id="editStatus">
+              <option>New</option>
+              <option>Confirmed</option>
+              <option>Checked In</option>
+              <option>In Progress</option>
+              <option>Waiting Approval</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+          </div>
+
+          <div class="full">
+            <label>Customer Notes</label>
+            <textarea id="editMessage"></textarea>
+          </div>
+
+          <div class="full">
+            <label>Internal Shop Notes</label>
+            <textarea id="editShopNotes"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="success-btn" onclick="saveAppointmentEdit()">Save Changes</button>
+          <button class="light-btn" onclick="switchToViewMode()">Cancel</button>
+        </div>
+
+        <div class="notice" id="editNotice"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="createModal">
+    <div class="modal">
+      <h2>New Appointment</h2>
+      <div class="modal-date">Create an appointment from the admin portal</div>
+
+      <div class="form-grid">
+        <div>
+          <label>Name</label>
+          <input id="newName" placeholder="Customer name">
+        </div>
+
+        <div>
+          <label>Phone</label>
+          <input id="newPhone" placeholder="Phone number">
+        </div>
+
+        <div>
+          <label>Email</label>
+          <input id="newEmail" placeholder="Optional">
+        </div>
+
+        <div>
+          <label>Vehicle</label>
+          <input id="newVehicle" placeholder="Year Make Model">
+        </div>
+
+        <div>
+          <label>Service</label>
+          <input id="newService" placeholder="Oil Change, Brakes, etc.">
+        </div>
+
+        <div>
+          <label>Drop-off / Wait</label>
+          <select id="newDropOff">
+            <option value="">Select</option>
+            <option>Drop Off</option>
+            <option>Waiting</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Date</label>
+          <input id="newDate" type="date">
+        </div>
+
+        <div>
+          <label>Time</label>
+          <select id="newTime"></select>
+        </div>
+
+        <div>
+          <label>Status</label>
+          <select id="newStatus">
+            <option>New</option>
+            <option>Confirmed</option>
+            <option>Checked In</option>
+            <option>In Progress</option>
+            <option>Waiting Approval</option>
+            <option>Completed</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Send Confirmation Email?</label>
+          <select id="newSendConfirmation">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label>Customer Notes</label>
+          <textarea id="newMessage"></textarea>
+        </div>
+
+        <div class="full">
+          <label>Internal Shop Notes</label>
+          <textarea id="newShopNotes"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="success-btn" onclick="createAppointment()">Create Appointment</button>
+        <button class="light-btn" onclick="closeCreateModal()">Cancel</button>
+      </div>
+
+      <div class="notice" id="createNotice"></div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "toros123";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
+
+    let appointments = [];
+    let currentDate = new Date();
+    let selectedAppointment = null;
+
+    const appointmentTimes = [
+      "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM",
+      "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+      "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM",
+      "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM",
+      "4:00 PM", "4:30 PM", "5:00 PM"
+    ];
+
+    function login() {
+      const password = document.getElementById("passwordInput").value;
+      const error = document.getElementById("loginError");
+
+      if (password === ADMIN_PASSWORD) {
+        localStorage.setItem("torosAdminLoggedIn", "true");
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminDashboard").style.display = "block";
+        loadAppointments();
+      } else {
+        error.textContent = "Incorrect password.";
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("torosAdminLoggedIn");
+      location.reload();
+    }
+
+    async function loadAppointments() {
+      try {
+        const response = await fetch(SCRIPT_URL + "?action=getAppointments");
+        const data = await response.json();
+
+        appointments = Array.isArray(data) ? data : data.appointments || [];
+
+        renderCalendar();
+        renderLists();
+      } catch (error) {
+        console.error(error);
+        document.getElementById("todayAppointments").innerHTML = "Could not load appointments.";
+        document.getElementById("upcomingAppointments").innerHTML = "Could not load appointments.";
+        renderCalendar();
+      }
+    }
+
+    async function postToScript(payload) {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      return await response.json();
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById("calendarGrid");
+      const monthTitle = document.getElementById("monthTitle");
+
+      grid.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      monthTitle.textContent = currentDate.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric"
+      });
+
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+      dayNames.forEach(day => {
+        const div = document.createElement("div");
+        div.className = "day-name";
+        div.textContent = day;
+        grid.appendChild(div);
+      });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const blank = document.createElement("div");
+        blank.className = "day";
+        blank.style.visibility = "hidden";
+        grid.appendChild(blank);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateBox = document.createElement("div");
+        dateBox.className = "day";
+
+        const fullDate = new Date(year, month, day);
+        const dateKey = formatDate(fullDate);
+        const todayKey = formatDate(new Date());
+
+        if (dateKey === todayKey) {
+          dateBox.classList.add("today");
+        }
+
+        dateBox.innerHTML = `<div class="day-number">${day}</div>`;
+
+        const dayAppointments = appointments.filter(app => {
+          return formatAppointmentDate(app) === dateKey;
+        });
+
+        dayAppointments.slice(0, 3).forEach(app => {
+          const dot = document.createElement("div");
+          dot.className = "appointment-dot";
+          dot.textContent = `${app.time || ""} ${app.name || app.customer || "Appointment"}`;
+          dot.onclick = () => openModal(app);
+          dateBox.appendChild(dot);
+        });
+
+        grid.appendChild(dateBox);
+      }
+    }
+
+    function renderLists() {
+      const todayContainer = document.getElementById("todayAppointments");
+      const upcomingContainer = document.getElementById("upcomingAppointments");
+
+      const todayKey = formatDate(new Date());
+
+      const todayApps = appointments.filter(app => formatAppointmentDate(app) === todayKey);
+
+      const upcomingApps = appointments
+        .filter(app => formatAppointmentDate(app) > todayKey)
+        .sort((a, b) => new Date(formatAppointmentDate(a)) - new Date(formatAppointmentDate(b)))
+        .slice(0, 8);
+
+      todayContainer.innerHTML = todayApps.length
+        ? todayApps.map(renderAppointment).join("")
+        : `<p class="empty">No appointments today.</p>`;
+
+      upcomingContainer.innerHTML = upcomingApps.length
+        ? upcomingApps.map(renderAppointment).join("")
+        : `<p class="empty">No upcoming appointments.</p>`;
+
+      document.querySelectorAll("[data-app-index]").forEach(el => {
+        el.addEventListener("click", () => {
+          const index = Number(el.getAttribute("data-app-index"));
+          openModal(appointments[index]);
+        });
+      });
+    }
+
+    function renderAppointment(app) {
+      const index = appointments.indexOf(app);
+
+      return `
+        <div class="appointment" data-app-index="${index}">
+          <strong>${app.name || app.customer || "Customer"}</strong>
+          <small>${app.date || ""} ${app.time || ""}</small>
+          <small>${app.vehicle || ""}</small>
+          <small>${app.service || app.reason || ""}</small>
+          <small>${app.phone || ""}</small>
+          <span class="status-pill">${app.status || "New"}</span>
+        </div>
+      `;
+    }
+
+    function openModal(app) {
+      selectedAppointment = app;
+      switchToViewMode();
+
+      const phone = app.phone || "";
+      const email = app.email || "";
+
+      document.getElementById("modalName").textContent = app.name || app.customer || "Customer";
+      document.getElementById("modalDate").textContent = `${formatDisplayDate(app)} • ${app.time || ""}`;
+      document.getElementById("modalPhone").textContent = phone || "Not provided";
+      document.getElementById("modalEmail").textContent = email || "Not provided";
+      document.getElementById("modalVehicle").textContent = app.vehicle || "Not provided";
+      document.getElementById("modalService").textContent = app.service || app.reason || "Not provided";
+      document.getElementById("modalDropOff").textContent = app.dropOff || app.drop_off || "Not provided";
+      document.getElementById("modalStatus").textContent = app.status || "New";
+      document.getElementById("modalNotes").textContent = app.message || app.notes || "None";
+      document.getElementById("modalShopNotes").textContent = app.shopNotes || "None";
+      document.getElementById("modalSource").textContent = app.source || "Website";
+
+      document.getElementById("callBtn").onclick = () => {
+        if (phone) window.location.href = "tel:" + phone.replace(/\D/g, "");
+      };
+
+      document.getElementById("emailBtn").onclick = () => {
+        if (email) window.location.href = "mailto:" + email;
+      };
+
+      document.getElementById("appointmentModal").style.display = "flex";
+    }
+
+    function switchToEditMode() {
+      if (!selectedAppointment) return;
+
+      fillTimeOptions("editTime", selectedAppointment.time);
+
+      document.getElementById("editName").value = selectedAppointment.name || "";
+      document.getElementById("editPhone").value = selectedAppointment.phone || "";
+      document.getElementById("editEmail").value = selectedAppointment.email || "";
+      document.getElementById("editVehicle").value = selectedAppointment.vehicle || "";
+      document.getElementById("editService").value = selectedAppointment.service || "";
+      document.getElementById("editDropOff").value = selectedAppointment.dropOff || "";
+      document.getElementById("editDate").value = formatAppointmentDate(selectedAppointment);
+      document.getElementById("editStatus").value = selectedAppointment.status || "New";
+      document.getElementById("editMessage").value = selectedAppointment.message || "";
+      document.getElementById("editShopNotes").value = selectedAppointment.shopNotes || "";
+      document.getElementById("editNotice").textContent = "";
+
+      document.getElementById("viewMode").classList.add("hidden");
+      document.getElementById("editMode").classList.remove("hidden");
+    }
+
+    function switchToViewMode() {
+      document.getElementById("viewMode").classList.remove("hidden");
+      document.getElementById("editMode").classList.add("hidden");
+    }
+
+    async function saveAppointmentEdit() {
+      if (!selectedAppointment) return;
+
+      const notice = document.getElementById("editNotice");
+      notice.textContent = "Saving...";
+      notice.style.color = "#163051";
+
+      const payload = {
+        action: "updateAppointment",
+        password: ADMIN_PASSWORD,
+        eventId: selectedAppointment.eventId || "",
+        source: selectedAppointment.source || "Admin",
+        name: document.getElementById("editName").value,
+        phone: document.getElementById("editPhone").value,
+        email: document.getElementById("editEmail").value,
+        vehicle: document.getElementById("editVehicle").value,
+        service: document.getElementById("editService").value,
+        dropOff: document.getElementById("editDropOff").value,
+        date: document.getElementById("editDate").value,
+        time: document.getElementById("editTime").value,
+        status: document.getElementById("editStatus").value,
+        message: document.getElementById("editMessage").value,
+        shopNotes: document.getElementById("editShopNotes").value,
+        marketingOptIn: selectedAppointment.marketingOptIn || ""
+      };
+
+      try {
+        const result = await postToScript(payload);
+
+        if (result.status === "success") {
+          notice.textContent = "Saved.";
+          notice.style.color = "#1d7f4f";
+          await loadAppointments();
+          closeModal();
+        } else {
+          notice.textContent = result.message || "Could not save.";
+          notice.style.color = "#af2727";
+        }
+      } catch (err) {
+        notice.textContent = "Could not save.";
+        notice.style.color = "#af2727";
+      }
+    }
+
+    function openCreateModal() {
+      clearCreateForm();
+      fillTimeOptions("newTime", "9:00 AM");
+      document.getElementById("newDate").value = formatDate(new Date());
+      document.getElementById("createModal").style.display = "flex";
+    }
+
+    function closeCreateModal() {
+      document.getElementById("createModal").style.display = "none";
+    }
+
+    function clearCreateForm() {
+      ["newName", "newPhone", "newEmail", "newVehicle", "newService", "newMessage", "newShopNotes"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+
+      document.getElementById("newDropOff").value = "";
+      document.getElementById("newStatus").value = "New";
+      document.getElementById("newSendConfirmation").value = "false";
+      document.getElementById("createNotice").textContent = "";
+    }
+
+    async function createAppointment() {
+      const notice = document.getElementById("createNotice");
+      notice.textContent = "Creating...";
+      notice.style.color = "#163051";
+
+      const payload = {
+        action: "createAppointment",
+        password: ADMIN_PASSWORD,
+        name: document.getElementById("newName").value,
+        phone: document.getElementById("newPhone").value,
+        email: document.getElementById("newEmail").value,
+        vehicle: document.getElementById("newVehicle").value,
+        service: document.getElementById("newService").value,
+        dropOff: document.getElementById("newDropOff").value,
+        date: document.getElementById("newDate").value,
+        time: document.getElementById("newTime").value,
+        status: document.getElementById("newStatus").value,
+        message: document.getElementById("newMessage").value,
+        shopNotes: document.getElementById("newShopNotes").value,
+        sendConfirmation: document.getElementById("newSendConfirmation").value === "true"
+      };
+
+      if (!payload.name || !payload.phone || !payload.date || !payload.time) {
+        notice.textContent = "Name, phone, date, and time are required.";
+        notice.style.color = "#af2727";
+        return;
+      }
+
+      try {
+        const result = await postToScript(payload);
+
+        if (result.status === "success") {
+          notice.textContent = "Appointment created.";
+          notice.style.color = "#1d7f4f";
+          await loadAppointments();
+          closeCreateModal();
+        } else {
+          notice.textContent = result.message || "Could not create appointment.";
+          notice.style.color = "#af2727";
+        }
+      } catch (err) {
+        notice.textContent = "Could not create appointment.";
+        notice.style.color = "#af2727";
+      }
+    }
+
+    function closeModal() {
+      document.getElementById("appointmentModal").style.display = "none";
+    }
+
+    function fillTimeOptions(selectId, selectedValue) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = "";
+
+      appointmentTimes.forEach(time => {
+        const option = document.createElement("option");
+        option.value = time;
+        option.textContent = time;
+
+        if (time === selectedValue) {
+          option.selected = true;
+        }
+
+        select.appendChild(option);
+      });
+    }
+
+    function formatDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatAppointmentDate(app) {
+      if (!app.date) return "";
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(app.date)) return app.date;
+
+      const date = new Date(app.date);
+      if (isNaN(date)) return app.date;
+
+      return formatDate(date);
+    }
+
+    function formatDisplayDate(app) {
+      const dateKey = formatAppointmentDate(app);
+      const date = new Date(dateKey + "T12:00:00");
+
+      if (isNaN(date)) return app.date || "";
+
+      return date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      });
+    }
+
+    function changeMonth(amount) {
+      currentDate.setMonth(currentDate.getMonth() + amount);
+      renderCalendar();
+    }
+
+    function goToToday() {
+      currentDate = new Date();
+      renderCalendar();
+    }
+
+    window.onclick = function(event) {
+      const appointmentModal = document.getElementById("appointmentModal");
+      const createModal = document.getElementById("createModal");
+
+      if (event.target === appointmentModal) closeModal();
+      if (event.target === createModal) closeCreateModal();
+    };
+
+    window.onload = function () {
+      fillTimeOptions("newTime", "9:00 AM");
+      fillTimeOptions("editTime", "9:00 AM");
+
+      if (localStorage.getItem("torosAdminLoggedIn") === "true") {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminDashboard").style.display = "block";
+        loadAppointments();
+      }
+    };
+
+    document.getElementById("passwordInput").addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        login();
+      }
+    });
+  </script>
+
+</body>
+</html>
