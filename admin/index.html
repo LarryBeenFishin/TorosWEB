@@ -3,7 +3,380 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Inspection</title>
 
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #163051;
+      padding: 18px;
+    }
+
+    .wrap {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+
+    img {
+      max-width: 220px;
+    }
+
+    h1 {
+      margin: 12px 0 4px;
+    }
+
+    p {
+      color: #60708a;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 14px 0 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #d8dee9;
+      border-radius: 12px;
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .item {
+      border: 1px solid #e3eaf4;
+      border-radius: 16px;
+      padding: 16px;
+      margin: 14px 0;
+      background: #fbfcff;
+    }
+
+    .item h3 {
+      margin: 0 0 10px;
+    }
+
+    button, .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 13px 18px;
+      background: #af2727;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .blue {
+      background: #163051;
+    }
+
+    .green {
+      background: #1d7f4f;
+    }
+
+    .light {
+      background: #eef3fa;
+      color: #163051;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .result {
+      display: none;
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 16px;
+      background: #f7faff;
+      border: 1px solid #d8e3f2;
+    }
+
+    .result input {
+      margin-top: 8px;
+    }
+
+    .notice {
+      margin-top: 14px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .wrap {
+        padding: 18px;
+      }
+
+      button, .btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="wrap">
+    <div class="top">
+      <img src="/logo.png" alt="Toro's Auto Care">
+      <a class="btn blue" href="/admin">Back to Admin</a>
+    </div>
+
+    <h1>Create Vehicle Inspection</h1>
+    <p>Fill this out, create the report, then print or copy the customer link.</p>
+
+    <div class="grid">
+      <div>
+        <label>Customer Name</label>
+        <input id="customerName">
+      </div>
+
+      <div>
+        <label>Phone</label>
+        <input id="phone">
+      </div>
+
+      <div>
+        <label>Email</label>
+        <input id="email">
+      </div>
+
+      <div>
+        <label>Vehicle</label>
+        <input id="vehicle" placeholder="2017 Honda Ridgeline">
+      </div>
+
+      <div>
+        <label>Mileage</label>
+        <input id="mileage">
+      </div>
+
+      <div>
+        <label>Technician</label>
+        <input id="technician">
+      </div>
+
+      <div>
+        <label>Overall Status</label>
+        <select id="overallStatus">
+          <option>Good</option>
+          <option selected>Monitor</option>
+          <option>Needs Attention</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="inspectionItems"></div>
+
+    <label>Recommendations</label>
+    <textarea id="recommendations" placeholder="Example: Recommend front brake pads and rotors. Rear tires should be monitored."></textarea>
+
+    <div class="actions">
+      <button class="green" onclick="createInspection()">Create Inspection Report</button>
+      <a class="btn light" href="/admin">Cancel</a>
+    </div>
+
+    <div class="notice" id="notice"></div>
+
+    <div class="result" id="resultBox">
+      <h2>Inspection Created</h2>
+      <p>Customer report link:</p>
+      <input id="reportLink" readonly>
+
+      <div class="actions">
+        <button class="blue" onclick="copyLink()">Copy Link</button>
+        <a class="btn green" id="openReport" target="_blank">Open Report</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "toros123";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
+
+    const items = [
+      "Brakes",
+      "Tires",
+      "Suspension",
+      "Fluids",
+      "Battery",
+      "Lights",
+      "Wipers",
+      "Filters",
+      "Leaks"
+    ];
+
+    function buildItems() {
+      const container = document.getElementById("inspectionItems");
+
+      container.innerHTML = items.map(item => {
+        const key = item.toLowerCase();
+
+        return `
+          <div class="item">
+            <h3>${item}</h3>
+
+            <label>Status</label>
+            <select id="${key}Status">
+              <option>Good</option>
+              <option selected>Monitor</option>
+              <option>Needs Attention</option>
+            </select>
+
+            <label>Notes</label>
+            <textarea id="${key}Notes" placeholder="Add notes for ${item.toLowerCase()}..."></textarea>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function createInspection() {
+      const notice = document.getElementById("notice");
+      const resultBox = document.getElementById("resultBox");
+
+      notice.textContent = "Creating inspection...";
+      notice.style.color = "#163051";
+      resultBox.style.display = "none";
+
+      const payload = {
+        action: "createInspection",
+        password: ADMIN_PASSWORD,
+
+        customerName: document.getElementById("customerName").value,
+        phone: document.getElementById("phone").value,
+        email: document.getElementById("email").value,
+        vehicle: document.getElementById("vehicle").value,
+        mileage: document.getElementById("mileage").value,
+        technician: document.getElementById("technician").value,
+        overallStatus: document.getElementById("overallStatus").value,
+
+        brakesStatus: document.getElementById("brakesStatus").value,
+        brakesNotes: document.getElementById("brakesNotes").value,
+
+        tiresStatus: document.getElementById("tiresStatus").value,
+        tiresNotes: document.getElementById("tiresNotes").value,
+
+        suspensionStatus: document.getElementById("suspensionStatus").value,
+        suspensionNotes: document.getElementById("suspensionNotes").value,
+
+        fluidsStatus: document.getElementById("fluidsStatus").value,
+        fluidsNotes: document.getElementById("fluidsNotes").value,
+
+        batteryStatus: document.getElementById("batteryStatus").value,
+        batteryNotes: document.getElementById("batteryNotes").value,
+
+        lightsStatus: document.getElementById("lightsStatus").value,
+        lightsNotes: document.getElementById("lightsNotes").value,
+
+        wipersStatus: document.getElementById("wipersStatus").value,
+        wipersNotes: document.getElementById("wipersNotes").value,
+
+        filtersStatus: document.getElementById("filtersStatus").value,
+        filtersNotes: document.getElementById("filtersNotes").value,
+
+        leaksStatus: document.getElementById("leaksStatus").value,
+        leaksNotes: document.getElementById("leaksNotes").value,
+
+        recommendations: document.getElementById("recommendations").value
+      };
+
+      if (!payload.customerName || !payload.vehicle) {
+        notice.textContent = "Customer name and vehicle are required.";
+        notice.style.color = "#af2727";
+        return;
+      }
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.status !== "success") {
+          notice.textContent = data.message || "Could not create inspection.";
+          notice.style.color = "#af2727";
+          return;
+        }
+
+        const link = `${window.location.origin}/inspection?id=${data.inspectionId}`;
+
+        document.getElementById("reportLink").value = link;
+        document.getElementById("openReport").href = link;
+
+        notice.textContent = "Inspection created successfully.";
+        notice.style.color = "#1d7f4f";
+        resultBox.style.display = "block";
+
+      } catch (err) {
+        notice.textContent = "Could not create inspection.";
+        notice.style.color = "#af2727";
+      }
+    }
+
+    function copyLink() {
+      const input = document.getElementById("reportLink");
+      input.select();
+      input.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+
+      document.getElementById("notice").textContent = "Link copied.";
+      document.getElementById("notice").style.color = "#1d7f4f";
+    }
+
+    buildItems();
+  </script>
+
+</body>
+</html>
   <title>Vehicle Inspection Report</title>
 
   <style>
