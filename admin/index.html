@@ -1137,7 +1137,6 @@
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminDashboard").style.display = "block";
         loadAppointments();
-        setInterval(loadAppointments, 30000);
       }
     };
 
@@ -1149,13 +1148,18 @@
   </script>
 <!-- Texting Panel -->
 <button id="openTextPanelBtn" onclick="openTextPanel()" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#af2727;color:white;border:0;border-radius:14px;padding:14px 18px;font-weight:bold;box-shadow:0 8px 25px rgba(0,0,0,.25);">
-  Text Customer
+  Text Customer <span id="smsUnreadBadge" style="display:none;margin-left:8px;background:white;color:#af2727;border-radius:999px;padding:2px 7px;font-size:12px;">0</span>
 </button>
 
-<div id="textPanelOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;align-items:center;justify-content:center;padding:18px;">
-  <div style="width:100%;max-width:920px;background:white;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;max-height:92vh;display:flex;flex-direction:column;">
+<div id="smsToast" style="display:none;position:fixed;right:20px;bottom:78px;z-index:10001;background:#163051;color:white;border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:320px;font-size:14px;cursor:pointer;">
+  <div id="smsToastTitle" style="font-weight:bold;margin-bottom:4px;">New text message</div>
+  <div id="smsToastBody" style="opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+</div>
+
+<div id="textPanelOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;align-items:center;justify-content:center;padding:14px;">
+  <div style="width:100%;max-width:980px;height:min(92vh,820px);background:white;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;display:flex;flex-direction:column;">
     
-    <div style="background:#163051;color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+    <div style="background:#163051;color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-shrink:0;">
       <div>
         <div style="font-size:20px;font-weight:bold;">Texting Inbox</div>
         <div style="font-size:13px;opacity:.85;">Two-way SMS for Toro's Auto Care</div>
@@ -1163,21 +1167,21 @@
       <button onclick="closeTextPanel()" style="background:transparent;color:white;border:0;font-size:30px;cursor:pointer;padding:0;line-height:1;">×</button>
     </div>
 
-    <div style="display:grid;grid-template-columns:300px 1fr;min-height:560px;overflow:hidden;">
-      <div style="border-right:1px solid #e5e5e5;background:#f7f9fc;display:flex;flex-direction:column;min-width:0;">
-        <div style="padding:14px;border-bottom:1px solid #e5e5e5;">
+    <div id="textPanelGrid" style="display:grid;grid-template-columns:300px minmax(0,1fr);flex:1;min-height:0;overflow:hidden;">
+      <div id="smsSidebar" style="border-right:1px solid #e5e5e5;background:#f7f9fc;display:flex;flex-direction:column;min-width:0;min-height:0;">
+        <div style="padding:14px;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
           <input id="smsSearch" oninput="renderConversationList()" placeholder="Search name or phone" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:14px;">
         </div>
-        <div id="conversationList" style="overflow:auto;flex:1;padding:10px;"></div>
+        <div id="conversationList" style="overflow:auto;flex:1;padding:10px;min-height:0;"></div>
       </div>
 
-      <div style="display:flex;flex-direction:column;min-width:0;">
-        <div style="padding:14px 16px;border-bottom:1px solid #e5e5e5;background:white;">
+      <div style="display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;">
+        <div style="padding:12px 16px;border-bottom:1px solid #e5e5e5;background:white;flex-shrink:0;">
           <div id="activeConversationTitle" style="font-size:18px;font-weight:bold;color:#163051;">New Message</div>
           <div id="activeConversationSub" style="font-size:13px;color:#6b7280;margin-top:3px;">Choose a customer or enter a phone number below.</div>
         </div>
 
-        <div style="padding:14px 16px;background:#fbfcff;border-bottom:1px solid #e5e5e5;">
+        <div style="padding:12px 16px;background:#fbfcff;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div>
               <label style="font-weight:bold;font-size:13px;margin-top:0;">Customer Name</label>
@@ -1200,19 +1204,19 @@
           </select>
         </div>
 
-        <div id="smsThread" style="flex:1;overflow:auto;background:#eef3fa;padding:16px;">
+        <div id="smsThread" style="flex:1;overflow:auto;background:#eef3fa;padding:16px;min-height:0;">
           <div style="color:#777;text-align:center;margin-top:40px;">Loading messages...</div>
         </div>
 
-        <div style="padding:14px 16px;background:white;border-top:1px solid #e5e5e5;">
+        <div id="smsComposer" style="padding:12px 16px;background:white;border-top:1px solid #e5e5e5;flex-shrink:0;">
           <label style="font-weight:bold;font-size:13px;margin-top:0;">Message</label>
-          <textarea id="smsMessage" placeholder="Type your message..." style="width:100%;height:90px;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:15px;resize:vertical;"></textarea>
+          <textarea id="smsMessage" placeholder="Type your message..." style="width:100%;height:76px;min-height:76px;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:15px;resize:vertical;"></textarea>
 
-          <button onclick="sendCustomerText()" style="width:100%;background:#af2727;color:white;border:0;border-radius:12px;padding:14px;font-weight:bold;font-size:16px;cursor:pointer;margin-top:10px;">
+          <button onclick="sendCustomerText()" style="width:100%;background:#af2727;color:white;border:0;border-radius:12px;padding:13px;font-weight:bold;font-size:16px;cursor:pointer;margin-top:8px;">
             Send Text
           </button>
 
-          <div id="smsStatus" style="margin-top:10px;font-size:14px;font-weight:bold;"></div>
+          <div id="smsStatus" style="margin-top:8px;font-size:14px;font-weight:bold;min-height:18px;"></div>
         </div>
       </div>
     </div>
@@ -1221,12 +1225,22 @@
 
 <style>
   @media (max-width: 760px) {
-    #textPanelOverlay > div > div:nth-child(2) {
-      grid-template-columns: 1fr !important;
-      min-height: 72vh !important;
+    #textPanelOverlay { padding:8px !important; }
+    #textPanelOverlay > div {
+      height:94vh !important;
+      border-radius:14px !important;
     }
-    #conversationList {
-      max-height: 170px;
+    #textPanelGrid {
+      grid-template-columns:1fr !important;
+    }
+    #smsSidebar {
+      max-height:190px;
+      border-right:0 !important;
+      border-bottom:1px solid #e5e5e5;
+    }
+    #smsComposer textarea {
+      height:64px !important;
+      min-height:64px !important;
     }
   }
 </style>
@@ -1235,13 +1249,159 @@
 let smsMessages = [];
 let activeSmsPhone = "";
 let smsRefreshTimer = null;
-let lastMessageCount = 0;
+let smsGlobalTimer = null;
+let appointmentRefreshTimer = null;
+let lastIncomingKey = localStorage.getItem("torosLastIncomingKey") || "";
+let unreadPhones = new Set(JSON.parse(localStorage.getItem("torosUnreadSmsPhones") || "[]"));
+let audioReady = false;
+let audioContext = null;
 
-const notificationSound = new Audio(
-  "https://actions.google.com/sounds/v1/notifications/message_pop_alert.ogg"
-);
+function unlockNotificationSound() {
+  if (audioReady) return;
+
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const buffer = audioContext.createBuffer(1, 1, 22050);
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.start(0);
+    audioReady = true;
+  } catch (err) {
+    audioReady = false;
+  }
+}
+
+document.addEventListener("click", unlockNotificationSound, { once: true });
+document.addEventListener("touchstart", unlockNotificationSound, { once: true });
+
+function playNotificationSound() {
+  try {
+    if (!audioContext) unlockNotificationSound();
+    if (!audioContext) return;
+
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
+
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(660, audioContext.currentTime + 0.09);
+
+    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.22);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.24);
+  } catch (err) {}
+}
+
+function startAppointmentAutoRefresh() {
+  if (appointmentRefreshTimer) return;
+
+  appointmentRefreshTimer = setInterval(() => {
+    if (localStorage.getItem("torosAdminLoggedIn") === "true") {
+      loadAppointments();
+    }
+  }, 30000);
+}
+
+function startSmsGlobalPolling() {
+  if (smsGlobalTimer) return;
+
+  pollSmsInBackground(true);
+
+  smsGlobalTimer = setInterval(() => {
+    pollSmsInBackground(false);
+  }, 4000);
+}
+
+async function pollSmsInBackground(initialLoad) {
+  if (localStorage.getItem("torosAdminLoggedIn") !== "true") return;
+
+  try {
+    const response = await fetch('/api/get-sheet-messages?cacheBust=' + Date.now());
+    const data = await response.json();
+    const messages = Array.isArray(data.messages) ? data.messages : [];
+    const latestIncoming = messages.find(msg => msg.type === "incoming");
+
+    if (latestIncoming) {
+      const incomingKey = getMessageKey(latestIncoming);
+
+      if (!lastIncomingKey) {
+        lastIncomingKey = incomingKey;
+        localStorage.setItem("torosLastIncomingKey", lastIncomingKey);
+      } else if (!initialLoad && incomingKey !== lastIncomingKey) {
+        const phoneKey = normalizePhone(latestIncoming.phone);
+        unreadPhones.add(phoneKey);
+        saveUnreadPhones();
+        lastIncomingKey = incomingKey;
+        localStorage.setItem("torosLastIncomingKey", lastIncomingKey);
+        updateUnreadBadge();
+        showSmsToast(latestIncoming);
+        playNotificationSound();
+      }
+    }
+
+    smsMessages = messages;
+    updateUnreadBadge();
+
+    if (document.getElementById("textPanelOverlay")?.style.display === "flex") {
+      renderConversationList();
+      renderActiveThread(false);
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function showSmsToast(msg) {
+  const toast = document.getElementById("smsToast");
+  const title = document.getElementById("smsToastTitle");
+  const body = document.getElementById("smsToastBody");
+
+  if (!toast || !title || !body) return;
+
+  title.innerText = "New text from " + (msg.name && msg.name !== "Customer" ? msg.name : displayPhone(msg.phone));
+  body.innerText = msg.message || "";
+  toast.style.display = "block";
+  toast.onclick = () => {
+    openTextPanel();
+    selectConversation(normalizePhone(msg.phone));
+    toast.style.display = "none";
+  };
+
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 6000);
+}
+
+function saveUnreadPhones() {
+  localStorage.setItem("torosUnreadSmsPhones", JSON.stringify(Array.from(unreadPhones)));
+}
+
+function updateUnreadBadge() {
+  const badge = document.getElementById("smsUnreadBadge");
+  if (!badge) return;
+
+  const count = unreadPhones.size;
+  badge.innerText = count;
+  badge.style.display = count ? "inline-block" : "none";
+}
+
+function getMessageKey(msg) {
+  return [msg.sid || "", msg.date || "", msg.phone || "", msg.message || ""].join("|");
+}
 
 function openTextPanel() {
+  unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
   loadSmsHistory();
 
@@ -1297,16 +1457,19 @@ async function loadSmsHistory() {
   const threadBox = document.getElementById("smsThread");
 
   try {
-    const response = await fetch('/api/get-sheet-messages');
+    const response = await fetch('/api/get-sheet-messages?cacheBust=' + Date.now());
     const data = await response.json();
 
     smsMessages = Array.isArray(data.messages) ? data.messages : [];
 
-    if (lastMessageCount && smsMessages.length > lastMessageCount) {
-      notificationSound.play().catch(() => {});
+    const latestIncoming = smsMessages.find(msg => msg.type === "incoming");
+    if (latestIncoming) {
+      const incomingKey = getMessageKey(latestIncoming);
+      if (!lastIncomingKey) {
+        lastIncomingKey = incomingKey;
+        localStorage.setItem("torosLastIncomingKey", lastIncomingKey);
+      }
     }
-
-    lastMessageCount = smsMessages.length;
 
     renderConversationList();
 
@@ -1314,8 +1477,10 @@ async function loadSmsHistory() {
       const firstPhone = normalizePhone(smsMessages[0].phone);
       selectConversation(firstPhone, false);
     } else {
-      renderActiveThread();
+      renderActiveThread(false);
     }
+
+    updateUnreadBadge();
 
   } catch (err) {
     console.error(err);
@@ -1370,6 +1535,7 @@ function renderConversationList() {
     const active = group.phoneKey === activeSmsPhone;
     const latestText = latest.message || "";
     const incoming = latest.type === "incoming";
+    const unread = unreadPhones.has(group.phoneKey);
 
     return `
       <div onclick="selectConversation('${escapeJs(group.phoneKey)}')" style="
@@ -1381,13 +1547,15 @@ function renderConversationList() {
         margin-bottom:9px;
         cursor:pointer;
         box-shadow:0 2px 8px rgba(0,0,0,.04);
+        position:relative;
       ">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+        ${unread ? '<span style="position:absolute;top:10px;right:10px;width:10px;height:10px;background:#af2727;border-radius:999px;border:2px solid white;"></span>' : ''}
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding-right:${unread ? '20px' : '0'};">
           <div style="font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(group.name)}</div>
           <div style="font-size:11px;opacity:.75;white-space:nowrap;">${formatShortDate(latest.date)}</div>
         </div>
         <div style="font-size:12px;opacity:.8;margin-top:3px;">${escapeHtml(group.phone)}</div>
-        <div style="font-size:12px;margin-top:6px;opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        <div style="font-size:12px;margin-top:6px;opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:${unread ? 'bold' : 'normal'};">
           ${incoming ? '↩ ' : '↪ '} ${escapeHtml(latestText)}
         </div>
       </div>
@@ -1397,6 +1565,9 @@ function renderConversationList() {
 
 function selectConversation(phoneKey, rerenderList = true) {
   activeSmsPhone = phoneKey;
+  unreadPhones.delete(phoneKey);
+  saveUnreadPhones();
+  updateUnreadBadge();
 
   const group = getConversationGroups().find(g => g.phoneKey === phoneKey);
 
@@ -1411,7 +1582,7 @@ function selectConversation(phoneKey, rerenderList = true) {
   if (rerenderList) renderConversationList();
 }
 
-function renderActiveThread() {
+function renderActiveThread(forceScroll = true) {
   const threadBox = document.getElementById("smsThread");
 
   if (!smsMessages.length) {
@@ -1431,6 +1602,8 @@ function renderActiveThread() {
     threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>No messages for this customer yet.</div>";
     return;
   }
+
+  const wasNearBottom = threadBox.scrollHeight - threadBox.scrollTop - threadBox.clientHeight < 120;
 
   threadBox.innerHTML = thread.map(msg => {
     const outgoing = msg.type === "outgoing";
@@ -1455,7 +1628,11 @@ function renderActiveThread() {
     `;
   }).join("");
 
-  threadBox.scrollTop = threadBox.scrollHeight;
+  if (forceScroll || wasNearBottom) {
+    requestAnimationFrame(() => {
+      threadBox.scrollTop = threadBox.scrollHeight;
+    });
+  }
 }
 
 async function sendCustomerText() {
@@ -1543,6 +1720,30 @@ function escapeHtml(text) {
 
 function escapeJs(text) {
   return String(text || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+const originalLoginFunction = window.login;
+window.login = function() {
+  originalLoginFunction();
+
+  if (localStorage.getItem("torosAdminLoggedIn") === "true") {
+    startAppointmentAutoRefresh();
+    startSmsGlobalPolling();
+  }
+};
+
+window.addEventListener("load", function() {
+  updateUnreadBadge();
+
+  if (localStorage.getItem("torosAdminLoggedIn") === "true") {
+    startAppointmentAutoRefresh();
+    startSmsGlobalPolling();
+  }
+});
+
+const toastBox = document.getElementById("smsToast");
+if (toastBox) {
+  toastBox.addEventListener("click", unlockNotificationSound);
 }
 </script>
 </body>
