@@ -1,7 +1,8 @@
 const twilio = require("twilio");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = async function handler(req, res) {
-
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
@@ -10,7 +11,6 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-
     const { to, message } = req.body;
 
     const client = twilio(
@@ -24,18 +24,33 @@ module.exports = async function handler(req, res) {
       to: to
     });
 
+    const filePath = path.join(process.cwd(), "messages.json");
+
+    let messages = [];
+
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, "utf8");
+      messages = JSON.parse(raw || "[]");
+    }
+
+    messages.unshift({
+      type: "outgoing",
+      phone: to,
+      message: message,
+      date: new Date().toISOString()
+    });
+
+    fs.writeFileSync(filePath, JSON.stringify(messages, null, 2));
+
     return res.status(200).json({
       success: true,
       sid: result.sid
     });
 
   } catch (err) {
-
     return res.status(500).json({
       success: false,
       error: err.message
     });
-
   }
-
 };
