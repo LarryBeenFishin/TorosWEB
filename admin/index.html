@@ -1324,40 +1324,5 @@ function escapeHtml(text) {
   });
 }
 </script>
-  <script>
-async function loadServerMessages() {
-  try {
-    const response = await fetch('/api/get-messages');
-    const messages = await response.json();
-    const box = document.getElementById('smsHistory');
-
-    if (!messages.length) {
-      box.innerHTML = "<div style='color:#777;'>No messages yet.</div>";
-      return;
-    }
-
-    box.innerHTML = messages.map(msg => {
-      const incoming = msg.type === 'incoming';
-
-      return `
-        <div style="background:${incoming ? '#ffffff' : '#e7f1ff'};border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid #ddd;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <div style="font-weight:bold;">${incoming ? 'Customer' : "Toro's Auto Care"}</div>
-            <div style="font-size:11px;color:#777;">${new Date(msg.date).toLocaleString()}</div>
-          </div>
-          <div style="font-size:12px;color:#666;margin-bottom:6px;">${msg.phone}</div>
-          <div style="font-size:14px;line-height:1.4;">${msg.message}</div>
-        </div>
-      `;
-    }).join('');
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-setInterval(loadServerMessages, 3000);
-loadServerMessages();
-</script>
 </body>
 </html>
