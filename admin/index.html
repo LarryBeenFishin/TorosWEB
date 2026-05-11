@@ -1267,13 +1267,6 @@ async function sendCustomerText() {
       status.style.color = "green";
       status.innerText = "Text sent!";
 
-      saveSmsHistory({
-        name: name || "Customer",
-        phone: phone,
-        message: message,
-        date: new Date().toLocaleString()
-      });
-
       document.getElementById("smsMessage").value = "";
       document.getElementById("smsTemplate").value = "";
       loadSmsHistory();
@@ -1289,28 +1282,44 @@ async function sendCustomerText() {
   }
 }
 
-function saveSmsHistory(item) {
-  const history = JSON.parse(localStorage.getItem("smsHistory") || "[]");
-  history.unshift(item);
-  localStorage.setItem("smsHistory", JSON.stringify(history.slice(0, 20)));
+async function loadSmsHistory() {
+  const box = document.getElementById("smsHistory");
+
+  try {
+    const response = await fetch("/api/get-sheet-messages");
+    const data = await response.json();
+
+    if (!data.success) {
+      box.innerHTML = `<div style='color:#af2727;'>Could not load messages: ${escapeHtml(data.error || "Unknown error")}</div>`;
+      return;
+    }
+
+    if (!data.messages || !data.messages.length) {
+      box.innerHTML = "<div style='color:#777;'>No messages yet.</div>";
+      return;
+    }
+
+    box.innerHTML = data.messages.map(item => `
+      <div style="background:white;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #e5e5e5;">
+        <div style="font-weight:bold;">
+          ${escapeHtml(item.name || "Customer")} • ${escapeHtml(item.phone || "")}
+        </div>
+        <div style="color:#777;font-size:12px;margin:3px 0;">
+          ${escapeHtml(formatSmsDate(item.date))}
+        </div>
+        <div>${escapeHtml(item.message || "")}</div>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    box.innerHTML = `<div style='color:#af2727;'>Could not load messages: ${escapeHtml(err.message)}</div>`;
+  }
 }
 
-function loadSmsHistory() {
-  const box = document.getElementById("smsHistory");
-  const history = JSON.parse(localStorage.getItem("smsHistory") || "[]");
-
-  if (!history.length) {
-    box.innerHTML = "<div style='color:#777;'>No messages sent yet.</div>";
-    return;
-  }
-
-  box.innerHTML = history.map(item => `
-    <div style="background:white;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #e5e5e5;">
-      <div style="font-weight:bold;">${escapeHtml(item.name)} • ${escapeHtml(item.phone)}</div>
-      <div style="color:#777;font-size:12px;margin:3px 0;">${escapeHtml(item.date)}</div>
-      <div>${escapeHtml(item.message)}</div>
-    </div>
-  `).join("");
+function formatSmsDate(value) {
+  const date = new Date(value);
+  if (isNaN(date)) return value || "";
+  return date.toLocaleString();
 }
 
 function escapeHtml(text) {
@@ -1324,6 +1333,8 @@ function escapeHtml(text) {
     }[match];
   });
 }
+
+setInterval(loadSmsHistory, 5000);
 </script>
 </body>
 </html>
