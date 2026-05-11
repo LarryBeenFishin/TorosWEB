@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow">
 
   <title>Toro's Auto Care Admin</title>
 
@@ -1247,10 +1248,18 @@
 
 <script>
 let smsMessages = [];
+try {
+  smsMessages = JSON.parse(localStorage.getItem("torosSmsMessageCache") || "[]");
+} catch (err) {
+  smsMessages = [];
+}
 let activeSmsPhone = "";
 let smsRefreshTimer = null;
 let smsGlobalTimer = null;
 let appointmentRefreshTimer = null;
+let smsLoadedOnce = smsMessages.length > 0;
+let smsLoading = false;
+let lastSmsFetchTime = 0;
 let lastIncomingKey = localStorage.getItem("torosLastIncomingKey") || "";
 let unreadPhones = new Set(JSON.parse(localStorage.getItem("torosUnreadSmsPhones") || "[]"));
 let audioReady = false;
@@ -1356,12 +1365,11 @@ async function pollSmsInBackground(initialLoad) {
       }
     }
 
-    smsMessages = messages;
+    cacheSmsMessages(messages);
     updateUnreadBadge();
 
     if (document.getElementById("textPanelOverlay")?.style.display === "flex") {
-      renderConversationList();
-      renderActiveThread(false);
+      renderSmsInboxFromCache();
     }
 
   } catch (err) {
@@ -1403,6 +1411,29 @@ function updateUnreadBadge() {
   badge.style.display = count ? "inline-block" : "none";
 }
 
+function cacheSmsMessages(messages) {
+  smsMessages = Array.isArray(messages) ? messages : [];
+  smsLoadedOnce = true;
+  lastSmsFetchTime = Date.now();
+
+  try {
+    localStorage.setItem("torosSmsMessageCache", JSON.stringify(smsMessages.slice(0, 250)));
+  } catch (err) {}
+}
+
+function renderSmsInboxFromCache() {
+  renderConversationList();
+
+  if (!activeSmsPhone && smsMessages.length) {
+    const firstPhone = normalizePhone(smsMessages[0].phone);
+    selectConversation(firstPhone, false);
+  } else {
+    renderActiveThread(false);
+  }
+
+  updateUnreadBadge();
+}
+
 function getMessageKey(msg) {
   return [msg.sid || "", msg.date || "", msg.phone || "", msg.message || ""].join("|");
 }
@@ -1416,7 +1447,20 @@ function openTextPanel() {
   saveUnreadPhones();
   updateUnreadBadge();
 
-  loadSmsHistory();
+  // Show cached/preloaded conversations immediately instead of waiting on Google Sheets.
+  if (smsMessages.length) {
+    renderSmsInboxFromCache();
+  } else {
+    const threadBox = document.getElementById("smsThread");
+    const listBox = document.getElementById("conversationList");
+    if (listBox) listBox.innerHTML = "<div style='color:#777;padding:12px;'>Loading conversations...</div>";
+    if (threadBox) threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Loading messages...</div>";
+  }
+
+  // Refresh in the background only when the cache is stale.
+  if (!smsLoading && Date.now() - lastSmsFetchTime > 2500) {
+    loadSmsHistory();
+  }
 
   if (!smsRefreshTimer) {
     smsRefreshTimer = setInterval(loadSmsHistory, 3000);
@@ -1469,11 +1513,15 @@ function displayPhone(phone) {
 async function loadSmsHistory() {
   const threadBox = document.getElementById("smsThread");
 
+  if (smsLoading) return;
+  smsLoading = true;
+
   try {
     const response = await fetch('/api/get-sheet-messages?cacheBust=' + Date.now());
     const data = await response.json();
+    const messages = Array.isArray(data.messages) ? data.messages : [];
 
-    smsMessages = Array.isArray(data.messages) ? data.messages : [];
+    cacheSmsMessages(messages);
 
     const latestIncoming = smsMessages.find(msg => msg.type === "incoming");
     if (latestIncoming) {
@@ -1484,20 +1532,15 @@ async function loadSmsHistory() {
       }
     }
 
-    renderConversationList();
-
-    if (!activeSmsPhone && smsMessages.length) {
-      const firstPhone = normalizePhone(smsMessages[0].phone);
-      selectConversation(firstPhone, false);
-    } else {
-      renderActiveThread(false);
-    }
-
-    updateUnreadBadge();
+    renderSmsInboxFromCache();
 
   } catch (err) {
     console.error(err);
-    threadBox.innerHTML = "<div style='color:#af2727;text-align:center;'>Could not load messages.</div>";
+    if (!smsMessages.length) {
+      threadBox.innerHTML = "<div style='color:#af2727;text-align:center;'>Could not load messages.</div>";
+    }
+  } finally {
+    smsLoading = false;
   }
 }
 
