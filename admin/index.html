@@ -724,7 +724,7 @@
   </div>
 
   <script>
-    const ADMIN_PASSWORD = "toros123";
+    // Password is checked securely through /api/admin-login, not stored in this HTML.
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
 
     let appointments = [];
@@ -739,17 +739,44 @@
       "4:00 PM", "4:30 PM", "5:00 PM"
     ];
 
-    function login() {
+    async function login() {
       const password = document.getElementById("passwordInput").value;
       const error = document.getElementById("loginError");
 
-      if (password === ADMIN_PASSWORD) {
-        localStorage.setItem("torosAdminLoggedIn", "true");
-        document.getElementById("loginScreen").style.display = "none";
-        document.getElementById("adminDashboard").style.display = "block";
-        loadAppointments();
-      } else {
-        error.textContent = "Incorrect password.";
+      error.textContent = "Checking...";
+
+      try {
+        const response = await fetch("/api/admin-login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ password: password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          localStorage.setItem("torosAdminLoggedIn", "true");
+          document.getElementById("loginScreen").style.display = "none";
+          document.getElementById("adminDashboard").style.display = "block";
+          error.textContent = "";
+          loadAppointments();
+
+          if (typeof startAppointmentAutoRefresh === "function") {
+            startAppointmentAutoRefresh();
+          }
+
+          if (typeof startSmsGlobalPolling === "function") {
+            startSmsGlobalPolling();
+          }
+        } else {
+          localStorage.removeItem("torosAdminLoggedIn");
+          error.textContent = "Incorrect password.";
+        }
+      } catch (err) {
+        localStorage.removeItem("torosAdminLoggedIn");
+        error.textContent = "Login error. Try again.";
       }
     }
 
@@ -956,7 +983,6 @@
 
       const payload = {
         action: "updateAppointment",
-        password: ADMIN_PASSWORD,
         eventId: selectedAppointment.eventId || "",
         source: selectedAppointment.source || "Admin",
         name: document.getElementById("editName").value,
@@ -1020,7 +1046,6 @@
 
       const payload = {
         action: "createAppointment",
-        password: ADMIN_PASSWORD,
         name: document.getElementById("newName").value,
         phone: document.getElementById("newPhone").value,
         email: document.getElementById("newEmail").value,
@@ -1138,6 +1163,14 @@
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminDashboard").style.display = "block";
         loadAppointments();
+
+        if (typeof startAppointmentAutoRefresh === "function") {
+          startAppointmentAutoRefresh();
+        }
+
+        if (typeof startSmsGlobalPolling === "function") {
+          startSmsGlobalPolling();
+        }
       }
     };
 
@@ -1778,15 +1811,6 @@ function escapeJs(text) {
   return String(text || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
-const originalLoginFunction = window.login;
-window.login = function() {
-  originalLoginFunction();
-
-  if (localStorage.getItem("torosAdminLoggedIn") === "true") {
-    startAppointmentAutoRefresh();
-    startSmsGlobalPolling();
-  }
-};
 
 window.addEventListener("load", function() {
   updateUnreadBadge();
