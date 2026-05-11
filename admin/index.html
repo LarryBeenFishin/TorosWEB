@@ -1256,7 +1256,8 @@ async function sendCustomerText() {
       },
       body: JSON.stringify({
         to: phone,
-        message: message
+        message: message,
+        name: name
       })
     });
 
