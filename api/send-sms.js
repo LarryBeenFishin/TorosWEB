@@ -9,7 +9,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { to, message } = req.body;
+    const { to, message, name } = req.body;
 
     const client = twilio(
       process.env.TWILIO_ACCOUNT_SID,
@@ -20,6 +20,21 @@ module.exports = async function handler(req, res) {
       body: message,
       from: process.env.TWILIO_PHONE_NUMBER,
       to: to
+    });
+
+    await fetch(process.env.SHEETS_WEB_APP_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain"
+      },
+      body: JSON.stringify({
+        secret: process.env.SHEETS_SECRET_KEY,
+        type: "outgoing",
+        name: name || "",
+        phone: to,
+        message: message,
+        sid: result.sid
+      })
     });
 
     return res.status(200).json({
