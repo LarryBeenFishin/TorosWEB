@@ -1146,36 +1146,182 @@
       }
     });
   </script>
-<button onclick="sendTestText()" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#af2727;color:white;border:0;border-radius:12px;padding:14px 18px;font-weight:bold;">
-  Send Test Text
+<!-- Texting Panel -->
+<button id="openTextPanelBtn" onclick="openTextPanel()" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#af2727;color:white;border:0;border-radius:14px;padding:14px 18px;font-weight:bold;box-shadow:0 8px 25px rgba(0,0,0,.25);">
+  Text Customer
 </button>
 
+<div id="textPanelOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;align-items:center;justify-content:center;padding:18px;">
+  <div style="width:100%;max-width:560px;background:white;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;">
+    
+    <div style="background:#163051;color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:20px;font-weight:bold;">Text Customer</div>
+        <div style="font-size:13px;opacity:.85;">Send SMS from Toro's Auto Care</div>
+      </div>
+      <button onclick="closeTextPanel()" style="background:transparent;color:white;border:0;font-size:28px;cursor:pointer;">×</button>
+    </div>
+
+    <div style="padding:18px;">
+      <label style="font-weight:bold;font-size:13px;">Customer Name</label>
+      <input id="smsCustomerName" placeholder="John Smith" style="width:100%;padding:12px;margin:6px 0 14px;border:1px solid #ccc;border-radius:10px;font-size:15px;">
+
+      <label style="font-weight:bold;font-size:13px;">Phone Number</label>
+      <input id="smsPhone" placeholder="+18475551234" style="width:100%;padding:12px;margin:6px 0 14px;border:1px solid #ccc;border-radius:10px;font-size:15px;">
+
+      <label style="font-weight:bold;font-size:13px;">Quick Templates</label>
+      <select id="smsTemplate" onchange="useSmsTemplate()" style="width:100%;padding:12px;margin:6px 0 14px;border:1px solid #ccc;border-radius:10px;font-size:15px;">
+        <option value="">Choose a template</option>
+        <option value="Hi, this is Toro's Auto Care. Your appointment has been confirmed. Reply here if you have any questions.">Appointment Confirmed</option>
+        <option value="Hi, this is Toro's Auto Care. Your vehicle inspection is ready. Please review it when you have a chance.">Inspection Ready</option>
+        <option value="Hi, this is Toro's Auto Care. Your vehicle is ready for pickup. Thank you!">Vehicle Ready</option>
+        <option value="Hi, this is Toro's Auto Care. Just checking in to see if you had any questions about your estimate.">Estimate Follow-Up</option>
+        <option value="Thank you for choosing Toro's Auto Care. If you had a great experience, we would really appreciate a Google review.">Review Request</option>
+      </select>
+
+      <label style="font-weight:bold;font-size:13px;">Message</label>
+      <textarea id="smsMessage" placeholder="Type your message..." style="width:100%;height:120px;padding:12px;margin:6px 0 14px;border:1px solid #ccc;border-radius:10px;font-size:15px;resize:vertical;"></textarea>
+
+      <button onclick="sendCustomerText()" style="width:100%;background:#af2727;color:white;border:0;border-radius:12px;padding:14px;font-weight:bold;font-size:16px;cursor:pointer;">
+        Send Text
+      </button>
+
+      <div id="smsStatus" style="margin-top:12px;font-size:14px;font-weight:bold;"></div>
+
+      <hr style="margin:18px 0;border:0;border-top:1px solid #eee;">
+
+      <div style="font-weight:bold;margin-bottom:8px;">Recent Sent Messages</div>
+      <div id="smsHistory" style="max-height:180px;overflow:auto;background:#f7f7f7;border-radius:12px;padding:10px;font-size:13px;"></div>
+    </div>
+  </div>
+</div>
+
 <script>
-async function sendTestText() {
-  const phone = prompt("Enter phone number like +18475551234");
-  if (!phone) return;
+function openTextPanel() {
+  document.getElementById("textPanelOverlay").style.display = "flex";
+  loadSmsHistory();
+}
 
-  const message = prompt("Enter message");
-  if (!message) return;
+function closeTextPanel() {
+  document.getElementById("textPanelOverlay").style.display = "none";
+}
 
-  const response = await fetch("/api/send-sms", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      to: phone,
-      message: message
-    })
-  });
-
-  const data = await response.json();
-
-  if (data.success) {
-    alert("Text sent!");
-  } else {
-    alert("Error: " + data.error);
+function useSmsTemplate() {
+  const template = document.getElementById("smsTemplate").value;
+  if (template) {
+    document.getElementById("smsMessage").value = template;
   }
+}
+
+function formatPhoneNumber(phone) {
+  phone = phone.trim();
+
+  if (phone.startsWith("+1")) return phone;
+
+  phone = phone.replace(/\D/g, "");
+
+  if (phone.length === 10) {
+    return "+1" + phone;
+  }
+
+  if (phone.length === 11 && phone.startsWith("1")) {
+    return "+" + phone;
+  }
+
+  return phone;
+}
+
+async function sendCustomerText() {
+  const name = document.getElementById("smsCustomerName").value.trim();
+  let phone = document.getElementById("smsPhone").value.trim();
+  const message = document.getElementById("smsMessage").value.trim();
+  const status = document.getElementById("smsStatus");
+
+  if (!phone || !message) {
+    status.style.color = "#af2727";
+    status.innerText = "Phone number and message are required.";
+    return;
+  }
+
+  phone = formatPhoneNumber(phone);
+
+  status.style.color = "#163051";
+  status.innerText = "Sending...";
+
+  try {
+    const response = await fetch("/api/send-sms", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        to: phone,
+        message: message
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      status.style.color = "green";
+      status.innerText = "Text sent!";
+
+      saveSmsHistory({
+        name: name || "Customer",
+        phone: phone,
+        message: message,
+        date: new Date().toLocaleString()
+      });
+
+      document.getElementById("smsMessage").value = "";
+      document.getElementById("smsTemplate").value = "";
+      loadSmsHistory();
+
+    } else {
+      status.style.color = "#af2727";
+      status.innerText = "Error: " + data.error;
+    }
+
+  } catch (error) {
+    status.style.color = "#af2727";
+    status.innerText = "Error: " + error.message;
+  }
+}
+
+function saveSmsHistory(item) {
+  const history = JSON.parse(localStorage.getItem("smsHistory") || "[]");
+  history.unshift(item);
+  localStorage.setItem("smsHistory", JSON.stringify(history.slice(0, 20)));
+}
+
+function loadSmsHistory() {
+  const box = document.getElementById("smsHistory");
+  const history = JSON.parse(localStorage.getItem("smsHistory") || "[]");
+
+  if (!history.length) {
+    box.innerHTML = "<div style='color:#777;'>No messages sent yet.</div>";
+    return;
+  }
+
+  box.innerHTML = history.map(item => `
+    <div style="background:white;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #e5e5e5;">
+      <div style="font-weight:bold;">${escapeHtml(item.name)} • ${escapeHtml(item.phone)}</div>
+      <div style="color:#777;font-size:12px;margin:3px 0;">${escapeHtml(item.date)}</div>
+      <div>${escapeHtml(item.message)}</div>
+    </div>
+  `).join("");
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, function(match) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[match];
+  });
 }
 </script>
 </body>
