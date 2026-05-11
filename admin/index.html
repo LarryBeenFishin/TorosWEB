@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="robots" content="noindex, nofollow">
 
   <title>Toro's Auto Care Admin</title>
 
@@ -724,7 +723,7 @@
   </div>
 
   <script>
-    // Password is checked securely through /api/admin-login, not stored in this HTML.
+    const ADMIN_PASSWORD = "toros123";
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
 
     let appointments = [];
@@ -739,44 +738,17 @@
       "4:00 PM", "4:30 PM", "5:00 PM"
     ];
 
-    async function login() {
+    function login() {
       const password = document.getElementById("passwordInput").value;
       const error = document.getElementById("loginError");
 
-      error.textContent = "Checking...";
-
-      try {
-        const response = await fetch("/api/admin-login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ password: password })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          localStorage.setItem("torosAdminLoggedIn", "true");
-          document.getElementById("loginScreen").style.display = "none";
-          document.getElementById("adminDashboard").style.display = "block";
-          error.textContent = "";
-          loadAppointments();
-
-          if (typeof startAppointmentAutoRefresh === "function") {
-            startAppointmentAutoRefresh();
-          }
-
-          if (typeof startSmsGlobalPolling === "function") {
-            startSmsGlobalPolling();
-          }
-        } else {
-          localStorage.removeItem("torosAdminLoggedIn");
-          error.textContent = "Incorrect password.";
-        }
-      } catch (err) {
-        localStorage.removeItem("torosAdminLoggedIn");
-        error.textContent = "Login error. Try again.";
+      if (password === ADMIN_PASSWORD) {
+        localStorage.setItem("torosAdminLoggedIn", "true");
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminDashboard").style.display = "block";
+        loadAppointments();
+      } else {
+        error.textContent = "Incorrect password.";
       }
     }
 
@@ -803,8 +775,11 @@
     }
 
     async function postToScript(payload) {
-      const response = await fetch(SCRIPT_URL, {
+      const response = await fetch("/api/admin-appointment", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify(payload)
       });
 
@@ -983,6 +958,7 @@
 
       const payload = {
         action: "updateAppointment",
+        password: ADMIN_PASSWORD,
         eventId: selectedAppointment.eventId || "",
         source: selectedAppointment.source || "Admin",
         name: document.getElementById("editName").value,
@@ -1046,6 +1022,7 @@
 
       const payload = {
         action: "createAppointment",
+        password: ADMIN_PASSWORD,
         name: document.getElementById("newName").value,
         phone: document.getElementById("newPhone").value,
         email: document.getElementById("newEmail").value,
@@ -1163,14 +1140,6 @@
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminDashboard").style.display = "block";
         loadAppointments();
-
-        if (typeof startAppointmentAutoRefresh === "function") {
-          startAppointmentAutoRefresh();
-        }
-
-        if (typeof startSmsGlobalPolling === "function") {
-          startSmsGlobalPolling();
-        }
       }
     };
 
@@ -1281,18 +1250,10 @@
 
 <script>
 let smsMessages = [];
-try {
-  smsMessages = JSON.parse(localStorage.getItem("torosSmsMessageCache") || "[]");
-} catch (err) {
-  smsMessages = [];
-}
 let activeSmsPhone = "";
 let smsRefreshTimer = null;
 let smsGlobalTimer = null;
 let appointmentRefreshTimer = null;
-let smsLoadedOnce = smsMessages.length > 0;
-let smsLoading = false;
-let lastSmsFetchTime = 0;
 let lastIncomingKey = localStorage.getItem("torosLastIncomingKey") || "";
 let unreadPhones = new Set(JSON.parse(localStorage.getItem("torosUnreadSmsPhones") || "[]"));
 let audioReady = false;
@@ -1326,28 +1287,21 @@ function playNotificationSound() {
       audioContext.resume();
     }
 
-    // Louder two-tone alert. Keep this below 1.0 to avoid distortion.
-    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
 
-    function tone(freq, startTime, duration) {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(660, audioContext.currentTime + 0.09);
 
-      oscillator.type = "square";
-      oscillator.frequency.setValueAtTime(freq, startTime);
+    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.22);
 
-      gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.55, startTime + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-
-      oscillator.connect(gain);
-      gain.connect(audioContext.destination);
-      oscillator.start(startTime);
-      oscillator.stop(startTime + duration + 0.02);
-    }
-
-    tone(1040, now, 0.18);
-    tone(760, now + 0.22, 0.22);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.24);
   } catch (err) {}
 }
 
@@ -1398,11 +1352,12 @@ async function pollSmsInBackground(initialLoad) {
       }
     }
 
-    cacheSmsMessages(messages);
+    smsMessages = messages;
     updateUnreadBadge();
 
     if (document.getElementById("textPanelOverlay")?.style.display === "flex") {
-      renderSmsInboxFromCache();
+      renderConversationList();
+      renderActiveThread(false);
     }
 
   } catch (err) {
@@ -1444,29 +1399,6 @@ function updateUnreadBadge() {
   badge.style.display = count ? "inline-block" : "none";
 }
 
-function cacheSmsMessages(messages) {
-  smsMessages = Array.isArray(messages) ? messages : [];
-  smsLoadedOnce = true;
-  lastSmsFetchTime = Date.now();
-
-  try {
-    localStorage.setItem("torosSmsMessageCache", JSON.stringify(smsMessages.slice(0, 250)));
-  } catch (err) {}
-}
-
-function renderSmsInboxFromCache() {
-  renderConversationList();
-
-  if (!activeSmsPhone && smsMessages.length) {
-    const firstPhone = normalizePhone(smsMessages[0].phone);
-    selectConversation(firstPhone, false);
-  } else {
-    renderActiveThread(false);
-  }
-
-  updateUnreadBadge();
-}
-
 function getMessageKey(msg) {
   return [msg.sid || "", msg.date || "", msg.phone || "", msg.message || ""].join("|");
 }
@@ -1474,26 +1406,7 @@ function getMessageKey(msg) {
 function openTextPanel() {
   unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
-
-  // Opening the inbox marks all current messages as read and clears the red badge.
-  unreadPhones.clear();
-  saveUnreadPhones();
-  updateUnreadBadge();
-
-  // Show cached/preloaded conversations immediately instead of waiting on Google Sheets.
-  if (smsMessages.length) {
-    renderSmsInboxFromCache();
-  } else {
-    const threadBox = document.getElementById("smsThread");
-    const listBox = document.getElementById("conversationList");
-    if (listBox) listBox.innerHTML = "<div style='color:#777;padding:12px;'>Loading conversations...</div>";
-    if (threadBox) threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Loading messages...</div>";
-  }
-
-  // Refresh in the background only when the cache is stale.
-  if (!smsLoading && Date.now() - lastSmsFetchTime > 2500) {
-    loadSmsHistory();
-  }
+  loadSmsHistory();
 
   if (!smsRefreshTimer) {
     smsRefreshTimer = setInterval(loadSmsHistory, 3000);
@@ -1546,15 +1459,11 @@ function displayPhone(phone) {
 async function loadSmsHistory() {
   const threadBox = document.getElementById("smsThread");
 
-  if (smsLoading) return;
-  smsLoading = true;
-
   try {
     const response = await fetch('/api/get-sheet-messages?cacheBust=' + Date.now());
     const data = await response.json();
-    const messages = Array.isArray(data.messages) ? data.messages : [];
 
-    cacheSmsMessages(messages);
+    smsMessages = Array.isArray(data.messages) ? data.messages : [];
 
     const latestIncoming = smsMessages.find(msg => msg.type === "incoming");
     if (latestIncoming) {
@@ -1565,15 +1474,20 @@ async function loadSmsHistory() {
       }
     }
 
-    renderSmsInboxFromCache();
+    renderConversationList();
+
+    if (!activeSmsPhone && smsMessages.length) {
+      const firstPhone = normalizePhone(smsMessages[0].phone);
+      selectConversation(firstPhone, false);
+    } else {
+      renderActiveThread(false);
+    }
+
+    updateUnreadBadge();
 
   } catch (err) {
     console.error(err);
-    if (!smsMessages.length) {
-      threadBox.innerHTML = "<div style='color:#af2727;text-align:center;'>Could not load messages.</div>";
-    }
-  } finally {
-    smsLoading = false;
+    threadBox.innerHTML = "<div style='color:#af2727;text-align:center;'>Could not load messages.</div>";
   }
 }
 
@@ -1811,6 +1725,15 @@ function escapeJs(text) {
   return String(text || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
+const originalLoginFunction = window.login;
+window.login = function() {
+  originalLoginFunction();
+
+  if (localStorage.getItem("torosAdminLoggedIn") === "true") {
+    startAppointmentAutoRefresh();
+    startSmsGlobalPolling();
+  }
+};
 
 window.addEventListener("load", function() {
   updateUnreadBadge();
