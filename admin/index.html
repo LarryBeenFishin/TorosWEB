@@ -1284,21 +1284,28 @@ function playNotificationSound() {
       audioContext.resume();
     }
 
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
+    // Louder two-tone alert. Keep this below 1.0 to avoid distortion.
+    const now = audioContext.currentTime;
 
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(660, audioContext.currentTime + 0.09);
+    function tone(freq, startTime, duration) {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
 
-    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.22);
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(freq, startTime);
 
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.24);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.55, startTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration + 0.02);
+    }
+
+    tone(1040, now, 0.18);
+    tone(760, now + 0.22, 0.22);
   } catch (err) {}
 }
 
@@ -1403,6 +1410,12 @@ function getMessageKey(msg) {
 function openTextPanel() {
   unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
+
+  // Opening the inbox marks all current messages as read and clears the red badge.
+  unreadPhones.clear();
+  saveUnreadPhones();
+  updateUnreadBadge();
+
   loadSmsHistory();
 
   if (!smsRefreshTimer) {
