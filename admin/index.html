@@ -1137,6 +1137,7 @@
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminDashboard").style.display = "block";
         loadAppointments();
+        setInterval(loadAppointments, 30000);
       }
     };
 
@@ -1234,13 +1235,18 @@
 let smsMessages = [];
 let activeSmsPhone = "";
 let smsRefreshTimer = null;
+let lastMessageCount = 0;
+
+const notificationSound = new Audio(
+  "https://actions.google.com/sounds/v1/notifications/message_pop_alert.ogg"
+);
 
 function openTextPanel() {
   document.getElementById("textPanelOverlay").style.display = "flex";
   loadSmsHistory();
 
   if (!smsRefreshTimer) {
-    smsRefreshTimer = setInterval(loadSmsHistory, 5000);
+    smsRefreshTimer = setInterval(loadSmsHistory, 3000);
   }
 }
 
@@ -1295,6 +1301,12 @@ async function loadSmsHistory() {
     const data = await response.json();
 
     smsMessages = Array.isArray(data.messages) ? data.messages : [];
+
+    if (lastMessageCount && smsMessages.length > lastMessageCount) {
+      notificationSound.play().catch(() => {});
+    }
+
+    lastMessageCount = smsMessages.length;
 
     renderConversationList();
 
