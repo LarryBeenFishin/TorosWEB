@@ -1146,6 +1146,37 @@
       }
     });
   </script>
+<button onclick="sendTestText()" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#af2727;color:white;border:0;border-radius:12px;padding:14px 18px;font-weight:bold;">
+  Send Test Text
+</button>
 
+<script>
+async function sendTestText() {
+  const phone = prompt("Enter phone number like +18475551234");
+  if (!phone) return;
+
+  const message = prompt("Enter message");
+  if (!message) return;
+
+  const response = await fetch("/api/send-sms", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      to: phone,
+      message: message
+    })
+  });
+
+  const data = await response.json();
+
+  if (data.success) {
+    alert("Text sent!");
+  } else {
+    alert("Error: " + data.error);
+  }
+}
+</script>
 </body>
 </html>
