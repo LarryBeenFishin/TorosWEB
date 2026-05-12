@@ -1184,6 +1184,8 @@
           const phoneKey = normalizePhone(phone);
           if (phoneKey) {
             activeSmsPhone = phoneKey;
+            smsLastActivePhone = phoneKey;
+            localStorage.setItem("torosLastActiveSmsPhone", phoneKey);
             const existingGroup = getConversationGroups().find(g => g.phoneKey === phoneKey);
 
             if (existingGroup) {
@@ -1421,6 +1423,8 @@
 let smsMessages = [];
 const SMS_CACHE_KEY = "torosCachedSmsMessages";
 let activeSmsPhone = "";
+let smsHasOpenedBefore = localStorage.getItem("torosSmsHasOpenedBefore") === "true";
+let smsLastActivePhone = localStorage.getItem("torosLastActiveSmsPhone") || "";
 let smsIsNewMessageMode = false;
 let smsLastRenderSignature = "";
 let smsRefreshTimer = null;
@@ -1647,7 +1651,23 @@ function getMessageKey(msg) {
 function openTextPanel() {
   unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
+
   loadCachedSmsMessages();
+
+  if (!smsHasOpenedBefore && !smsLastActivePhone) {
+    startNewSmsMessage();
+    smsHasOpenedBefore = true;
+    localStorage.setItem("torosSmsHasOpenedBefore", "true");
+  } else if (smsLastActivePhone) {
+    activeSmsPhone = smsLastActivePhone;
+    smsIsNewMessageMode = false;
+
+    const existingGroup = getConversationGroups().find(g => g.phoneKey === smsLastActivePhone);
+    if (existingGroup) {
+      selectConversation(smsLastActivePhone);
+    }
+  }
+
   loadSmsHistory();
 
   if (!smsRefreshTimer) {
@@ -1768,7 +1788,16 @@ async function loadSmsHistory() {
           threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
           threadBox.dataset.newModeSet = "true";
         }
-      } else if (!activeSmsPhone && smsMessages.length) {
+      } else if (!activeSmsPhone && smsLastActivePhone && smsMessages.length) {
+        const rememberedGroup = getConversationGroups().find(g => g.phoneKey === smsLastActivePhone);
+        if (rememberedGroup) {
+          selectConversation(smsLastActivePhone, false);
+        } else {
+          renderActiveThread(false);
+        }
+      } else if (!activeSmsPhone && !smsHasOpenedBefore && smsMessages.length) {
+        startNewSmsMessage();
+      } else if (!activeSmsPhone && smsMessages.length && !smsIsNewMessageMode) {
         const firstPhone = normalizePhone(smsMessages[0].phone);
         selectConversation(firstPhone, false);
       } else {
@@ -1862,6 +1891,8 @@ function renderConversationList() {
 function selectConversation(phoneKey, rerenderList = true) {
   smsIsNewMessageMode = false;
   activeSmsPhone = phoneKey;
+  smsLastActivePhone = phoneKey;
+  localStorage.setItem("torosLastActiveSmsPhone", phoneKey);
   unreadPhones.delete(phoneKey);
   saveUnreadPhones();
   updateUnreadBadge();
@@ -1961,6 +1992,8 @@ async function sendCustomerText() {
   phone = formatPhoneNumber(phone);
   document.getElementById("smsPhone").value = phone;
   activeSmsPhone = normalizePhone(phone);
+  smsLastActivePhone = activeSmsPhone;
+  localStorage.setItem("torosLastActiveSmsPhone", activeSmsPhone);
 
   status.style.color = "#163051";
   status.innerText = "Sending...";
