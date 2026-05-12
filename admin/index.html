@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow">
 
   <title>Toro's Auto Care Admin</title>
 
@@ -362,6 +363,32 @@
       display: none;
     }
 
+
+    .status-new { background: #2563eb !important; color: white !important; }
+    .status-confirmed { background: #16a34a !important; color: white !important; }
+    .status-checked-in { background: #f97316 !important; color: white !important; }
+    .status-in-progress { background: #7c3aed !important; color: white !important; }
+    .status-waiting-approval { background: #d97706 !important; color: white !important; }
+    .status-completed { background: #6b7280 !important; color: white !important; }
+    .status-cancelled { background: #dc2626 !important; color: white !important; }
+
+    .appointment-dot.status-new { background: #2563eb !important; }
+    .appointment-dot.status-confirmed { background: #16a34a !important; }
+    .appointment-dot.status-checked-in { background: #f97316 !important; }
+    .appointment-dot.status-in-progress { background: #7c3aed !important; }
+    .appointment-dot.status-waiting-approval { background: #d97706 !important; }
+    .appointment-dot.status-completed { background: #6b7280 !important; }
+    .appointment-dot.status-cancelled { background: #dc2626 !important; }
+
+    .quick-text-btn {
+      background: #1d7f4f;
+    }
+
+    .quick-text-btn:hover {
+      background: #17683f;
+    }
+
+
     @media (max-width: 900px) {
       header {
         justify-content: center;
@@ -548,6 +575,7 @@
         <div class="modal-actions">
           <button id="callBtn">Call Customer</button>
           <button class="light-btn" id="emailBtn">Email</button>
+          <button class="quick-text-btn" onclick="textSelectedAppointmentCustomer()">Text Customer</button>
           <button class="secondary-btn" onclick="switchToEditMode()">Edit / Reschedule</button>
           <button class="light-btn" onclick="closeModal()">Close</button>
         </div>
@@ -727,7 +755,7 @@
   </div>
 
   <script>
-    const ADMIN_PASSWORD = "toros123";
+    // Admin login is checked through /api/admin-login. Password is not stored in this HTML.
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
 
     let appointments = [];
@@ -742,17 +770,44 @@
       "4:00 PM", "4:30 PM", "5:00 PM"
     ];
 
-    function login() {
+    async function login() {
       const password = document.getElementById("passwordInput").value;
       const error = document.getElementById("loginError");
 
-      if (password === ADMIN_PASSWORD) {
-        localStorage.setItem("torosAdminLoggedIn", "true");
-        document.getElementById("loginScreen").style.display = "none";
-        document.getElementById("adminDashboard").style.display = "block";
-        loadAppointments();
-      } else {
-        error.textContent = "Incorrect password.";
+      error.textContent = "Checking...";
+
+      try {
+        const response = await fetch("/api/admin-login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ password: password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          localStorage.setItem("torosAdminLoggedIn", "true");
+          document.getElementById("loginScreen").style.display = "none";
+          document.getElementById("adminDashboard").style.display = "block";
+          error.textContent = "";
+          loadAppointments();
+
+          if (typeof startAppointmentAutoRefresh === "function") {
+            startAppointmentAutoRefresh();
+          }
+
+          if (typeof startSmsGlobalPolling === "function") {
+            startSmsGlobalPolling();
+          }
+        } else {
+          localStorage.removeItem("torosAdminLoggedIn");
+          error.textContent = "Incorrect password.";
+        }
+      } catch (err) {
+        localStorage.removeItem("torosAdminLoggedIn");
+        error.textContent = "Login error. Try again.";
       }
     }
 
@@ -788,6 +843,13 @@
       });
 
       return await response.json();
+    }
+
+    function getStatusClass(status) {
+      return "status-" + String(status || "new")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
     }
 
     function renderCalendar() {
@@ -843,7 +905,7 @@
 
         dayAppointments.slice(0, 3).forEach(app => {
           const dot = document.createElement("div");
-          dot.className = "appointment-dot";
+          dot.className = "appointment-dot " + getStatusClass(app.status || "New");
           dot.textContent = `${app.time || ""} ${app.name || app.customer || "Appointment"}`;
           dot.onclick = () => openModal(app);
           dateBox.appendChild(dot);
@@ -892,7 +954,7 @@
           <small>${app.vehicle || ""}</small>
           <small>${app.service || app.reason || ""}</small>
           <small>${app.phone || ""}</small>
-          <span class="status-pill">${app.status || "New"}</span>
+          <span class="status-pill ${getStatusClass(app.status || "New")}">${app.status || "New"}</span>
         </div>
       `;
     }
@@ -962,7 +1024,6 @@
 
       const payload = {
         action: "updateAppointment",
-        password: ADMIN_PASSWORD,
         eventId: selectedAppointment.eventId || "",
         source: selectedAppointment.source || "Admin",
         name: document.getElementById("editName").value,
@@ -1026,7 +1087,6 @@
 
       const payload = {
         action: "createAppointment",
-        password: ADMIN_PASSWORD,
         name: document.getElementById("newName").value,
         phone: document.getElementById("newPhone").value,
         email: document.getElementById("newEmail").value,
@@ -1062,6 +1122,38 @@
       } catch (err) {
         notice.textContent = "Could not create appointment.";
         notice.style.color = "#af2727";
+      }
+    }
+
+    function textSelectedAppointmentCustomer() {
+      if (!selectedAppointment) return;
+
+      const name = selectedAppointment.name || selectedAppointment.customer || "";
+      const phone = selectedAppointment.phone || "";
+
+      closeModal();
+
+      if (typeof openTextPanel === "function") {
+        openTextPanel();
+
+        setTimeout(() => {
+          const nameInput = document.getElementById("smsCustomerName");
+          const phoneInput = document.getElementById("smsPhone");
+          const messageInput = document.getElementById("smsMessage");
+
+          if (nameInput) nameInput.value = name;
+          if (phoneInput) phoneInput.value = formatPhoneNumber(phone);
+
+          const phoneKey = normalizePhone(phone);
+          if (phoneKey) {
+            activeSmsPhone = phoneKey;
+            selectConversation(phoneKey);
+          }
+
+          if (messageInput && !messageInput.value) {
+            messageInput.placeholder = "Type a message to " + (name || "this customer") + "...";
+          }
+        }, 350);
       }
     }
 
@@ -1144,6 +1236,14 @@
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminDashboard").style.display = "block";
         loadAppointments();
+
+        if (typeof startAppointmentAutoRefresh === "function") {
+          startAppointmentAutoRefresh();
+        }
+
+        if (typeof startSmsGlobalPolling === "function") {
+          startSmsGlobalPolling();
+        }
       }
     };
 
@@ -1729,15 +1829,6 @@ function escapeJs(text) {
   return String(text || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
-const originalLoginFunction = window.login;
-window.login = function() {
-  originalLoginFunction();
-
-  if (localStorage.getItem("torosAdminLoggedIn") === "true") {
-    startAppointmentAutoRefresh();
-    startSmsGlobalPolling();
-  }
-};
 
 window.addEventListener("load", function() {
   updateUnreadBadge();
