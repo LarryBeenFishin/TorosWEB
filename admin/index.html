@@ -1147,11 +1147,32 @@
           const phoneKey = normalizePhone(phone);
           if (phoneKey) {
             activeSmsPhone = phoneKey;
-            selectConversation(phoneKey);
+            const existingGroup = getConversationGroups().find(g => g.phoneKey === phoneKey);
+
+            if (existingGroup) {
+              selectConversation(phoneKey);
+            } else {
+              resetSmsComposeView();
+
+              const customerCard = document.getElementById("smsActiveCustomerCard");
+              const manualFields = document.getElementById("smsManualFields");
+
+              if (customerCard && manualFields) {
+                customerCard.style.display = "block";
+                manualFields.style.display = "none";
+                document.getElementById("smsActiveCustomerName").innerText = name || "Customer";
+                document.getElementById("smsActiveCustomerPhone").innerText = formatPhoneNumber(phone);
+              }
+
+              document.getElementById("activeConversationTitle").innerText = "Text Conversation";
+              document.getElementById("activeConversationSub").innerText = "Composing to appointment customer";
+              renderActiveThread();
+            }
           }
 
           if (messageInput && !messageInput.value) {
             messageInput.placeholder = "Type a message to " + (name || "this customer") + "...";
+            messageInput.focus();
           }
         }, 350);
       }
@@ -1277,6 +1298,9 @@
     <div id="textPanelGrid" style="display:grid;grid-template-columns:300px minmax(0,1fr);flex:1;min-height:0;overflow:hidden;">
       <div id="smsSidebar" style="border-right:1px solid #e5e5e5;background:#f7f9fc;display:flex;flex-direction:column;min-width:0;min-height:0;">
         <div style="padding:14px;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
+          <button onclick="startNewSmsMessage()" style="width:100%;background:#1d7f4f;color:white;border:0;border-radius:12px;padding:12px;font-weight:bold;margin-bottom:10px;">
+            + New Message
+          </button>
           <input id="smsSearch" oninput="renderConversationList()" placeholder="Search name or phone" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:14px;">
         </div>
         <div id="conversationList" style="overflow:auto;flex:1;padding:10px;min-height:0;"></div>
@@ -1517,7 +1541,6 @@ function getMessageKey(msg) {
 
 function openTextPanel() {
   unlockNotificationSound();
-  resetSmsComposeView();
   document.getElementById("textPanelOverlay").style.display = "flex";
   loadSmsHistory();
 
@@ -1544,7 +1567,36 @@ function resetSmsComposeView() {
   if (manualFields) manualFields.style.display = "block";
 
   document.getElementById("activeConversationTitle").innerText = "New Message";
-  document.getElementById("activeConversationSub").innerText = "Choose a customer or enter a phone number below.";
+  document.getElementById("activeConversationSub").innerText = "Enter a customer name and phone number to start a text.";
+}
+
+function startNewSmsMessage() {
+  activeSmsPhone = "";
+
+  const nameInput = document.getElementById("smsCustomerName");
+  const phoneInput = document.getElementById("smsPhone");
+  const messageInput = document.getElementById("smsMessage");
+  const templateInput = document.getElementById("smsTemplate");
+  const status = document.getElementById("smsStatus");
+  const threadBox = document.getElementById("smsThread");
+
+  if (nameInput) nameInput.value = "";
+  if (phoneInput) phoneInput.value = "";
+  if (messageInput) {
+    messageInput.value = "";
+    messageInput.placeholder = "Type your message...";
+    setTimeout(() => messageInput.focus(), 150);
+  }
+  if (templateInput) templateInput.value = "";
+  if (status) status.innerText = "";
+
+  resetSmsComposeView();
+
+  if (threadBox) {
+    threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
+  }
+
+  renderConversationList();
 }
 
 function useSmsTemplate() {
@@ -1739,7 +1791,11 @@ function renderActiveThread(forceScroll = true) {
     .reverse();
 
   if (!thread.length) {
-    threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>No messages for this customer yet.</div>";
+    if (!phoneKey) {
+      threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
+    } else {
+      threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>No messages for this customer yet.</div>";
+    }
     return;
   }
 
