@@ -33,10 +33,12 @@ module.exports = async function handler(req, res) {
     });
 
     const results = await Promise.allSettled(
-      subscriptions.map(subscription => webpush.sendNotification(subscription, payload))
+      subscriptions.map(subscription =>
+        webpush.sendNotification(subscription, payload)
+      )
     );
 
-    const sent = results.filter(result => result.status === "fulfilled").length;
+    const sent = results.filter(r => r.status === "fulfilled").length;
     const failed = results.length - sent;
 
     return res.status(200).json({
