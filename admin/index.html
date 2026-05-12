@@ -1484,6 +1484,7 @@ const SMS_CACHE_KEY = "torosCachedSmsMessages";
 let activeSmsPhone = "";
 let smsHasOpenedBefore = localStorage.getItem("torosSmsHasOpenedBefore") === "true";
 let smsLastActivePhone = localStorage.getItem("torosLastActiveSmsPhone") || "";
+let smsRestoreConversationOnOpen = localStorage.getItem("torosRestoreSmsConversation") === "true";
 let smsIsNewMessageMode = false;
 let smsLastRenderSignature = "";
 let smsRefreshTimer = null;
@@ -1713,11 +1714,7 @@ function openTextPanel() {
 
   loadCachedSmsMessages();
 
-  if (!smsHasOpenedBefore && !smsLastActivePhone) {
-    startNewSmsMessage();
-    smsHasOpenedBefore = true;
-    localStorage.setItem("torosSmsHasOpenedBefore", "true");
-  } else if (smsLastActivePhone) {
+  if (smsRestoreConversationOnOpen && smsLastActivePhone) {
     activeSmsPhone = smsLastActivePhone;
     smsIsNewMessageMode = false;
 
@@ -1725,6 +1722,10 @@ function openTextPanel() {
     if (existingGroup) {
       selectConversation(smsLastActivePhone);
     }
+  } else {
+    startNewSmsMessage();
+    smsHasOpenedBefore = true;
+    localStorage.setItem("torosSmsHasOpenedBefore", "true");
   }
 
   loadSmsHistory();
@@ -1736,6 +1737,15 @@ function openTextPanel() {
 
 function closeTextPanel() {
   document.getElementById("textPanelOverlay").style.display = "none";
+
+  if (activeSmsPhone && !smsIsNewMessageMode) {
+    smsRestoreConversationOnOpen = true;
+    localStorage.setItem("torosRestoreSmsConversation", "true");
+    localStorage.setItem("torosLastActiveSmsPhone", activeSmsPhone);
+  } else {
+    smsRestoreConversationOnOpen = false;
+    localStorage.setItem("torosRestoreSmsConversation", "false");
+  }
 
   if (smsRefreshTimer) {
     clearInterval(smsRefreshTimer);
@@ -1755,6 +1765,8 @@ function resetSmsComposeView() {
 
 function startNewSmsMessage() {
   smsIsNewMessageMode = true;
+  smsRestoreConversationOnOpen = false;
+  localStorage.setItem("torosRestoreSmsConversation", "false");
   activeSmsPhone = "";
 
   const nameInput = document.getElementById("smsCustomerName");
@@ -1949,9 +1961,11 @@ function renderConversationList() {
 
 function selectConversation(phoneKey, rerenderList = true) {
   smsIsNewMessageMode = false;
+  smsRestoreConversationOnOpen = true;
   activeSmsPhone = phoneKey;
   smsLastActivePhone = phoneKey;
   localStorage.setItem("torosLastActiveSmsPhone", phoneKey);
+  localStorage.setItem("torosRestoreSmsConversation", "true");
   unreadPhones.delete(phoneKey);
   saveUnreadPhones();
   updateUnreadBadge();
@@ -2129,6 +2143,11 @@ function escapeJs(text) {
 
 
 window.addEventListener("load", function() {
+  if (localStorage.getItem("torosRestoreSmsConversation") === null) {
+    localStorage.setItem("torosRestoreSmsConversation", "false");
+    smsRestoreConversationOnOpen = false;
+  }
+
   updateUnreadBadge();
 
   if (localStorage.getItem("torosAdminLoggedIn") === "true") {
