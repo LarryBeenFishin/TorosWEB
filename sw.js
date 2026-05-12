@@ -1,4 +1,4 @@
-const CACHE_NAME = "toros-admin-v2";
+const CACHE_NAME = "toros-admin-v3";
 
 const STATIC_ASSETS = [
   "/logo.png",
@@ -64,6 +64,54 @@ self.addEventListener("fetch", event => {
 
         return response;
       });
+    })
+  );
+});
+
+self.addEventListener("push", event => {
+  let data = {
+    title: "Toro's Auto Care",
+    body: "New notification",
+    url: "/admin"
+  };
+
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (err) {}
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Toro's Auto Care", {
+      body: data.body || "New notification",
+      icon: "/logo.png",
+      badge: "/logo.png",
+      data: {
+        url: data.url || "/admin"
+      }
+    })
+  );
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+
+  const url = event.notification.data?.url || "/admin";
+
+  event.waitUntil(
+    clients.matchAll({
+      type: "window",
+      includeUncontrolled: true
+    }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes(url) && "focus" in client) {
+          return client.focus();
+        }
+      }
+
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
     })
   );
 });
