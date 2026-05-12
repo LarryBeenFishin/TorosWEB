@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "twilio": "^5.4.0"
+    "twilio": "^5.4.0",
+    "web-push": "^3.6.7"
   }
 }
