@@ -1,8 +1,6 @@
-const CACHE_NAME = "toros-admin-v1";
+const CACHE_NAME = "toros-admin-v2";
 
 const STATIC_ASSETS = [
-  "/",
-  "/admin",
   "/logo.png",
   "/manifest.json"
 ];
@@ -45,9 +43,19 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  if (
+    url.pathname === "/" ||
+    url.pathname.startsWith("/admin")
+  ) {
+    event.respondWith(
+      fetch(request).catch(() => caches.match(request))
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(request)
-      .then(response => {
+    caches.match(request).then(cached => {
+      return cached || fetch(request).then(response => {
         const copy = response.clone();
 
         caches.open(CACHE_NAME).then(cache => {
@@ -55,7 +63,7 @@ self.addEventListener("fetch", event => {
         });
 
         return response;
-      })
-      .catch(() => caches.match(request))
+      });
+    })
   );
 });
