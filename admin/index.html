@@ -383,6 +383,15 @@
     .appointment-dot.status-completed { background: #6b7280 !important; }
     .appointment-dot.status-cancelled { background: #dc2626 !important; }
 
+    .appointment.seen-new {
+      border-left-color: #d8dee9;
+      background: #fbfcff;
+    }
+
+    .appointment-dot.seen-new-dot {
+      background: #9ca3af !important;
+    }
+
     .quick-text-btn {
       background: #1d7f4f;
     }
@@ -774,6 +783,44 @@
     ];
 
     const APPOINTMENTS_CACHE_KEY = "torosCachedAppointments";
+    const SEEN_APPOINTMENTS_KEY = "torosSeenAppointments";
+
+    function getSeenAppointments() {
+      try {
+        return JSON.parse(localStorage.getItem(SEEN_APPOINTMENTS_KEY) || "{}");
+      } catch (err) {
+        return {};
+      }
+    }
+
+    function saveSeenAppointments(seen) {
+      try {
+        localStorage.setItem(SEEN_APPOINTMENTS_KEY, JSON.stringify(seen || {}));
+      } catch (err) {}
+    }
+
+    function getAppointmentSeenKey(app) {
+      return String(app.eventId || [
+        app.name || app.customer || "",
+        app.phone || "",
+        app.date || "",
+        app.time || "",
+        app.service || app.reason || ""
+      ].join("|")).toLowerCase();
+    }
+
+    function isAppointmentSeen(app) {
+      const seen = getSeenAppointments();
+      return !!seen[getAppointmentSeenKey(app)];
+    }
+
+    function markAppointmentSeen(app) {
+      if (!app) return;
+
+      const seen = getSeenAppointments();
+      seen[getAppointmentSeenKey(app)] = true;
+      saveSeenAppointments(seen);
+    }
 
     function loadCachedAppointments() {
       try {
@@ -940,7 +987,9 @@
 
         dayAppointments.slice(0, 3).forEach(app => {
           const dot = document.createElement("div");
-          dot.className = "appointment-dot " + getStatusClass(app.status || "New");
+          const appStatus = app.status || "New";
+          const seenNew = String(appStatus).toLowerCase() === "new" && isAppointmentSeen(app);
+          dot.className = "appointment-dot " + (seenNew ? "seen-new-dot" : getStatusClass(appStatus));
           dot.textContent = `${app.time || ""} ${app.name || app.customer || "Appointment"}`;
           dot.onclick = () => openModal(app);
           dateBox.appendChild(dot);
@@ -981,21 +1030,31 @@
 
     function renderAppointment(app) {
       const index = appointments.indexOf(app);
+      const appStatus = app.status || "New";
+      const seenNew = String(appStatus).toLowerCase() === "new" && isAppointmentSeen(app);
+      const badgeHtml = seenNew ? "" : `<span class="status-pill ${getStatusClass(appStatus)}">${appStatus}</span>`;
 
       return `
-        <div class="appointment" data-app-index="${index}">
+        <div class="appointment ${seenNew ? "seen-new" : ""}" data-app-index="${index}">
           <strong>${app.name || app.customer || "Customer"}</strong>
           <small>${app.date || ""} ${app.time || ""}</small>
           <small>${app.vehicle || ""}</small>
           <small>${app.service || app.reason || ""}</small>
           <small>${app.phone || ""}</small>
-          <span class="status-pill ${getStatusClass(app.status || "New")}">${app.status || "New"}</span>
+          ${badgeHtml}
         </div>
       `;
     }
 
     function openModal(app) {
       selectedAppointment = app;
+
+      if (String(app.status || "New").toLowerCase() === "new" && !isAppointmentSeen(app)) {
+        markAppointmentSeen(app);
+        renderCalendar();
+        renderLists();
+      }
+
       switchToViewMode();
 
       const phone = app.phone || "";
