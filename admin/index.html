@@ -1131,6 +1131,8 @@
       const name = selectedAppointment.name || selectedAppointment.customer || "";
       const phone = selectedAppointment.phone || "";
 
+      smsIsNewMessageMode = false;
+
       closeModal();
 
       if (typeof openTextPanel === "function") {
@@ -1387,6 +1389,8 @@
 <script>
 let smsMessages = [];
 let activeSmsPhone = "";
+let smsIsNewMessageMode = false;
+let smsLastRenderSignature = "";
 let smsRefreshTimer = null;
 let smsGlobalTimer = null;
 let appointmentRefreshTimer = null;
@@ -1461,6 +1465,31 @@ function startSmsGlobalPolling() {
   }, 4000);
 }
 
+
+function getSmsSignature(messages) {
+  return (messages || []).map(msg => {
+    return [
+      msg.sid || "",
+      msg.date || "",
+      msg.type || "",
+      msg.phone || "",
+      msg.message || ""
+    ].join("~");
+  }).join("|");
+}
+
+function updateSmsMessagesIfChanged(messages) {
+  const newSignature = getSmsSignature(messages);
+  const changed = newSignature !== smsLastRenderSignature;
+
+  if (changed) {
+    smsMessages = messages;
+    smsLastRenderSignature = newSignature;
+  }
+
+  return changed;
+}
+
 async function pollSmsInBackground(initialLoad) {
   if (localStorage.getItem("torosAdminLoggedIn") !== "true") return;
 
@@ -1488,12 +1517,22 @@ async function pollSmsInBackground(initialLoad) {
       }
     }
 
-    smsMessages = messages;
+    const messagesChanged = updateSmsMessagesIfChanged(messages);
     updateUnreadBadge();
 
-    if (document.getElementById("textPanelOverlay")?.style.display === "flex") {
+    if (document.getElementById("textPanelOverlay")?.style.display === "flex" && messagesChanged) {
       renderConversationList();
-      renderActiveThread(false);
+
+      if (smsIsNewMessageMode) {
+        resetSmsComposeView();
+        const threadBox = document.getElementById("smsThread");
+        if (threadBox && !threadBox.dataset.newModeSet) {
+          threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
+          threadBox.dataset.newModeSet = "true";
+        }
+      } else {
+        renderActiveThread(false);
+      }
     }
 
   } catch (err) {
@@ -1571,6 +1610,7 @@ function resetSmsComposeView() {
 }
 
 function startNewSmsMessage() {
+  smsIsNewMessageMode = true;
   activeSmsPhone = "";
 
   const nameInput = document.getElementById("smsCustomerName");
@@ -1594,6 +1634,7 @@ function startNewSmsMessage() {
 
   if (threadBox) {
     threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
+    threadBox.dataset.newModeSet = "true";
   }
 
   renderConversationList();
@@ -1640,7 +1681,8 @@ async function loadSmsHistory() {
     const response = await fetch('/api/get-sheet-messages?cacheBust=' + Date.now());
     const data = await response.json();
 
-    smsMessages = Array.isArray(data.messages) ? data.messages : [];
+    const freshMessages = Array.isArray(data.messages) ? data.messages : [];
+    const messagesChanged = updateSmsMessagesIfChanged(freshMessages);
 
     const latestIncoming = smsMessages.find(msg => msg.type === "incoming");
     if (latestIncoming) {
@@ -1651,13 +1693,22 @@ async function loadSmsHistory() {
       }
     }
 
-    renderConversationList();
+    if (messagesChanged) {
+      renderConversationList();
 
-    if (!activeSmsPhone && smsMessages.length) {
-      const firstPhone = normalizePhone(smsMessages[0].phone);
-      selectConversation(firstPhone, false);
-    } else {
-      renderActiveThread(false);
+      if (smsIsNewMessageMode) {
+        resetSmsComposeView();
+        const threadBox = document.getElementById("smsThread");
+        if (threadBox && !threadBox.dataset.newModeSet) {
+          threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
+          threadBox.dataset.newModeSet = "true";
+        }
+      } else if (!activeSmsPhone && smsMessages.length) {
+        const firstPhone = normalizePhone(smsMessages[0].phone);
+        selectConversation(firstPhone, false);
+      } else {
+        renderActiveThread(false);
+      }
     }
 
     updateUnreadBadge();
@@ -1744,6 +1795,7 @@ function renderConversationList() {
 }
 
 function selectConversation(phoneKey, rerenderList = true) {
+  smsIsNewMessageMode = false;
   activeSmsPhone = phoneKey;
   unreadPhones.delete(phoneKey);
   saveUnreadPhones();
@@ -1776,6 +1828,9 @@ function selectConversation(phoneKey, rerenderList = true) {
 
 function renderActiveThread(forceScroll = true) {
   const threadBox = document.getElementById("smsThread");
+  if (threadBox) {
+    threadBox.dataset.newModeSet = "";
+  }
 
   if (!smsMessages.length) {
     threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>No messages yet.</div>";
@@ -1868,6 +1923,8 @@ async function sendCustomerText() {
     if (data.success) {
       status.style.color = "green";
       status.innerText = "Text sent!";
+
+      smsIsNewMessageMode = false;
 
       document.getElementById("smsMessage").value = "";
       document.getElementById("smsTemplate").value = "";
