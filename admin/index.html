@@ -773,6 +773,29 @@
       "4:00 PM", "4:30 PM", "5:00 PM"
     ];
 
+    const APPOINTMENTS_CACHE_KEY = "torosCachedAppointments";
+
+    function loadCachedAppointments() {
+      try {
+        const cached = JSON.parse(localStorage.getItem(APPOINTMENTS_CACHE_KEY) || "[]");
+
+        if (Array.isArray(cached) && cached.length) {
+          appointments = cached;
+          renderCalendar();
+          renderLists();
+          return true;
+        }
+      } catch (err) {}
+
+      return false;
+    }
+
+    function saveCachedAppointments() {
+      try {
+        localStorage.setItem(APPOINTMENTS_CACHE_KEY, JSON.stringify(appointments || []));
+      } catch (err) {}
+    }
+
     async function login() {
       const password = document.getElementById("passwordInput").value;
       const error = document.getElementById("loginError");
@@ -795,6 +818,7 @@
           document.getElementById("loginScreen").style.display = "none";
           document.getElementById("adminDashboard").style.display = "block";
           error.textContent = "";
+          loadCachedAppointments();
           loadAppointments();
 
           if (typeof startAppointmentAutoRefresh === "function") {
@@ -821,18 +845,26 @@
 
     async function loadAppointments() {
       try {
-        const response = await fetch(SCRIPT_URL + "?action=getAppointments");
+        const response = await fetch(SCRIPT_URL + "?action=getAppointments&cacheBust=" + Date.now());
         const data = await response.json();
 
         appointments = Array.isArray(data) ? data : data.appointments || [];
 
+        saveCachedAppointments();
         renderCalendar();
         renderLists();
       } catch (error) {
         console.error(error);
-        document.getElementById("todayAppointments").innerHTML = "Could not load appointments.";
-        document.getElementById("upcomingAppointments").innerHTML = "Could not load appointments.";
-        renderCalendar();
+
+        if (!appointments.length) {
+          const hasCache = loadCachedAppointments();
+
+          if (!hasCache) {
+            document.getElementById("todayAppointments").innerHTML = "Could not load appointments.";
+            document.getElementById("upcomingAppointments").innerHTML = "Could not load appointments.";
+            renderCalendar();
+          }
+        }
       }
     }
 
@@ -1259,6 +1291,7 @@
       if (localStorage.getItem("torosAdminLoggedIn") === "true") {
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminDashboard").style.display = "block";
+        loadCachedAppointments();
         loadAppointments();
 
         if (typeof startAppointmentAutoRefresh === "function") {
@@ -1386,6 +1419,7 @@
 
 <script>
 let smsMessages = [];
+const SMS_CACHE_KEY = "torosCachedSmsMessages";
 let activeSmsPhone = "";
 let smsIsNewMessageMode = false;
 let smsLastRenderSignature = "";
@@ -1396,6 +1430,38 @@ let lastIncomingKey = localStorage.getItem("torosLastIncomingKey") || "";
 let unreadPhones = new Set(JSON.parse(localStorage.getItem("torosUnreadSmsPhones") || "[]"));
 let audioReady = false;
 let audioContext = null;
+
+
+function loadCachedSmsMessages() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(SMS_CACHE_KEY) || "[]");
+
+    if (Array.isArray(cached) && cached.length) {
+      smsMessages = cached;
+      smsLastRenderSignature = getSmsSignature(cached);
+      renderConversationList();
+
+      if (!activeSmsPhone && !smsIsNewMessageMode) {
+        const firstPhone = normalizePhone(cached[0]?.phone || "");
+        if (firstPhone) {
+          selectConversation(firstPhone, false);
+        }
+      } else if (!smsIsNewMessageMode) {
+        renderActiveThread(false);
+      }
+
+      return true;
+    }
+  } catch (err) {}
+
+  return false;
+}
+
+function saveCachedSmsMessages() {
+  try {
+    localStorage.setItem(SMS_CACHE_KEY, JSON.stringify(smsMessages || []));
+  } catch (err) {}
+}
 
 function unlockNotificationSound() {
   if (audioReady) return;
@@ -1456,6 +1522,7 @@ function startAppointmentAutoRefresh() {
 function startSmsGlobalPolling() {
   if (smsGlobalTimer) return;
 
+  loadCachedSmsMessages();
   pollSmsInBackground(true);
 
   smsGlobalTimer = setInterval(() => {
@@ -1483,6 +1550,7 @@ function updateSmsMessagesIfChanged(messages) {
   if (changed) {
     smsMessages = messages;
     smsLastRenderSignature = newSignature;
+    saveCachedSmsMessages();
   }
 
   return changed;
@@ -1579,6 +1647,7 @@ function getMessageKey(msg) {
 function openTextPanel() {
   unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
+  loadCachedSmsMessages();
   loadSmsHistory();
 
   if (!smsRefreshTimer) {
@@ -1827,7 +1896,6 @@ function renderActiveThread(forceScroll = true) {
 
   if (!smsMessages.length) {
     threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>No messages yet.</div>";
-      document.getElementById("activeConversationSub").innerText = "Choose a customer or enter a phone number below.";
     return;
   }
 
