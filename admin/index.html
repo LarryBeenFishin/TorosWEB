@@ -1166,8 +1166,6 @@
                 document.getElementById("smsActiveCustomerPhone").innerText = formatPhoneNumber(phone);
               }
 
-              document.getElementById("activeConversationTitle").innerText = "Text Conversation";
-              document.getElementById("activeConversationSub").innerText = "Composing to appointment customer";
               renderActiveThread();
             }
           }
@@ -1309,19 +1307,16 @@
       </div>
 
       <div style="display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;">
-        <div style="padding:12px 16px;border-bottom:1px solid #e5e5e5;background:white;flex-shrink:0;">
-          <div id="activeConversationTitle" style="font-size:18px;font-weight:bold;color:#163051;">New Message</div>
-          <div id="activeConversationSub" style="font-size:13px;color:#6b7280;margin-top:3px;">Choose a customer or enter a phone number below.</div>
-        </div>
+        <div id="smsComposeCard" style="padding:18px 16px;background:white;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
 
-        <div id="smsComposeCard" style="padding:12px 16px;background:#fbfcff;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
-
-          <div id="smsActiveCustomerCard" style="display:none;background:white;border:1px solid #dbe3ef;border-radius:14px;padding:14px;margin-bottom:12px;">
+          <div id="smsActiveCustomerCard" style="display:none;background:white;border:1px solid #dbe3ef;border-radius:14px;padding:14px;margin-bottom:0;">
             <div style="font-size:18px;font-weight:bold;color:#163051;" id="smsActiveCustomerName">Customer</div>
             <div style="font-size:13px;color:#6b7280;margin-top:4px;" id="smsActiveCustomerPhone"></div>
           </div>
 
           <div id="smsManualFields">
+            <div style="font-size:18px;font-weight:bold;color:#163051;margin-bottom:8px;">New Message</div>
+            <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">Enter a customer name and phone number to start a text.</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
               <div>
                 <label style="font-weight:bold;font-size:13px;margin-top:0;">Customer Name</label>
@@ -1605,8 +1600,6 @@ function resetSmsComposeView() {
   if (customerCard) customerCard.style.display = "none";
   if (manualFields) manualFields.style.display = "block";
 
-  document.getElementById("activeConversationTitle").innerText = "New Message";
-  document.getElementById("activeConversationSub").innerText = "Enter a customer name and phone number to start a text.";
 }
 
 function startNewSmsMessage() {
@@ -1807,9 +1800,6 @@ function selectConversation(phoneKey, rerenderList = true) {
     document.getElementById("smsCustomerName").value = group.name === "Customer" ? "" : group.name;
     document.getElementById("smsPhone").value = group.phone;
 
-    document.getElementById("activeConversationTitle").innerText = "Text Conversation";
-    document.getElementById("activeConversationSub").innerText = "Viewing customer message history";
-
     const customerCard = document.getElementById("smsActiveCustomerCard");
     const manualFields = document.getElementById("smsManualFields");
 
@@ -1834,8 +1824,7 @@ function renderActiveThread(forceScroll = true) {
 
   if (!smsMessages.length) {
     threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>No messages yet.</div>";
-    document.getElementById("activeConversationTitle").innerText = "New Message";
-    document.getElementById("activeConversationSub").innerText = "Choose a customer or enter a phone number below.";
+      document.getElementById("activeConversationSub").innerText = "Choose a customer or enter a phone number below.";
     return;
   }
 
