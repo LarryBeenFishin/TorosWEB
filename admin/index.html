@@ -1230,7 +1230,7 @@
       closeModal();
 
       if (typeof openTextPanel === "function") {
-        openTextPanel();
+        openTextPanel("conversation");
 
         setTimeout(() => {
           const nameInput = document.getElementById("smsCustomerName");
@@ -1372,7 +1372,7 @@
     });
   </script>
 <!-- Texting Panel -->
-<button id="openTextPanelBtn" onclick="openTextPanel()" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#af2727;color:white;border:0;border-radius:14px;padding:14px 18px;font-weight:bold;box-shadow:0 8px 25px rgba(0,0,0,.25);">
+<button id="openTextPanelBtn" onclick="openTextPanel('new')" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#af2727;color:white;border:0;border-radius:14px;padding:14px 18px;font-weight:bold;box-shadow:0 8px 25px rgba(0,0,0,.25);">
   Text Customer <span id="smsUnreadBadge" style="display:none;margin-left:8px;background:white;color:#af2727;border-radius:999px;padding:2px 7px;font-size:12px;">0</span>
 </button>
 
@@ -1681,7 +1681,7 @@ function showSmsToast(msg) {
   body.innerText = msg.message || "";
   toast.style.display = "block";
   toast.onclick = () => {
-    openTextPanel();
+    openTextPanel("conversation");
     selectConversation(normalizePhone(msg.phone));
     toast.style.display = "none";
   };
@@ -1708,13 +1708,17 @@ function getMessageKey(msg) {
   return [msg.sid || "", msg.date || "", msg.phone || "", msg.message || ""].join("|");
 }
 
-function openTextPanel() {
+function openTextPanel(mode = "new") {
   unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
 
   loadCachedSmsMessages();
 
-  if (smsRestoreConversationOnOpen && smsLastActivePhone) {
+  if (mode === "new") {
+    startNewSmsMessage();
+    smsHasOpenedBefore = true;
+    localStorage.setItem("torosSmsHasOpenedBefore", "true");
+  } else if (smsRestoreConversationOnOpen && smsLastActivePhone) {
     activeSmsPhone = smsLastActivePhone;
     smsIsNewMessageMode = false;
 
