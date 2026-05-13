@@ -4707,4 +4707,110 @@ function escapeJs(value) {
 }
 
 window.addEventListener("resize", function() {
-  const ove
+  const overlay = document.getElementById("textPanelOverlay");
+  if (!overlay || overlay.style.display !== "flex") return;
+
+  const sidebar = document.getElementById("smsSidebar");
+  const convo = document.getElementById("smsConversationView");
+
+  if (!isMobileSmsView()) {
+    if (sidebar) sidebar.classList.remove("sms-mobile-hidden");
+    if (convo) convo.style.display = "grid";
+  } else if (smsIsNewMessageMode || activeSmsPhone) {
+    showSmsConversationView();
+  } else {
+    showSmsConversationList();
+  }
+
+  setTimeout(adjustSmsForKeyboard, 150);
+});
+
+window.addEventListener("load", function() {
+  updateUnreadBadge();
+
+  if (localStorage.getItem("torosAdminLoggedIn") === "true") {
+    startSmsGlobalPolling();
+  }
+});
+</script>
+
+<script>
+  const VAPID_PUBLIC_KEY = "BI4DHPaAW8ZietuTFi4wIkIL49KSqylLqZb4jHIY6OwiyKDNs9BBlLbXU9Q6Z-jsfb6b6uty6HbyyLRWNdeh6l8";
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+
+    return outputArray;
+  }
+
+  async function enablePushNotifications() {
+    if (!("serviceWorker" in navigator)) {
+      alert("Push notifications are not supported on this device/browser.");
+      return;
+    }
+
+    if (!("PushManager" in window)) {
+      alert("Push notifications are not supported on this device/browser.");
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+
+      if (permission !== "granted") {
+        alert("Notifications were not enabled.");
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.register("/sw.js");
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+
+      const response = await fetch("/api/subscribe-push", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          subscription
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Notifications enabled for this device.");
+      } else {
+        alert(data.message || "Could not enable notifications.");
+      }
+    } catch (err) {
+      alert("Could not enable notifications: " + err.message);
+    }
+  }
+</script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function() {
+      navigator.serviceWorker.register("/sw.js").catch(function(error) {
+        console.log("Service worker registration failed:", error);
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
