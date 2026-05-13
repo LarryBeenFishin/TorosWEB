@@ -109,6 +109,246 @@
       flex-wrap: wrap;
     }
 
+/* TOROS ADMIN CARD BUTTON LAYOUT */
+
+    .admin-hero {
+      background:#163051;
+      color:white;
+      padding:26px;
+      display:block;
+    }
+
+    .admin-action-grid {
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:18px;
+      max-width:1500px;
+      margin:0 auto;
+    }
+
+    .admin-action-card {
+      min-height:124px;
+      border-radius:18px;
+      background:white;
+      color:#163051;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      padding:22px 24px;
+      text-align:left;
+      text-decoration:none;
+      box-shadow:0 12px 28px rgba(0,0,0,.16);
+      border:0;
+      cursor:pointer;
+      font-family:Arial, sans-serif;
+      transition:transform .15s ease;
+    }
+
+    .admin-action-card:hover {
+      background:white;
+      transform:translateY(-1px);
+    }
+
+    .admin-action-card.logo-card {
+      justify-content:center;
+      padding:16px;
+    }
+
+    .admin-action-card.logo-card img {
+      height:auto;
+      max-height:92px;
+      width:100%;
+      object-fit:contain;
+      background:transparent;
+      padding:0;
+      border-radius:0;
+    }
+
+    .logout-card {
+      justify-content:center;
+      background:linear-gradient(135deg, #af2727, #cf2f2f) !important;
+      color:white !important;
+      font-size:26px;
+    }
+
+    .action-icon {
+      font-size:42px;
+      line-height:1;
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:54px;
+      height:54px;
+    }
+
+    .green-icon {
+      color:#1d9958;
+    }
+
+    .action-title {
+      display:block;
+      font-size:24px;
+      font-weight:800;
+      line-height:1.1;
+    }
+
+    .action-subtitle {
+      display:block;
+      margin-top:8px;
+      font-size:18px;
+      font-weight:400;
+      color:#3f4c5f;
+      line-height:1.25;
+    }
+
+    .logout-card .action-title {
+      color:white;
+      font-size:26px;
+    }
+
+    .wide-action-card {
+      grid-column:1 / -1;
+      min-height:104px;
+      position:relative;
+    }
+
+    .notification-circle {
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      background:#0e5a89;
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:30px;
+      flex:0 0 auto;
+    }
+
+    .action-chevron {
+      margin-left:auto;
+      font-size:42px;
+      color:#163051;
+      opacity:.95;
+    }
+
+    @media (max-width:900px) {
+      .admin-hero {
+        padding:24px 14px 26px !important;
+      }
+
+      .admin-action-grid {
+        grid-template-columns:1fr 1fr;
+        gap:12px;
+      }
+
+      .admin-action-card {
+        min-height:78px;
+        border-radius:14px;
+        padding:14px;
+        gap:12px;
+        box-shadow:0 8px 18px rgba(0,0,0,.14);
+      }
+
+      .admin-action-card.logo-card {
+        min-height:74px;
+      }
+
+      .admin-action-card.logo-card img {
+        max-height:58px;
+      }
+
+      .logout-card {
+        min-height:74px;
+      }
+
+      .action-icon {
+        width:42px;
+        height:42px;
+        font-size:34px;
+      }
+
+      .action-title {
+        font-size:15px;
+      }
+
+      .action-subtitle {
+        font-size:13px;
+        margin-top:5px;
+      }
+
+      .logout-card .action-title {
+        font-size:17px;
+      }
+
+      .wide-action-card {
+        min-height:72px;
+        grid-column:1 / -1;
+      }
+
+      .notification-circle {
+        width:44px;
+        height:44px;
+        font-size:22px;
+      }
+
+      .action-chevron {
+        font-size:34px;
+      }
+    }
+
+    @media (max-width:430px) {
+      .admin-hero {
+        padding:22px 12px 24px !important;
+      }
+
+      .admin-action-grid {
+        gap:10px;
+      }
+
+      .admin-action-card {
+        padding:12px;
+      }
+
+      .action-icon {
+        width:38px;
+        height:38px;
+        font-size:30px;
+      }
+
+      .action-title {
+        font-size:14px;
+      }
+
+      .action-subtitle {
+        font-size:12px;
+      }
+    }
+
+    #pullRefreshIndicator {
+      position:fixed;
+      top:calc(8px + env(safe-area-inset-top));
+      left:50%;
+      transform:translate(-50%, -70px);
+      z-index:20000;
+      background:rgba(22,48,81,.94);
+      color:white;
+      border-radius:999px;
+      padding:10px 16px;
+      font-size:14px;
+      font-weight:bold;
+      box-shadow:0 8px 22px rgba(0,0,0,.24);
+      transition:transform .18s ease, opacity .18s ease;
+      opacity:0;
+      pointer-events:none;
+    }
+
+    #pullRefreshIndicator.visible {
+      transform:translate(-50%, 0);
+      opacity:1;
+    }
+
     .dashboard {
       padding: 24px;
       display: grid;
@@ -502,6 +742,7 @@
 </head>
 
 <body>
+  <div id="pullRefreshIndicator">â Pull to refresh</div>
 
   <section class="login-screen" id="loginScreen">
     <div class="login-card">
@@ -515,41 +756,71 @@
   </section>
 
   <section class="admin" id="adminDashboard">
-    <header>
-      <img src="/logo.png" alt="Toro's Auto Care Logo">
+    <header class="admin-hero">
+      <div class="admin-action-grid">
+        <div class="admin-action-card logo-card">
+          <img src="/logo.png" alt="Toro's Auto Care Logo">
+        </div>
 
-      <div class="header-buttons">
-        <button class="success-btn" onclick="openCreateModal()">+ New Appointment</button>
+        <button class="admin-action-card logout-card" onclick="logout()">
+          <span class="action-icon">â¥</span>
+          <span class="action-title">Logout</span>
+        </button>
 
-        <a href="/admin/inspection" style="text-decoration:none;">
-          <button class="success-btn">Inspection Form</button>
+        <button class="admin-action-card" onclick="openCreateModal()">
+          <span class="action-icon green-icon">â£</span>
+          <span>
+            <span class="action-title">New Appointment</span>
+            <span class="action-subtitle">Schedule a new<br>service appointment</span>
+          </span>
+        </button>
+
+        <a class="admin-action-card" href="/admin/inspection">
+          <span class="action-icon green-icon">â¤</span>
+          <span>
+            <span class="action-title">Inspection Form</span>
+            <span class="action-subtitle">Create a new<br>inspection form</span>
+          </span>
         </a>
 
-        <a href="/admin/inspection-history" style="text-decoration:none;">
-          <button class="success-btn">Inspection History</button>
+        <a class="admin-action-card" href="/admin/inspection-history">
+          <span class="action-icon green-icon">âº</span>
+          <span>
+            <span class="action-title">Inspection History</span>
+            <span class="action-subtitle">View past<br>inspections</span>
+          </span>
         </a>
 
-        <a href="/admin/customers" style="text-decoration:none;">
-          <button class="success-btn">Customer Profiles</button>
+        <a class="admin-action-card" href="/admin/customers">
+          <span class="action-icon green-icon">ð¥</span>
+          <span>
+            <span class="action-title">Customer Profiles</span>
+            <span class="action-subtitle">Manage customer<br>information</span>
+          </span>
         </a>
 
-        <button onclick="loadAppointments()">Refresh Appointments</button>
-        <button onclick="enablePushNotifications()">Enable Notifications</button>
-        <button onclick="logout()">Logout</button>
+        <button class="admin-action-card wide-action-card" onclick="enablePushNotifications()">
+          <span class="notification-circle">ð</span>
+          <span>
+            <span class="action-title">Enable Notifications</span>
+            <span class="action-subtitle">Stay updated on appointments and texts</span>
+          </span>
+          <span class="action-chevron">âº</span>
+        </button>
       </div>
     </header>
 
     <main class="dashboard">
       <div class="card">
         <div class="calendar-header">
-          <button onclick="changeMonth(-1)">←</button>
+          <button onclick="changeMonth(-1)">â</button>
 
           <div class="calendar-title-wrap">
             <h2 id="monthTitle">Calendar</h2>
             <button class="today-btn" onclick="goToToday()">Today</button>
           </div>
 
-          <button onclick="changeMonth(1)">→</button>
+          <button onclick="changeMonth(1)">â</button>
         </div>
 
         <div class="calendar-grid" id="calendarGrid"></div>
@@ -676,7 +947,7 @@
 
   <div class="modal-overlay" id="createModal">
     <div class="modal" style="position:relative;">
-      <button type="button" class="modal-x" onclick="closeCreateModal()">×</button>
+      <button type="button" class="modal-x" onclick="closeCreateModal()">Ã</button>
 
       <h2>New Appointment</h2>
       <div class="modal-date">Create an appointment from the admin portal</div>
@@ -1062,7 +1333,7 @@
       const email = app.email || "";
 
       document.getElementById("modalName").textContent = app.name || app.customer || "Customer";
-      document.getElementById("modalDate").textContent = `${formatDisplayDate(app)} • ${app.time || ""}`;
+      document.getElementById("modalDate").textContent = `${formatDisplayDate(app)} â¢ ${app.time || ""}`;
       document.getElementById("modalPhone").textContent = phone || "Not provided";
       document.getElementById("modalEmail").textContent = email || "Not provided";
       document.getElementById("modalVehicle").textContent = app.vehicle || "Not provided";
@@ -1366,6 +1637,86 @@
       }
     };
 
+
+    let pullStartY = 0;
+    let pullActive = false;
+    let pullTriggered = false;
+
+    function showPullRefresh(text) {
+      const indicator = document.getElementById("pullRefreshIndicator");
+      if (!indicator) return;
+      indicator.textContent = text || "â Pull to refresh";
+      indicator.classList.add("visible");
+    }
+
+    function hidePullRefresh() {
+      const indicator = document.getElementById("pullRefreshIndicator");
+      if (!indicator) return;
+      indicator.classList.remove("visible");
+    }
+
+    async function runPullRefresh() {
+      const overlay = document.getElementById("textPanelOverlay");
+      showPullRefresh("Refreshing...");
+
+      try {
+        if (overlay && overlay.style.display === "flex") {
+          if (typeof loadSmsHistory === "function") {
+            await loadSmsHistory();
+          }
+        } else if (typeof loadAppointments === "function") {
+          await loadAppointments();
+        }
+      } catch (err) {}
+
+      setTimeout(hidePullRefresh, 650);
+    }
+
+    document.addEventListener("touchstart", function(event) {
+      if (!event.touches || event.touches.length !== 1) return;
+
+      const overlay = document.getElementById("textPanelOverlay");
+      const isTextingOpen = overlay && overlay.style.display === "flex";
+      const scrollTarget = event.target.closest("#smsThread, #conversationList");
+
+      if (isTextingOpen) {
+        if (scrollTarget && scrollTarget.scrollTop > 0) return;
+      } else if (window.scrollY > 0) {
+        return;
+      }
+
+      pullStartY = event.touches[0].clientY;
+      pullActive = true;
+      pullTriggered = false;
+    }, { passive:true });
+
+    document.addEventListener("touchmove", function(event) {
+      if (!pullActive || !event.touches || event.touches.length !== 1) return;
+
+      const distance = event.touches[0].clientY - pullStartY;
+
+      if (distance > 45 && !pullTriggered) {
+        showPullRefresh(distance > 95 ? "Release to refresh" : "â Pull to refresh");
+      }
+
+      if (distance > 110) {
+        pullTriggered = true;
+      }
+    }, { passive:true });
+
+    document.addEventListener("touchend", function() {
+      if (!pullActive) return;
+
+      if (pullTriggered) {
+        runPullRefresh();
+      } else {
+        hidePullRefresh();
+      }
+
+      pullActive = false;
+      pullTriggered = false;
+    }, { passive:true });
+
     document.getElementById("passwordInput").addEventListener("keydown", function(event) {
       if (event.key === "Enter") {
         login();
@@ -1373,7 +1724,7 @@
     });
   </script>
 <!-- Texting Panel - Rebuilt Clean Mobile Module -->
-<button id="openTextPanelBtn" onclick="openTextPanel('new')" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#af2727;color:white;border:0;border-radius:14px;padding:14px 18px;font-weight:bold;box-shadow:0 8px 25px rgba(0,0,0,.25);">
+<button id="openTextPanelBtn" onclick="openTextPanel('inbox')" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#af2727;color:white;border:0;border-radius:14px;padding:14px 18px;font-weight:bold;box-shadow:0 8px 25px rgba(0,0,0,.25);">
   Text Customer <span id="smsUnreadBadge" style="display:none;margin-left:8px;background:white;color:#af2727;border-radius:999px;padding:2px 7px;font-size:12px;">0</span>
 </button>
 
@@ -1384,7 +1735,7 @@
 
 <div id="textPanelOverlay">
   <div id="textPanelShell">
-    <button id="smsCloseButton" onclick="closeTextPanel()">×</button>
+    <button id="smsCloseButton" onclick="closeTextPanel()">Ã</button>
 
     <div id="smsDesktopHeader">
       <div>
@@ -1400,7 +1751,7 @@
             <button id="smsNewMessageBtn" onclick="startNewSmsMessage()">+ New Message</button>
 
             <div id="smsSearchWrap">
-              <span id="smsSearchIcon">⌕</span>
+              <span id="smsSearchIcon">â</span>
               <input id="smsSearch" oninput="renderConversationList()" placeholder="Search">
             </div>
           </div>
@@ -1410,7 +1761,7 @@
 
       <section id="smsConversationView">
         <div id="smsLockedTop">
-          <button type="button" id="smsBackBtn" onclick="showSmsConversationList()">← Back</button>
+          <button type="button" id="smsBackBtn" onclick="showSmsConversationList()">â Back</button>
 
           <div id="smsActiveCustomerCard">
             <div id="smsActiveCustomerName">New Message</div>
@@ -1954,7 +2305,7 @@
     }
 
     #smsSendButton::after {
-      content:"↑";
+      content:"â";
       font-size:25px;
       line-height:1;
       font-weight:bold;
@@ -2295,7 +2646,7 @@
     }
 
     #smsBackBtn::after {
-      content:"‹";
+      content:"â¹";
       font-size:42px;
       line-height:1;
       font-weight:600;
@@ -3094,7 +3445,7 @@ function renderConversationList() {
         </div>
         <div style="font-size:13px;opacity:.86;margin-top:4px;">${escapeHtml(group.phone)}</div>
         <div style="font-size:13px;margin-top:8px;opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:${unread ? 'bold' : 'normal'};">
-          ${incoming ? '↩ ' : '↪ '} ${escapeHtml(latestText)}
+          ${incoming ? 'â© ' : 'âª '} ${escapeHtml(latestText)}
         </div>
       </div>
     `;
@@ -3178,7 +3529,7 @@ function renderActiveThread(forceScroll = true) {
         ">
           <div style="font-size:16px;line-height:1.4;white-space:pre-wrap;">${escapeHtml(msg.message)}</div>
           <div style="font-size:12px;opacity:.72;margin-top:6px;text-align:${outgoing ? 'right' : 'left'};">
-            ${outgoing ? "Toro's Auto Care" : escapeHtml(msg.name || 'Customer')} • ${formatFullDate(msg.date)}
+            ${outgoing ? "Toro's Auto Care" : escapeHtml(msg.name || 'Customer')} â¢ ${formatFullDate(msg.date)}
           </div>
         </div>
       </div>
