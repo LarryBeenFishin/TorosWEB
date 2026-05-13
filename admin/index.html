@@ -1562,9 +1562,60 @@
       resize:none !important;
     }
 
+    #smsComposer label {
+      display:none !important;
+    }
+
+    #smsComposer {
+      position:relative !important;
+      display:flex !important;
+      align-items:flex-end !important;
+      gap:8px !important;
+    }
+
+    #smsMessage {
+      flex:1 !important;
+      height:46px !important;
+      min-height:46px !important;
+      max-height:110px !important;
+      border-radius:23px !important;
+      padding:12px 16px !important;
+      resize:none !important;
+      line-height:20px !important;
+    }
+
     #smsComposer button {
-      border-radius:18px !important;
-      padding:13px !important;
+      width:46px !important;
+      height:46px !important;
+      min-width:46px !important;
+      border-radius:50% !important;
+      padding:0 !important;
+      margin-top:0 !important;
+      font-size:0 !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      background:#af2727 !important;
+    }
+
+    #smsComposer button::after {
+      content:"↑";
+      font-size:26px;
+      line-height:1;
+      font-weight:bold;
+      color:white;
+      transform:translateY(-1px);
+    }
+
+    #smsStatus {
+      position:absolute;
+      left:12px;
+      bottom:calc(64px + env(safe-area-inset-bottom));
+      background:rgba(255,255,255,.94);
+      padding:4px 8px;
+      border-radius:999px;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+      max-width:calc(100vw - 24px);
     }
 
 
@@ -1934,6 +1985,7 @@ function startNewSmsMessage() {
   if (messageInput) {
     messageInput.value = "";
     messageInput.placeholder = "Type your message...";
+    autoGrowSmsMessageBox();
     setTimeout(() => messageInput.focus(), 150);
   }
   if (templateInput) templateInput.value = "";
@@ -1950,10 +2002,21 @@ function startNewSmsMessage() {
   showSmsConversationView();
 }
 
+
+function autoGrowSmsMessageBox() {
+  const textarea = document.getElementById("smsMessage");
+  if (!textarea) return;
+
+  textarea.style.height = "46px";
+  const nextHeight = Math.min(textarea.scrollHeight, 110);
+  textarea.style.height = nextHeight + "px";
+}
+
 function useSmsTemplate() {
   const template = document.getElementById("smsTemplate").value;
   if (template) {
     document.getElementById("smsMessage").value = template;
+    autoGrowSmsMessageBox();
   }
 }
 
@@ -2272,6 +2335,7 @@ async function sendCustomerText() {
       smsIsNewMessageMode = false;
 
       document.getElementById("smsMessage").value = "";
+      autoGrowSmsMessageBox();
       document.getElementById("smsTemplate").value = "";
 
       setTimeout(loadSmsHistory, 700);
@@ -2321,6 +2385,13 @@ function escapeJs(text) {
 }
 
 
+
+
+document.addEventListener("input", function(event) {
+  if (event.target && event.target.id === "smsMessage") {
+    autoGrowSmsMessageBox();
+  }
+});
 
 window.addEventListener("resize", function() {
   const overlay = document.getElementById("textPanelOverlay");
