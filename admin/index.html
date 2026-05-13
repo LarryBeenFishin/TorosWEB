@@ -1676,6 +1676,14 @@
   }
 /* TOROS MOBILE KEYBOARD TARGET OVERRIDE */
 
+    #textPanelGrid,
+    #textPanelOverlay,
+    #smsConversationView {
+      overscroll-behavior:none !important;
+      touch-action:pan-y !important;
+    }
+
+
   @media (max-width: 760px) {
     #smsPanelHeader {
       position:fixed !important;
@@ -1717,18 +1725,21 @@
       min-height:0 !important;
       overflow:hidden !important;
       background:#eef3fa !important;
+      display:flex !important;
+      flex-direction:column !important;
     }
 
     #smsComposeCard {
       position:sticky !important;
       top:0 !important;
-      z-index:30 !important;
+      z-index:100 !important;
       padding:18px 74px 14px 22px !important;
       background:rgba(255,255,255,.98) !important;
       border-bottom:1px solid #d8dee9 !important;
       backdrop-filter:blur(12px);
       -webkit-backdrop-filter:blur(12px);
       flex-shrink:0 !important;
+      width:100% !important;
     }
 
     #smsActiveCustomerCard {
@@ -1768,7 +1779,8 @@
     #smsThread {
       flex:1 1 auto !important;
       min-height:0 !important;
-      overflow:auto !important;
+      overflow-y:auto !important;
+      overflow-x:hidden !important;
       padding:18px 14px 18px !important;
       background:#eef3fa !important;
       -webkit-overflow-scrolling:touch !important;
