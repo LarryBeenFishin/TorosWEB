@@ -18,9 +18,11 @@ module.exports = async function handler(req, res) {
   if (!requireAuth(req, res)) return;
 
   try {
-    const title = req.body?.title || "Toro's Auto Care";
-    const body = req.body?.body || "New notification";
-    const url = req.body?.url || "/admin";
+    // If ?test=true, use hardcoded test values
+    const isTest = req.query.test === "true";
+    const title = isTest ? "Test Push" : (req.body?.title || "Toro's Auto Care");
+    const body = isTest ? "This is a test notification from Toro's Auto Care." : (req.body?.body || "New notification");
+    const url = isTest ? "/admin" : (req.body?.url || "/admin");
 
     const response = await fetch(
       `${process.env.APPOINTMENTS_SCRIPT_URL}?action=getPushSubscriptions&password=${process.env.APPS_SCRIPT_ADMIN_PASSWORD}`
@@ -29,11 +31,7 @@ module.exports = async function handler(req, res) {
     const data = await response.json();
     const subscriptions = data.subscriptions || [];
 
-    const payload = JSON.stringify({
-      title,
-      body,
-      url
-    });
+    const payload = JSON.stringify({ title, body, url });
 
     const results = await Promise.allSettled(
       subscriptions.map(subscription =>
@@ -44,11 +42,7 @@ module.exports = async function handler(req, res) {
     const sent = results.filter(r => r.status === "fulfilled").length;
     const failed = results.length - sent;
 
-    return res.status(200).json({
-      success: true,
-      sent,
-      failed
-    });
+    return res.status(200).json({ success: true, sent, failed });
 
   } catch (err) {
     return res.status(500).json({
