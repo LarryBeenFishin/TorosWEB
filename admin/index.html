@@ -2263,6 +2263,83 @@
     }
   }
 
+/* TOROS MOBILE CHAT HEADER BUTTONS */
+
+  @media (max-width:760px) {
+    #smsLockedTop {
+      padding:calc(14px + env(safe-area-inset-top)) 74px 12px 74px !important;
+      min-height:96px !important;
+      display:grid !important;
+      grid-template-columns:1fr !important;
+      align-items:center !important;
+    }
+
+    #smsBackBtn {
+      position:fixed !important;
+      top:calc(12px + env(safe-area-inset-top)) !important;
+      left:12px !important;
+      z-index:10050 !important;
+      width:44px !important;
+      height:44px !important;
+      border-radius:999px !important;
+      background:rgba(22,48,81,.92) !important;
+      color:white !important;
+      font-size:0 !important;
+      box-shadow:0 8px 22px rgba(0,0,0,.28) !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      padding:0 !important;
+      margin:0 !important;
+      line-height:1 !important;
+    }
+
+    #smsBackBtn::after {
+      content:"‹";
+      font-size:42px;
+      line-height:1;
+      font-weight:600;
+      transform:translateY(-2px);
+    }
+
+    #smsActiveCustomerCard {
+      text-align:center !important;
+      padding:0 !important;
+      margin:0 0 8px !important;
+      border:0 !important;
+      background:transparent !important;
+    }
+
+    #smsActiveCustomerName {
+      font-size:21px !important;
+      font-weight:800 !important;
+      line-height:1.15 !important;
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+    }
+
+    #smsActiveCustomerPhone {
+      font-size:14px !important;
+      margin-top:3px !important;
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+    }
+
+    #smsManualFields {
+      margin-top:6px !important;
+    }
+
+    #smsTemplate {
+      margin-top:2px !important;
+    }
+
+    .sms-template-label {
+      text-align:left !important;
+    }
+  }
+
 </style>
 
 <script>
