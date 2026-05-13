@@ -2232,6 +2232,16 @@
     }
   }
 
+/* TOROS MOBILE MESSAGE 5 LINE AUTOGROW */
+
+  @media (max-width:760px) {
+    #smsMessage {
+      max-height:124px !important;
+      overflow-y:auto !important;
+      line-height:20px !important;
+    }
+  }
+
 </style>
 
 <script>
@@ -2304,10 +2314,13 @@ function autoGrowSmsMessageBox() {
   const textarea = document.getElementById("smsMessage");
   if (!textarea) return;
 
-  textarea.style.height = isMobileSmsView() ? "44px" : "46px";
-  const maxHeight = isMobileSmsView() ? 96 : 110;
+  const baseHeight = isMobileSmsView() ? 44 : 46;
+  const maxHeight = isMobileSmsView() ? 124 : 140;
+
+  textarea.style.height = baseHeight + "px";
   const nextHeight = Math.min(textarea.scrollHeight, maxHeight);
   textarea.style.height = nextHeight + "px";
+  textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
 }
 
 function loadCachedSmsMessages() {
