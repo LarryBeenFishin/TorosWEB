@@ -1459,22 +1459,90 @@
 
 <style>
   @media (max-width: 760px) {
-    #textPanelOverlay { padding:8px !important; }
+
+    #textPanelOverlay {
+      padding:0 !important;
+      align-items:stretch !important;
+      justify-content:stretch !important;
+    }
+
     #textPanelOverlay > div {
-      height:94vh !important;
-      border-radius:14px !important;
+      width:100vw !important;
+      height:100vh !important;
+      max-width:none !important;
+      border-radius:0 !important;
     }
+
     #textPanelGrid {
-      grid-template-columns:1fr !important;
+      display:block !important;
+      height:100% !important;
+      position:relative;
     }
+
     #smsSidebar {
-      max-height:190px;
+      width:100%;
+      height:100%;
+      max-height:none !important;
       border-right:0 !important;
-      border-bottom:1px solid #e5e5e5;
+      border-bottom:0 !important;
+      background:#f5f5f7 !important;
     }
+
+    #conversationList {
+      padding:8px !important;
+    }
+
+    #smsSidebar.sms-mobile-hidden {
+      display:none !important;
+    }
+
+    #smsConversationView {
+      position:absolute;
+      inset:0;
+      background:#eef3fa;
+      display:flex;
+      flex-direction:column;
+      z-index:5;
+    }
+
+    #smsComposeCard {
+      border-radius:0 !important;
+      padding:12px 14px !important;
+      background:white !important;
+      border-bottom:1px solid #e5e5e5 !important;
+    }
+
+    #smsThread {
+      flex:1 !important;
+      padding:14px !important;
+    }
+
+    #smsComposer {
+      padding:10px 12px !important;
+      background:white !important;
+      border-top:1px solid #e5e5e5 !important;
+    }
+
     #smsComposer textarea {
-      height:64px !important;
-      min-height:64px !important;
+      height:52px !important;
+      min-height:52px !important;
+      border-radius:22px !important;
+      padding:14px 16px !important;
+      resize:none !important;
+    }
+
+    #smsComposer button {
+      border-radius:18px !important;
+    }
+
+    .sms-mobile-back {
+      display:flex !important;
+      align-items:center;
+      gap:6px;
+      color:#163051;
+      font-weight:bold;
+      margin-bottom:10px;
+      cursor:pointer;
     }
   }
 </style>
