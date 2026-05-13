@@ -1541,25 +1541,12 @@
 
     #smsThread {
       flex:1 !important;
-      padding:14px !important;
+      padding:14px 14px 18px !important;
       min-height:0 !important;
       overflow:auto !important;
       background:#eef3fa !important;
-    }
-
-    #smsComposer {
-      padding:10px 12px calc(10px + env(safe-area-inset-bottom)) !important;
-      background:white !important;
-      border-top:1px solid #e5e5e5 !important;
-      flex-shrink:0 !important;
-    }
-
-    #smsComposer textarea {
-      height:52px !important;
-      min-height:52px !important;
-      border-radius:22px !important;
-      padding:14px 16px !important;
-      resize:none !important;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
     }
 
     #smsComposer label {
@@ -1567,27 +1554,37 @@
     }
 
     #smsComposer {
-      position:relative !important;
+      position:sticky !important;
+      bottom:0 !important;
+      z-index:20 !important;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom)) !important;
+      background:rgba(255,255,255,.96) !important;
+      border-top:1px solid #e5e5e5 !important;
+      flex-shrink:0 !important;
       display:flex !important;
       align-items:flex-end !important;
       gap:8px !important;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
     }
 
+    #smsComposer textarea,
     #smsMessage {
       flex:1 !important;
-      height:46px !important;
-      min-height:46px !important;
-      max-height:110px !important;
-      border-radius:23px !important;
-      padding:12px 16px !important;
+      height:44px !important;
+      min-height:44px !important;
+      max-height:96px !important;
+      border-radius:22px !important;
+      padding:12px 15px !important;
       resize:none !important;
       line-height:20px !important;
+      background:white !important;
     }
 
     #smsComposer button {
-      width:46px !important;
-      height:46px !important;
-      min-width:46px !important;
+      width:44px !important;
+      height:44px !important;
+      min-width:44px !important;
       border-radius:50% !important;
       padding:0 !important;
       margin-top:0 !important;
@@ -1600,7 +1597,7 @@
 
     #smsComposer button::after {
       content:"↑";
-      font-size:26px;
+      font-size:25px;
       line-height:1;
       font-weight:bold;
       color:white;
@@ -1610,7 +1607,7 @@
     #smsStatus {
       position:absolute;
       left:12px;
-      bottom:calc(64px + env(safe-area-inset-bottom));
+      bottom:calc(62px + env(safe-area-inset-bottom));
       background:rgba(255,255,255,.94);
       padding:4px 8px;
       border-radius:999px;
@@ -1763,6 +1760,7 @@ function startAppointmentAutoRefresh() {
 function startSmsGlobalPolling() {
   if (smsGlobalTimer) return;
 
+  adjustSmsForKeyboard();
   loadCachedSmsMessages();
   pollSmsInBackground(true);
 
@@ -1886,6 +1884,31 @@ function getMessageKey(msg) {
 }
 
 
+
+function adjustSmsForKeyboard() {
+  const overlay = document.getElementById("textPanelOverlay");
+  const panel = overlay ? overlay.firstElementChild : null;
+  const thread = document.getElementById("smsThread");
+
+  if (!overlay || overlay.style.display !== "flex" || !isMobileSmsView()) return;
+
+  if (window.visualViewport && panel) {
+    panel.style.height = window.visualViewport.height + "px";
+  }
+
+  if (thread && document.activeElement && document.activeElement.id === "smsMessage") {
+    requestAnimationFrame(() => {
+      thread.scrollTop = thread.scrollHeight;
+    });
+  }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", adjustSmsForKeyboard);
+  window.visualViewport.addEventListener("scroll", adjustSmsForKeyboard);
+}
+
+
 function lockPageBehindSms() {
   smsPageScrollY = window.scrollY || document.documentElement.scrollTop || 0;
   document.body.classList.add("sms-panel-open");
@@ -1893,6 +1916,13 @@ function lockPageBehindSms() {
 }
 
 function unlockPageBehindSms() {
+  const overlay = document.getElementById("textPanelOverlay");
+  const panel = overlay ? overlay.firstElementChild : null;
+
+  if (panel) {
+    panel.style.height = "";
+  }
+
   document.body.classList.remove("sms-panel-open");
   document.body.style.top = "";
   window.scrollTo(0, smsPageScrollY || 0);
@@ -2007,8 +2037,8 @@ function autoGrowSmsMessageBox() {
   const textarea = document.getElementById("smsMessage");
   if (!textarea) return;
 
-  textarea.style.height = "46px";
-  const nextHeight = Math.min(textarea.scrollHeight, 110);
+  textarea.style.height = "44px";
+  const nextHeight = Math.min(textarea.scrollHeight, 96);
   textarea.style.height = nextHeight + "px";
 }
 
@@ -2386,6 +2416,13 @@ function escapeJs(text) {
 
 
 
+
+
+document.addEventListener("focusin", function(event) {
+  if (event.target && event.target.id === "smsMessage") {
+    setTimeout(adjustSmsForKeyboard, 250);
+  }
+});
 
 document.addEventListener("input", function(event) {
   if (event.target && event.target.id === "smsMessage") {
