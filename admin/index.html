@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#163051">
   <link rel="manifest" href="/manifest.json">
@@ -34,21 +34,12 @@
 
     button:hover { background: #911f1f; }
 
-
-    body.sms-panel-open {
-      overflow: hidden !important;
-      position: fixed !important;
-      width: 100% !important;
-      height: 100% !important;
-      touch-action: none;
-    }
-
     input, select, textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #d8dee9;
       border-radius: 12px;
-      font-size: 16px;
+      font-size: 15px;
       font-family: Arial, sans-serif;
     }
 
@@ -1381,65 +1372,60 @@
       }
     });
   </script>
-<!-- Texting Panel -->
+<!-- Texting Panel - Rebuilt Clean Mobile Module -->
 <button id="openTextPanelBtn" onclick="openTextPanel('new')" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#af2727;color:white;border:0;border-radius:14px;padding:14px 18px;font-weight:bold;box-shadow:0 8px 25px rgba(0,0,0,.25);">
   Text Customer <span id="smsUnreadBadge" style="display:none;margin-left:8px;background:white;color:#af2727;border-radius:999px;padding:2px 7px;font-size:12px;">0</span>
 </button>
 
-<div id="smsToast" style="display:none;position:fixed;right:20px;bottom:78px;z-index:10001;background:#163051;color:white;border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:320px;font-size:14px;cursor:pointer;">
-  <div id="smsToastTitle" style="font-weight:bold;margin-bottom:4px;">New text message</div>
-  <div id="smsToastBody" style="opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+<div id="smsToast">
+  <div id="smsToastTitle">New text message</div>
+  <div id="smsToastBody"></div>
 </div>
 
-<div id="textPanelOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;align-items:center;justify-content:center;padding:14px;">
-  <div style="width:100%;max-width:980px;height:min(92vh,820px);background:white;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;display:flex;flex-direction:column;">
-    
-    <div id="smsPanelHeader" style="background:#163051;color:white;padding:0;display:block;flex-shrink:0;">
+<div id="textPanelOverlay">
+  <div id="textPanelShell">
+    <button id="smsCloseButton" onclick="closeTextPanel()">×</button>
+
+    <div id="smsDesktopHeader">
       <div>
-        <div style="font-size:20px;font-weight:bold;">Texting Inbox</div>
-        <div style="font-size:13px;opacity:.85;">Two-way SMS for Toro's Auto Care</div>
+        <div class="sms-desktop-title">Texting Inbox</div>
+        <div class="sms-desktop-subtitle">Two-way SMS for Toro's Auto Care</div>
       </div>
-      <button onclick="closeTextPanel()" style="background:transparent;color:white;border:0;font-size:30px;cursor:pointer;padding:0;line-height:1;">×</button>
     </div>
 
-    <div id="textPanelGrid" style="display:grid;grid-template-columns:300px minmax(0,1fr);flex:1;min-height:0;overflow:hidden;position:relative;">
-      <div id="smsSidebar" style="border-right:1px solid #e5e5e5;background:#f7f9fc;display:flex;flex-direction:column;min-width:0;min-height:0;">
-        <div style="padding:14px;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
-          <button onclick="startNewSmsMessage()" style="width:100%;background:#1d7f4f;color:white;border:0;border-radius:12px;padding:12px;font-weight:bold;margin-bottom:10px;">
-            + New Message
-          </button>
-          <input id="smsSearch" oninput="renderConversationList()" placeholder="Search name or phone" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px;">
+    <div id="smsApp">
+      <aside id="smsSidebar">
+        <div id="smsSidebarTop">
+          <button id="smsNewMessageBtn" onclick="startNewSmsMessage()">+ New Message</button>
+          <input id="smsSearch" oninput="renderConversationList()" placeholder="Search name or phone">
         </div>
-        <div id="conversationList" style="overflow:auto;flex:1;padding:10px;min-height:0;"></div>
-      </div>
+        <div id="conversationList"></div>
+      </aside>
 
-      <div id="smsConversationView" style="display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;">
-        <div id="smsComposeCard" style="padding:18px 16px;background:white;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
+      <section id="smsConversationView">
+        <div id="smsLockedTop">
+          <button type="button" id="smsBackBtn" onclick="showSmsConversationList()">← Back</button>
 
-          <div class="sms-mobile-back" onclick="showSmsConversationList()" style="display:none;">← Back</div>
-
-          <div id="smsActiveCustomerCard" style="display:none;background:white;border:1px solid #dbe3ef;border-radius:14px;padding:14px;margin-bottom:0;">
-            <div style="font-size:18px;font-weight:bold;color:#163051;" id="smsActiveCustomerName">Customer</div>
-            <div style="font-size:13px;color:#6b7280;margin-top:4px;" id="smsActiveCustomerPhone"></div>
+          <div id="smsActiveCustomerCard">
+            <div id="smsActiveCustomerName">New Message</div>
+            <div id="smsActiveCustomerPhone">Enter a customer name and phone number to start a text.</div>
           </div>
 
           <div id="smsManualFields">
-            <div style="font-size:18px;font-weight:bold;color:#163051;margin-bottom:8px;">New Message</div>
-            <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">Enter a customer name and phone number to start a text.</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="sms-manual-grid">
               <div>
-                <label style="font-weight:bold;font-size:13px;margin-top:0;">Customer Name</label>
-                <input id="smsCustomerName" placeholder="John Smith" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px;">
+                <label>Customer Name</label>
+                <input id="smsCustomerName" placeholder="John Smith">
               </div>
               <div>
-                <label style="font-weight:bold;font-size:13px;margin-top:0;">Phone Number</label>
-                <input id="smsPhone" placeholder="+18475551234" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px;">
+                <label>Phone Number</label>
+                <input id="smsPhone" placeholder="+18475551234">
               </div>
             </div>
           </div>
 
-          <label style="font-weight:bold;font-size:13px;">Quick Templates</label>
-          <select id="smsTemplate" onchange="useSmsTemplate()" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px;">
+          <label class="sms-template-label">Quick Templates</label>
+          <select id="smsTemplate" onchange="useSmsTemplate()">
             <option value="">Choose a template</option>
             <option value="Hi, this is Toro's Auto Care. Your appointment has been confirmed. Reply here if you have any questions.">Appointment Confirmed</option>
             <option value="Hi, this is Toro's Auto Care. Your vehicle inspection is ready. Please review it when you have a chance.">Inspection Ready</option>
@@ -1449,28 +1435,328 @@
           </select>
         </div>
 
-        <div id="smsThread" style="flex:1;overflow:auto;background:#eef3fa;padding:16px;min-height:0;">
-          <div style="color:#777;text-align:center;margin-top:40px;">Loading messages...</div>
+        <div id="smsThread">
+          <div class="sms-empty-state">Start a new message by entering a name, phone number, and message.</div>
         </div>
 
-        <div id="smsComposer" style="padding:12px 16px;background:white;border-top:1px solid #e5e5e5;flex-shrink:0;">
-          <label style="font-weight:bold;font-size:13px;margin-top:0;">Message</label>
-          <textarea id="smsMessage" placeholder="Type your message..." style="width:100%;height:76px;min-height:76px;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;resize:vertical;"></textarea>
-
-          <button onclick="sendCustomerText()" style="width:100%;background:#af2727;color:white;border:0;border-radius:12px;padding:13px;font-weight:bold;font-size:16px;cursor:pointer;margin-top:8px;">
-            Send Text
-          </button>
-
-          <div id="smsStatus" style="margin-top:8px;font-size:14px;font-weight:bold;min-height:18px;"></div>
+        <div id="smsComposer">
+          <textarea id="smsMessage" placeholder="Type your message..."></textarea>
+          <button id="smsSendButton" onclick="sendCustomerText()" aria-label="Send text">Send Text</button>
+          <div id="smsStatus"></div>
         </div>
-        <div id="smsKeyboardSpacer" aria-hidden="true"></div>
-      </div>
+      </section>
     </div>
   </div>
 </div>
 
 <style>
-  @media (max-width: 760px) {
+  body.sms-panel-open {
+    overflow:hidden !important;
+    position:fixed !important;
+    width:100% !important;
+    height:100% !important;
+  }
+
+  #smsToast {
+    display:none;
+    position:fixed;
+    right:20px;
+    bottom:78px;
+    z-index:10001;
+    background:#163051;
+    color:white;
+    border-radius:14px;
+    padding:12px 14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+    max-width:320px;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  #smsToastTitle {
+    font-weight:bold;
+    margin-bottom:4px;
+  }
+
+  #smsToastBody {
+    opacity:.9;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  #textPanelOverlay {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:10000;
+    align-items:center;
+    justify-content:center;
+    padding:14px;
+  }
+
+  #textPanelShell {
+    width:100%;
+    max-width:980px;
+    height:min(92vh,820px);
+    background:white;
+    border-radius:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+
+  #smsCloseButton {
+    position:absolute;
+    top:14px;
+    right:16px;
+    z-index:100;
+    background:transparent;
+    color:white;
+    border:0;
+    font-size:30px;
+    cursor:pointer;
+    padding:0;
+    line-height:1;
+    width:36px;
+    height:36px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  #smsDesktopHeader {
+    background:#163051;
+    color:white;
+    padding:16px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-shrink:0;
+  }
+
+  .sms-desktop-title {
+    font-size:20px;
+    font-weight:bold;
+  }
+
+  .sms-desktop-subtitle {
+    font-size:13px;
+    opacity:.85;
+  }
+
+  #smsApp {
+    display:grid;
+    grid-template-columns:300px minmax(0,1fr);
+    flex:1;
+    min-height:0;
+    overflow:hidden;
+  }
+
+  #smsSidebar {
+    border-right:1px solid #e5e5e5;
+    background:#f7f9fc;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    min-height:0;
+  }
+
+  #smsSidebarTop {
+    padding:14px;
+    border-bottom:1px solid #e5e5e5;
+    flex-shrink:0;
+  }
+
+  #smsNewMessageBtn {
+    width:100%;
+    background:#1d7f4f;
+    color:white;
+    border:0;
+    border-radius:12px;
+    padding:12px;
+    font-weight:bold;
+    margin-bottom:10px;
+  }
+
+  #smsSearch,
+  #smsCustomerName,
+  #smsPhone,
+  #smsTemplate,
+  #smsMessage {
+    font-size:16px !important;
+  }
+
+  #smsSearch {
+    width:100%;
+    padding:11px;
+    border:1px solid #ccc;
+    border-radius:10px;
+  }
+
+  #conversationList {
+    overflow:auto;
+    flex:1;
+    padding:10px;
+    min-height:0;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  #smsConversationView {
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr) auto;
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+    background:#eef3fa;
+  }
+
+  #smsLockedTop {
+    background:white;
+    border-bottom:1px solid #d8dee9;
+    padding:14px 16px;
+    z-index:20;
+  }
+
+  #smsBackBtn {
+    display:none;
+    background:transparent;
+    color:#007aff;
+    border:0;
+    padding:0;
+    margin:0 0 10px;
+    font-size:17px;
+    font-weight:bold;
+  }
+
+  #smsActiveCustomerCard {
+    background:white;
+    border:1px solid #dbe3ef;
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:10px;
+  }
+
+  #smsActiveCustomerName {
+    font-size:18px;
+    font-weight:bold;
+    color:#163051;
+  }
+
+  #smsActiveCustomerPhone {
+    font-size:13px;
+    color:#6b7280;
+    margin-top:4px;
+  }
+
+  #smsManualFields {
+    display:block;
+    margin-bottom:10px;
+  }
+
+  .sms-manual-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  #smsLockedTop label {
+    font-weight:bold;
+    font-size:13px;
+    margin:0 0 6px;
+  }
+
+  #smsCustomerName,
+  #smsPhone,
+  #smsTemplate {
+    width:100%;
+    padding:11px;
+    border:1px solid #ccc;
+    border-radius:10px;
+  }
+
+  .sms-template-label {
+    display:block;
+    margin-top:8px !important;
+  }
+
+  #smsThread {
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    background:#eef3fa;
+    padding:16px;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+
+  .sms-empty-state {
+    color:#777;
+    text-align:center;
+    margin-top:40px;
+  }
+
+  #smsComposer {
+    background:white;
+    border-top:1px solid #d8dee9;
+    padding:10px 12px;
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    position:relative;
+    z-index:30;
+  }
+
+  #smsMessage {
+    width:100%;
+    flex:1;
+    height:46px;
+    min-height:46px;
+    max-height:110px;
+    padding:12px 16px;
+    border:1px solid #ccc;
+    border-radius:23px;
+    resize:none;
+    line-height:20px;
+    font-family:Arial, sans-serif;
+  }
+
+  #smsSendButton {
+    width:auto;
+    min-width:120px;
+    background:#af2727;
+    color:white;
+    border:0;
+    border-radius:12px;
+    padding:13px;
+    font-weight:bold;
+    font-size:16px;
+  }
+
+  #smsStatus {
+    position:absolute;
+    left:12px;
+    bottom:62px;
+    font-size:14px;
+    font-weight:bold;
+    min-height:18px;
+    background:rgba(255,255,255,.94);
+    padding:4px 8px;
+    border-radius:999px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    max-width:calc(100% - 24px);
+    display:none;
+  }
+
+  @media (max-width:760px) {
+    #openTextPanelBtn {
+      bottom:16px !important;
+      right:16px !important;
+    }
 
     #textPanelOverlay {
       padding:0 !important;
@@ -1479,298 +1765,97 @@
       background:#f5f5f7 !important;
     }
 
-    #textPanelOverlay > div {
+    #textPanelShell {
       width:100vw !important;
-      height:100vh !important;
+      height:100dvh !important;
       max-width:none !important;
       max-height:none !important;
       border-radius:0 !important;
       box-shadow:none !important;
     }
 
-    #textPanelGrid {
-      display:block !important;
-      height:100% !important;
-      position:relative !important;
-      background:#f5f5f7 !important;
+    #smsDesktopHeader {
+      display:none !important;
     }
 
-    #smsPanelHeader {
+    #smsCloseButton {
       position:fixed !important;
       top:calc(12px + env(safe-area-inset-top)) !important;
       right:12px !important;
       z-index:10050 !important;
-      background:transparent !important;
-      padding:0 !important;
-      display:block !important;
-      width:44px !important;
-      height:44px !important;
-      pointer-events:none !important;
-    }
-
-    #smsPanelHeader > div {
-      display:none !important;
-    }
-
-    #smsPanelHeader button {
-      pointer-events:auto !important;
       width:44px !important;
       height:44px !important;
       border-radius:999px !important;
       background:rgba(22,48,81,.92) !important;
       color:white !important;
-      display:flex !important;
-      align-items:center !important;
-      justify-content:center !important;
       font-size:30px !important;
       box-shadow:0 8px 22px rgba(0,0,0,.28) !important;
     }
 
-    #smsConversationView {
-      padding-top:0 !important;
+    #smsApp {
+      display:block !important;
+      height:100% !important;
+      position:relative !important;
+      overflow:hidden !important;
     }
 
     #smsSidebar {
-      width:100%;
-      height:100%;
-      max-height:none !important;
+      width:100% !important;
+      height:100% !important;
       border-right:0 !important;
-      border-bottom:0 !important;
       background:#f5f5f7 !important;
-    }
-
-    #conversationList {
-      padding:8px !important;
-      background:#f5f5f7 !important;
+      display:flex;
     }
 
     #smsSidebar.sms-mobile-hidden {
       display:none !important;
     }
 
+    #smsSidebarTop {
+      padding:calc(68px + env(safe-area-inset-top)) 14px 14px !important;
+      background:#f5f5f7 !important;
+    }
+
+    #smsNewMessageBtn {
+      border-radius:14px !important;
+      font-size:16px !important;
+      padding:13px !important;
+    }
+
+    #smsSearch {
+      border-radius:14px !important;
+      padding:13px !important;
+    }
+
+    #conversationList {
+      padding:10px 8px !important;
+      background:#f5f5f7 !important;
+    }
+
     #smsConversationView {
       position:absolute !important;
       inset:0 !important;
-      background:#eef3fa !important;
-      display:none;
-      flex-direction:column !important;
-      z-index:5;
-      min-height:0 !important;
-    }
-
-    #smsComposeCard {
-      border-radius:0 !important;
-      padding:12px 14px !important;
-      background:white !important;
-      border-bottom:1px solid #e5e5e5 !important;
-      flex-shrink:0 !important;
-    }
-
-    #smsActiveCustomerCard {
-      border:0 !important;
-      padding:4px 0 8px !important;
-      background:white !important;
-    }
-
-    #smsManualFields > div:first-child {
-      font-size:22px !important;
-    }
-
-    #smsThread {
-      flex:1 !important;
-      padding:14px 14px 18px !important;
-      min-height:0 !important;
-      overflow:auto !important;
-      background:#eef3fa !important;
-      -webkit-overflow-scrolling:touch;
-      overscroll-behavior:contain;
-    }
-
-    #smsComposer label {
-      display:none !important;
-    }
-
-    #smsComposer {
-      position:relative !important;
-      z-index:20 !important;
-      padding:8px 10px calc(8px + env(safe-area-inset-bottom)) !important;
-      background:rgba(255,255,255,.96) !important;
-      border-top:1px solid #e5e5e5 !important;
-      flex-shrink:0 !important;
-      display:flex !important;
-      align-items:flex-end !important;
-      gap:8px !important;
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-    }
-
-    #smsComposer textarea,
-    #smsMessage {
-      flex:1 !important;
-      height:44px !important;
-      min-height:44px !important;
-      max-height:96px !important;
-      border-radius:22px !important;
-      padding:12px 15px !important;
-      resize:none !important;
-      line-height:20px !important;
-      background:white !important;
-    }
-
-    #smsComposer button {
-      width:44px !important;
-      height:44px !important;
-      min-width:44px !important;
-      border-radius:50% !important;
-      padding:0 !important;
-      margin-top:0 !important;
-      font-size:0 !important;
-      display:flex !important;
-      align-items:center !important;
-      justify-content:center !important;
-      background:#af2727 !important;
-    }
-
-    #smsComposer button::after {
-      content:"↑";
-      font-size:25px;
-      line-height:1;
-      font-weight:bold;
-      color:white;
-      transform:translateY(-1px);
-    }
-
-    #smsStatus {
-      position:absolute;
-      left:12px;
-      bottom:calc(62px + env(safe-area-inset-bottom));
-      background:rgba(255,255,255,.94);
-      padding:4px 8px;
-      border-radius:999px;
-      box-shadow:0 2px 8px rgba(0,0,0,.08);
-      max-width:calc(100vw - 24px);
-    }
-
-
-    #smsThread,
-    #conversationList {
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      touch-action: pan-y;
-    }
-
-    #textPanelOverlay {
-      overscroll-behavior: contain;
-    }
-
-    .sms-mobile-back {
-      display:flex !important;
-      align-items:center;
-      gap:6px;
-      color:#007aff;
-      font-weight:bold;
-      margin-bottom:10px;
-      cursor:pointer;
-      font-size:17px;
-      width:max-content;
-      padding-right:70px;
-    }
-  }
-/* TOROS MOBILE KEYBOARD TARGET OVERRIDE */
-
-    #smsConversationView {
-      grid-template-rows:auto minmax(0, 1fr) auto auto !important;
-    }
-
-    #smsConversationView[style*="display: flex"],
-    #smsConversationView[style*="display:flex"] {
-      display:grid !important;
-    }
-
-    #smsComposeCard {
-      position:relative !important;
-      top:auto !important;
-      z-index:30 !important;
-      grid-row:1 !important;
-    }
-
-    #smsThread {
-      grid-row:2 !important;
-      height:auto !important;
-      min-height:0 !important;
-      overflow-y:auto !important;
-      overflow-x:hidden !important;
-      -webkit-overflow-scrolling:touch !important;
-      overscroll-behavior:contain !important;
-    }
-
-    #smsComposer {
-      grid-row:3 !important;
-    }
-
-    #smsKeyboardSpacer {
-      grid-row:4 !important;
-    }
-
-
-  @media (max-width: 760px) {
-    #smsPanelHeader {
-      position:fixed !important;
-      top:calc(12px + env(safe-area-inset-top)) !important;
-      right:12px !important;
-      z-index:10050 !important;
-      background:transparent !important;
-      width:44px !important;
-      height:44px !important;
-      padding:0 !important;
-      pointer-events:none !important;
-    }
-
-    #smsPanelHeader > div {
-      display:none !important;
-    }
-
-    #smsPanelHeader button {
-      pointer-events:auto !important;
-      width:44px !important;
-      height:44px !important;
-      border-radius:999px !important;
-      background:rgba(22,48,81,.92) !important;
-      color:white !important;
-      display:flex !important;
-      align-items:center !important;
-      justify-content:center !important;
-      font-size:30px !important;
-      box-shadow:0 8px 22px rgba(0,0,0,.28) !important;
-    }
-
-    #textPanelOverlay > div {
-      height:100dvh !important;
-      max-height:100dvh !important;
-    }
-
-    #smsConversationView {
       height:100% !important;
-      min-height:0 !important;
-      overflow:hidden !important;
+      display:none;
+      grid-template-rows:auto minmax(0,1fr) auto !important;
       background:#eef3fa !important;
-      flex-direction:column !important;
     }
 
-    #smsComposeCard {
-      position:sticky !important;
-      top:0 !important;
-      z-index:30 !important;
+    #smsBackBtn {
+      display:block !important;
+    }
+
+    #smsLockedTop {
+      grid-row:1;
       padding:18px 74px 14px 22px !important;
       background:rgba(255,255,255,.98) !important;
-      border-bottom:1px solid #d8dee9 !important;
       backdrop-filter:blur(12px);
       -webkit-backdrop-filter:blur(12px);
+      z-index:50 !important;
       flex-shrink:0 !important;
     }
 
     #smsActiveCustomerCard {
-      display:block;
       border:0 !important;
       background:transparent !important;
       padding:0 0 12px !important;
@@ -1780,7 +1865,6 @@
     #smsActiveCustomerName {
       font-size:24px !important;
       font-weight:800 !important;
-      color:#163051 !important;
       line-height:1.15 !important;
     }
 
@@ -1790,10 +1874,24 @@
       margin-top:4px !important;
     }
 
-    #smsComposeCard label {
+    #smsManualFields {
+      margin-bottom:10px !important;
+    }
+
+    .sms-manual-grid {
+      grid-template-columns:1fr 1fr !important;
+      gap:10px !important;
+    }
+
+    #smsLockedTop label {
       font-size:15px !important;
       margin:8px 0 6px !important;
-      color:#163051 !important;
+    }
+
+    #smsCustomerName,
+    #smsPhone {
+      border-radius:12px !important;
+      padding:10px !important;
     }
 
     #smsTemplate {
@@ -1804,47 +1902,38 @@
     }
 
     #smsThread {
-      flex:1 1 auto !important;
+      grid-row:2;
       min-height:0 !important;
-      overflow:auto !important;
-      padding:18px 14px 18px !important;
+      overflow-y:auto !important;
+      overflow-x:hidden !important;
+      padding:18px 14px !important;
       background:#eef3fa !important;
       -webkit-overflow-scrolling:touch !important;
       overscroll-behavior:contain !important;
     }
 
     #smsComposer {
-      position:relative !important;
-      z-index:40 !important;
-      flex-shrink:0 !important;
-      display:flex !important;
-      align-items:center !important;
-      gap:8px !important;
-      padding:8px 10px 8px !important;
+      grid-row:3;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom)) !important;
       background:rgba(255,255,255,.98) !important;
-      border-top:1px solid #d8dee9 !important;
       backdrop-filter:blur(12px);
       -webkit-backdrop-filter:blur(12px);
-    }
-
-    #smsComposer label {
-      display:none !important;
+      border-top:1px solid #d8dee9 !important;
+      align-items:center !important;
+      z-index:60 !important;
     }
 
     #smsMessage {
-      flex:1 !important;
       height:44px !important;
       min-height:44px !important;
       max-height:96px !important;
       border-radius:22px !important;
       padding:12px 15px !important;
-      resize:none !important;
       line-height:20px !important;
-      font-size:16px !important;
       background:white !important;
     }
 
-    #smsComposer button {
+    #smsSendButton {
       width:44px !important;
       height:44px !important;
       min-width:44px !important;
@@ -1858,7 +1947,7 @@
       background:#af2727 !important;
     }
 
-    #smsComposer button::after {
+    #smsSendButton::after {
       content:"↑";
       font-size:25px;
       line-height:1;
@@ -1867,29 +1956,10 @@
       transform:translateY(-1px);
     }
 
-    #smsKeyboardSpacer {
-      display:block;
-      height:0px;
-      flex-shrink:0;
-      background:#cbd5e1;
-    }
-
     #smsStatus {
-      position:absolute;
-      left:12px;
-      bottom:56px;
-      background:rgba(255,255,255,.94);
-      padding:4px 8px;
-      border-radius:999px;
-      box-shadow:0 2px 8px rgba(0,0,0,.08);
-      max-width:calc(100vw - 24px);
-    }
-
-    #smsManualFields > div:first-child {
-      padding-right:42px !important;
+      bottom:58px !important;
     }
   }
-
 </style>
 
 <script>
@@ -1910,6 +1980,63 @@ let audioReady = false;
 let audioContext = null;
 let smsPageScrollY = 0;
 
+function isMobileSmsView() {
+  return window.innerWidth <= 760;
+}
+
+function lockPageBehindSms() {
+  smsPageScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.classList.add("sms-panel-open");
+  document.body.style.top = "-" + smsPageScrollY + "px";
+}
+
+function unlockPageBehindSms() {
+  document.body.classList.remove("sms-panel-open");
+  document.body.style.top = "";
+  window.scrollTo(0, smsPageScrollY || 0);
+}
+
+function showSmsConversationList() {
+  const sidebar = document.getElementById("smsSidebar");
+  const convo = document.getElementById("smsConversationView");
+
+  if (isMobileSmsView()) {
+    if (sidebar) sidebar.classList.remove("sms-mobile-hidden");
+    if (convo) convo.style.display = "none";
+  }
+}
+
+function showSmsConversationView() {
+  const sidebar = document.getElementById("smsSidebar");
+  const convo = document.getElementById("smsConversationView");
+
+  if (isMobileSmsView()) {
+    if (sidebar) sidebar.classList.add("sms-mobile-hidden");
+    if (convo) convo.style.display = "grid";
+  } else {
+    if (convo) convo.style.display = "grid";
+  }
+}
+
+function adjustSmsForKeyboard() {
+  const thread = document.getElementById("smsThread");
+
+  if (thread && document.activeElement && document.activeElement.id === "smsMessage") {
+    requestAnimationFrame(() => {
+      thread.scrollTop = thread.scrollHeight;
+    });
+  }
+}
+
+function autoGrowSmsMessageBox() {
+  const textarea = document.getElementById("smsMessage");
+  if (!textarea) return;
+
+  textarea.style.height = isMobileSmsView() ? "44px" : "46px";
+  const maxHeight = isMobileSmsView() ? 96 : 110;
+  const nextHeight = Math.min(textarea.scrollHeight, maxHeight);
+  textarea.style.height = nextHeight + "px";
+}
 
 function loadCachedSmsMessages() {
   try {
@@ -1920,7 +2047,7 @@ function loadCachedSmsMessages() {
       smsLastRenderSignature = getSmsSignature(cached);
       renderConversationList();
 
-      if (!activeSmsPhone && !smsIsNewMessageMode) {
+      if (!activeSmsPhone && !smsIsNewMessageMode && !isMobileSmsView()) {
         const firstPhone = normalizePhone(cached[0]?.phone || "");
         if (firstPhone) {
           selectConversation(firstPhone, false);
@@ -1958,7 +2085,6 @@ function unlockNotificationSound() {
   }
 }
 
-
 document.addEventListener("touchmove", function(event) {
   const overlay = document.getElementById("textPanelOverlay");
   if (!overlay || overlay.style.display !== "flex") return;
@@ -1971,6 +2097,18 @@ document.addEventListener("touchmove", function(event) {
 
 document.addEventListener("click", unlockNotificationSound, { once: true });
 document.addEventListener("touchstart", unlockNotificationSound, { once: true });
+
+document.addEventListener("input", function(event) {
+  if (event.target && event.target.id === "smsMessage") {
+    autoGrowSmsMessageBox();
+  }
+});
+
+document.addEventListener("focusin", function(event) {
+  if (event.target && event.target.id === "smsMessage") {
+    setTimeout(adjustSmsForKeyboard, 250);
+  }
+});
 
 function playNotificationSound() {
   try {
@@ -2012,7 +2150,6 @@ function startAppointmentAutoRefresh() {
 function startSmsGlobalPolling() {
   if (smsGlobalTimer) return;
 
-  adjustSmsForKeyboard();
   loadCachedSmsMessages();
   pollSmsInBackground(true);
 
@@ -2020,7 +2157,6 @@ function startSmsGlobalPolling() {
     pollSmsInBackground(false);
   }, 4000);
 }
-
 
 function getSmsSignature(messages) {
   return (messages || []).map(msg => {
@@ -2081,12 +2217,7 @@ async function pollSmsInBackground(initialLoad) {
       renderConversationList();
 
       if (smsIsNewMessageMode) {
-        resetSmsComposeView();
-        const threadBox = document.getElementById("smsThread");
-        if (threadBox && !threadBox.dataset.newModeSet) {
-          threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
-          threadBox.dataset.newModeSet = "true";
-        }
+        renderNewMessageState();
       } else {
         renderActiveThread(false);
       }
@@ -2135,69 +2266,10 @@ function getMessageKey(msg) {
   return [msg.sid || "", msg.date || "", msg.phone || "", msg.message || ""].join("|");
 }
 
-
-
-function adjustSmsForKeyboard() {
-  const overlay = document.getElementById("textPanelOverlay");
-  const spacer = document.getElementById("smsKeyboardSpacer");
-  const thread = document.getElementById("smsThread");
-
-  if (!overlay || overlay.style.display !== "flex" || !isMobileSmsView()) return;
-
-  let keyboardHeight = 0;
-
-  if (window.visualViewport) {
-    keyboardHeight = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
-  }
-
-  if (spacer) {
-    spacer.style.height = keyboardHeight + "px";
-  }
-
-  if (thread && document.activeElement && document.activeElement.id === "smsMessage") {
-    requestAnimationFrame(() => {
-      thread.scrollTop = thread.scrollHeight;
-    });
-  }
-}
-
-if (window.visualViewport) {
-  window.visualViewport.addEventListener("resize", adjustSmsForKeyboard);
-  window.visualViewport.addEventListener("scroll", adjustSmsForKeyboard);
-}
-
-
-function lockPageBehindSms() {
-  smsPageScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-  document.body.classList.add("sms-panel-open");
-  document.body.style.top = "-" + smsPageScrollY + "px";
-}
-
-function unlockPageBehindSms() {
-  const spacer = document.getElementById("smsKeyboardSpacer");
-  if (spacer) spacer.style.height = "0px";
-
-  const overlay = document.getElementById("textPanelOverlay");
-  const panel = overlay ? overlay.firstElementChild : null;
-
-  document.body.classList.remove("sms-panel-open");
-  document.body.style.top = "";
-  window.scrollTo(0, smsPageScrollY || 0);
-}
-
 function openTextPanel(mode = "new") {
   unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
-  setTimeout(adjustSmsForKeyboard, 300);
   lockPageBehindSms();
-
-  if (isMobileSmsView()) {
-    const convo = document.getElementById("smsConversationView");
-    const sidebar = document.getElementById("smsSidebar");
-
-    if (convo) convo.style.display = "none";
-    if (sidebar) sidebar.classList.remove("sms-mobile-hidden");
-  }
 
   loadCachedSmsMessages();
 
@@ -2212,6 +2284,8 @@ function openTextPanel(mode = "new") {
     const existingGroup = getConversationGroups().find(g => g.phoneKey === smsLastActivePhone);
     if (existingGroup) {
       selectConversation(smsLastActivePhone);
+    } else {
+      startNewSmsMessage();
     }
   } else {
     startNewSmsMessage();
@@ -2245,14 +2319,24 @@ function closeTextPanel() {
   }
 }
 
-
 function resetSmsComposeView() {
   const customerCard = document.getElementById("smsActiveCustomerCard");
   const manualFields = document.getElementById("smsManualFields");
 
-  if (customerCard) customerCard.style.display = "none";
+  if (customerCard) customerCard.style.display = "block";
   if (manualFields) manualFields.style.display = "block";
+}
 
+function renderNewMessageState() {
+  resetSmsComposeView();
+
+  document.getElementById("smsActiveCustomerName").innerText = "New Message";
+  document.getElementById("smsActiveCustomerPhone").innerText = "Enter a customer name and phone number to start a text.";
+
+  const threadBox = document.getElementById("smsThread");
+  if (threadBox) {
+    threadBox.innerHTML = "<div class='sms-empty-state'>Start a new message by entering a name, phone number, and message.</div>";
+  }
 }
 
 function startNewSmsMessage() {
@@ -2266,7 +2350,6 @@ function startNewSmsMessage() {
   const messageInput = document.getElementById("smsMessage");
   const templateInput = document.getElementById("smsTemplate");
   const status = document.getElementById("smsStatus");
-  const threadBox = document.getElementById("smsThread");
 
   if (nameInput) nameInput.value = "";
   if (phoneInput) phoneInput.value = "";
@@ -2277,27 +2360,14 @@ function startNewSmsMessage() {
     setTimeout(() => messageInput.focus(), 150);
   }
   if (templateInput) templateInput.value = "";
-  if (status) status.innerText = "";
-
-  resetSmsComposeView();
-
-  if (threadBox) {
-    threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
-    threadBox.dataset.newModeSet = "true";
+  if (status) {
+    status.innerText = "";
+    status.style.display = "none";
   }
 
+  renderNewMessageState();
   renderConversationList();
   showSmsConversationView();
-}
-
-
-function autoGrowSmsMessageBox() {
-  const textarea = document.getElementById("smsMessage");
-  if (!textarea) return;
-
-  textarea.style.height = "44px";
-  const nextHeight = Math.min(textarea.scrollHeight, 96);
-  textarea.style.height = nextHeight + "px";
 }
 
 function useSmsTemplate() {
@@ -2358,22 +2428,17 @@ async function loadSmsHistory() {
       renderConversationList();
 
       if (smsIsNewMessageMode) {
-        resetSmsComposeView();
-        const threadBox = document.getElementById("smsThread");
-        if (threadBox && !threadBox.dataset.newModeSet) {
-          threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
-          threadBox.dataset.newModeSet = "true";
-        }
-      } else if (!activeSmsPhone && smsLastActivePhone && smsMessages.length) {
+        renderNewMessageState();
+      } else if (!activeSmsPhone && smsLastActivePhone && smsMessages.length && !isMobileSmsView()) {
         const rememberedGroup = getConversationGroups().find(g => g.phoneKey === smsLastActivePhone);
         if (rememberedGroup) {
           selectConversation(smsLastActivePhone, false);
         } else {
           renderActiveThread(false);
         }
-      } else if (!activeSmsPhone && !smsHasOpenedBefore && smsMessages.length) {
+      } else if (!activeSmsPhone && !smsHasOpenedBefore && smsMessages.length && !isMobileSmsView()) {
         startNewSmsMessage();
-      } else if (!activeSmsPhone && smsMessages.length && !smsIsNewMessageMode) {
+      } else if (!activeSmsPhone && smsMessages.length && !smsIsNewMessageMode && !isMobileSmsView()) {
         const firstPhone = normalizePhone(smsMessages[0].phone);
         selectConversation(firstPhone, false);
       } else {
@@ -2421,6 +2486,8 @@ function getConversationGroups() {
 
 function renderConversationList() {
   const list = document.getElementById("conversationList");
+  if (!list) return;
+
   const search = (document.getElementById("smsSearch")?.value || "").toLowerCase();
   const groups = getConversationGroups().filter(group => {
     return group.name.toLowerCase().includes(search) || group.phone.toLowerCase().includes(search);
@@ -2443,51 +2510,25 @@ function renderConversationList() {
         background:${active ? '#163051' : '#ffffff'};
         color:${active ? '#ffffff' : '#163051'};
         border:1px solid ${active ? '#163051' : '#e5e5e5'};
-        border-radius:12px;
-        padding:11px;
-        margin-bottom:9px;
+        border-radius:14px;
+        padding:14px;
+        margin-bottom:10px;
         cursor:pointer;
         box-shadow:0 2px 8px rgba(0,0,0,.04);
         position:relative;
       ">
-        ${unread ? '<span style="position:absolute;top:10px;right:10px;width:10px;height:10px;background:#af2727;border-radius:999px;border:2px solid white;"></span>' : ''}
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding-right:${unread ? '20px' : '0'};">
-          <div style="font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(group.name)}</div>
-          <div style="font-size:11px;opacity:.75;white-space:nowrap;">${formatShortDate(latest.date)}</div>
+        ${unread ? '<span style="position:absolute;top:12px;right:12px;width:11px;height:11px;background:#af2727;border-radius:999px;border:2px solid white;"></span>' : ''}
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding-right:${unread ? '22px' : '0'};">
+          <div style="font-weight:bold;font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(group.name)}</div>
+          <div style="font-size:12px;opacity:.75;white-space:nowrap;">${formatShortDate(latest.date)}</div>
         </div>
-        <div style="font-size:12px;opacity:.8;margin-top:3px;">${escapeHtml(group.phone)}</div>
-        <div style="font-size:12px;margin-top:6px;opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:${unread ? 'bold' : 'normal'};">
+        <div style="font-size:13px;opacity:.86;margin-top:4px;">${escapeHtml(group.phone)}</div>
+        <div style="font-size:13px;margin-top:8px;opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:${unread ? 'bold' : 'normal'};">
           ${incoming ? '↩ ' : '↪ '} ${escapeHtml(latestText)}
         </div>
       </div>
     `;
   }).join("");
-}
-
-function isMobileSmsView() {
-  return window.innerWidth <= 760;
-}
-
-function showSmsConversationList() {
-  const sidebar = document.getElementById("smsSidebar");
-  const convo = document.getElementById("smsConversationView");
-
-  if (isMobileSmsView()) {
-    if (sidebar) sidebar.classList.remove("sms-mobile-hidden");
-    if (convo) convo.style.display = "none";
-  }
-}
-
-function showSmsConversationView() {
-  const sidebar = document.getElementById("smsSidebar");
-  const convo = document.getElementById("smsConversationView");
-
-  if (isMobileSmsView()) {
-    if (sidebar) sidebar.classList.add("sms-mobile-hidden");
-    if (convo) convo.style.display = "grid";
-  } else {
-    if (convo) convo.style.display = "flex";
-  }
 }
 
 function selectConversation(phoneKey, rerenderList = true) {
@@ -2507,15 +2548,15 @@ function selectConversation(phoneKey, rerenderList = true) {
     document.getElementById("smsCustomerName").value = group.name === "Customer" ? "" : group.name;
     document.getElementById("smsPhone").value = group.phone;
 
+    document.getElementById("smsActiveCustomerName").innerText = group.name;
+    document.getElementById("smsActiveCustomerPhone").innerText = group.phone;
+
     const customerCard = document.getElementById("smsActiveCustomerCard");
     const manualFields = document.getElementById("smsManualFields");
 
     if (customerCard && manualFields) {
       customerCard.style.display = "block";
       manualFields.style.display = "none";
-
-      document.getElementById("smsActiveCustomerName").innerText = group.name;
-      document.getElementById("smsActiveCustomerPhone").innerText = group.phone;
     }
   }
 
@@ -2526,12 +2567,11 @@ function selectConversation(phoneKey, rerenderList = true) {
 
 function renderActiveThread(forceScroll = true) {
   const threadBox = document.getElementById("smsThread");
-  if (threadBox) {
-    threadBox.dataset.newModeSet = "";
-  }
+
+  if (!threadBox) return;
 
   if (!smsMessages.length) {
-    threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>No messages yet.</div>";
+    threadBox.innerHTML = "<div class='sms-empty-state'>No messages yet.</div>";
     return;
   }
 
@@ -2543,9 +2583,9 @@ function renderActiveThread(forceScroll = true) {
 
   if (!thread.length) {
     if (!phoneKey) {
-      threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>Start a new message by entering a name, phone number, and message.</div>";
+      threadBox.innerHTML = "<div class='sms-empty-state'>Start a new message by entering a name, phone number, and message.</div>";
     } else {
-      threadBox.innerHTML = "<div style='color:#777;text-align:center;margin-top:40px;'>No messages for this customer yet.</div>";
+      threadBox.innerHTML = "<div class='sms-empty-state'>No messages for this customer yet.</div>";
     }
     return;
   }
@@ -2556,18 +2596,18 @@ function renderActiveThread(forceScroll = true) {
     const outgoing = msg.type === "outgoing";
 
     return `
-      <div style="display:flex;justify-content:${outgoing ? 'flex-end' : 'flex-start'};margin-bottom:10px;">
+      <div style="display:flex;justify-content:${outgoing ? 'flex-end' : 'flex-start'};margin-bottom:14px;">
         <div style="
           max-width:78%;
           background:${outgoing ? '#163051' : '#ffffff'};
           color:${outgoing ? '#ffffff' : '#163051'};
-          border-radius:16px;
-          padding:10px 12px;
+          border-radius:18px;
+          padding:11px 13px;
           box-shadow:0 2px 8px rgba(0,0,0,.08);
           border:1px solid ${outgoing ? '#163051' : '#e5e5e5'};
         ">
-          <div style="font-size:14px;line-height:1.4;white-space:pre-wrap;">${escapeHtml(msg.message)}</div>
-          <div style="font-size:11px;opacity:.72;margin-top:6px;text-align:${outgoing ? 'right' : 'left'};">
+          <div style="font-size:16px;line-height:1.4;white-space:pre-wrap;">${escapeHtml(msg.message)}</div>
+          <div style="font-size:12px;opacity:.72;margin-top:6px;text-align:${outgoing ? 'right' : 'left'};">
             ${outgoing ? "Toro's Auto Care" : escapeHtml(msg.name || 'Customer')} • ${formatFullDate(msg.date)}
           </div>
         </div>
@@ -2589,6 +2629,7 @@ async function sendCustomerText() {
   const status = document.getElementById("smsStatus");
 
   if (!phone || !message) {
+    status.style.display = "block";
     status.style.color = "#af2727";
     status.innerText = "Phone number and message are required.";
     return;
@@ -2600,6 +2641,7 @@ async function sendCustomerText() {
   smsLastActivePhone = activeSmsPhone;
   localStorage.setItem("torosLastActiveSmsPhone", activeSmsPhone);
 
+  status.style.display = "block";
   status.style.color = "#163051";
   status.innerText = "Sending...";
 
@@ -2619,76 +2661,57 @@ async function sendCustomerText() {
     const data = await response.json();
 
     if (data.success) {
-      status.style.color = "green";
-      status.innerText = "Text sent!";
-
-      smsIsNewMessageMode = false;
-
+      status.style.color = "#1d7f4f";
+      status.innerText = "Sent.";
       document.getElementById("smsMessage").value = "";
       autoGrowSmsMessageBox();
-      document.getElementById("smsTemplate").value = "";
+
+      smsIsNewMessageMode = false;
+      smsRestoreConversationOnOpen = true;
+      localStorage.setItem("torosRestoreSmsConversation", "true");
+
+      setTimeout(() => {
+        status.style.display = "none";
+      }, 1600);
 
       setTimeout(loadSmsHistory, 700);
     } else {
       status.style.color = "#af2727";
-      status.innerText = "Error: " + data.error;
+      status.innerText = data.error || "Could not send text.";
     }
-
-  } catch (error) {
+  } catch (err) {
     status.style.color = "#af2727";
-    status.innerText = "Error: " + error.message;
+    status.innerText = "Could not send text.";
   }
 }
 
-function formatShortDate(dateValue) {
-  const date = new Date(dateValue);
+function formatShortDate(dateText) {
+  const date = new Date(dateText);
   if (isNaN(date)) return "";
-  return date.toLocaleDateString("en-US", { month: "numeric", day: "numeric" });
+  return date.toLocaleDateString("en-US", { month:"numeric", day:"numeric" });
 }
 
-function formatFullDate(dateValue) {
-  const date = new Date(dateValue);
-  if (isNaN(date)) return "";
-  return date.toLocaleString("en-US", {
-    month: "numeric",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
+function formatFullDate(dateText) {
+  const date = new Date(dateText);
+  if (isNaN(date)) return dateText || "";
+  return date.toLocaleDateString("en-US") + ", " + date.toLocaleTimeString("en-US", {
+    hour:"numeric",
+    minute:"2-digit"
   });
 }
 
-function escapeHtml(text) {
-  return String(text || "").replace(/[&<>"']/g, function(match) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    }[match];
-  });
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-function escapeJs(text) {
-  return String(text || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+function escapeJs(value) {
+  return String(value || "").replace(/'/g, "\\'");
 }
-
-
-
-
-
-document.addEventListener("focusin", function(event) {
-  if (event.target && event.target.id === "smsMessage") {
-    setTimeout(adjustSmsForKeyboard, 250);
-  }
-});
-
-document.addEventListener("input", function(event) {
-  if (event.target && event.target.id === "smsMessage") {
-    autoGrowSmsMessageBox();
-  }
-});
 
 window.addEventListener("resize", function() {
   const overlay = document.getElementById("textPanelOverlay");
@@ -2699,7 +2722,7 @@ window.addEventListener("resize", function() {
 
   if (!isMobileSmsView()) {
     if (sidebar) sidebar.classList.remove("sms-mobile-hidden");
-    if (convo) convo.style.display = "flex";
+    if (convo) convo.style.display = "grid";
   } else if (smsIsNewMessageMode || activeSmsPhone) {
     showSmsConversationView();
   } else {
@@ -2710,25 +2733,13 @@ window.addEventListener("resize", function() {
 });
 
 window.addEventListener("load", function() {
-  if (localStorage.getItem("torosRestoreSmsConversation") === null) {
-    localStorage.setItem("torosRestoreSmsConversation", "false");
-    smsRestoreConversationOnOpen = false;
-  }
-
   updateUnreadBadge();
 
   if (localStorage.getItem("torosAdminLoggedIn") === "true") {
-    startAppointmentAutoRefresh();
     startSmsGlobalPolling();
   }
 });
-
-const toastBox = document.getElementById("smsToast");
-if (toastBox) {
-  toastBox.addEventListener("click", unlockNotificationSound);
-}
 </script>
-
 
 <script>
   const VAPID_PUBLIC_KEY = "BI4DHPaAW8ZietuTFi4wIkIL49KSqylLqZb4jHIY6OwiyKDNs9BBlLbXU9Q6Z-jsfb6b6uty6HbyyLRWNdeh6l8";
