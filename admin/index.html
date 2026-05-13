@@ -1960,6 +1960,55 @@
       bottom:58px !important;
     }
   }
+/* LOCKED MOBILE SMS HEADER FINAL OVERRIDE */
+
+  @media (max-width:760px) {
+    #smsConversationView {
+      position:absolute !important;
+      inset:0 !important;
+      display:none;
+      grid-template-rows:minmax(0,1fr) auto !important;
+      background:#eef3fa !important;
+      overflow:hidden !important;
+      --sms-locked-top-height:190px;
+    }
+
+    #smsLockedTop {
+      position:fixed !important;
+      top:0 !important;
+      left:0 !important;
+      right:0 !important;
+      z-index:10040 !important;
+      padding:18px 74px 14px 22px !important;
+      background:rgba(255,255,255,.98) !important;
+      border-bottom:1px solid #d8dee9 !important;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+    }
+
+    #smsThread {
+      grid-row:1 !important;
+      margin-top:var(--sms-locked-top-height) !important;
+      min-height:0 !important;
+      overflow-y:auto !important;
+      overflow-x:hidden !important;
+      padding:18px 14px !important;
+      background:#eef3fa !important;
+      -webkit-overflow-scrolling:touch !important;
+      overscroll-behavior:contain !important;
+    }
+
+    #smsComposer {
+      grid-row:2 !important;
+      position:relative !important;
+      z-index:10030 !important;
+    }
+
+    #smsCloseButton {
+      z-index:10060 !important;
+    }
+  }
+
 </style>
 
 <script>
@@ -2013,9 +2062,22 @@ function showSmsConversationView() {
   if (isMobileSmsView()) {
     if (sidebar) sidebar.classList.add("sms-mobile-hidden");
     if (convo) convo.style.display = "grid";
+    setTimeout(updateSmsLockedTopHeight, 50);
+    setTimeout(adjustSmsForKeyboard, 100);
   } else {
     if (convo) convo.style.display = "grid";
   }
+}
+
+
+function updateSmsLockedTopHeight() {
+  const convo = document.getElementById("smsConversationView");
+  const top = document.getElementById("smsLockedTop");
+
+  if (!convo || !top || !isMobileSmsView()) return;
+
+  const height = Math.ceil(top.getBoundingClientRect().height);
+  convo.style.setProperty("--sms-locked-top-height", height + "px");
 }
 
 function adjustSmsForKeyboard() {
@@ -2106,6 +2168,7 @@ document.addEventListener("input", function(event) {
 
 document.addEventListener("focusin", function(event) {
   if (event.target && event.target.id === "smsMessage") {
+    setTimeout(updateSmsLockedTopHeight, 100);
     setTimeout(adjustSmsForKeyboard, 250);
   }
 });
@@ -2368,6 +2431,7 @@ function startNewSmsMessage() {
   renderNewMessageState();
   renderConversationList();
   showSmsConversationView();
+  updateSmsLockedTopHeight();
 }
 
 function useSmsTemplate() {
@@ -2561,6 +2625,7 @@ function selectConversation(phoneKey, rerenderList = true) {
   }
 
   showSmsConversationView();
+  updateSmsLockedTopHeight();
   renderActiveThread();
   if (rerenderList) renderConversationList();
 }
@@ -2729,6 +2794,7 @@ window.addEventListener("resize", function() {
     showSmsConversationList();
   }
 
+  setTimeout(updateSmsLockedTopHeight, 100);
   setTimeout(adjustSmsForKeyboard, 150);
 });
 
