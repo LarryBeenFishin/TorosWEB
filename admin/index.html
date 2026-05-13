@@ -1414,7 +1414,7 @@
 
           <div id="smsActiveCustomerCard">
             <div id="smsActiveCustomerName">New Message</div>
-            <div id="smsActiveCustomerPhone">Enter a customer name and phone number to start a text.</div>
+            <div id="smsActiveCustomerPhone"></div>
           </div>
 
           <div id="smsManualFields">
@@ -2340,6 +2340,39 @@
     }
   }
 
+/* TOROS MOBILE NEW MESSAGE CENTER FIX */
+
+  @media (max-width:760px) {
+    #smsCloseButton {
+      top:calc(12px + env(safe-area-inset-top)) !important;
+      right:12px !important;
+      width:44px !important;
+      height:44px !important;
+    }
+
+    #smsLockedTop {
+      padding:calc(14px + env(safe-area-inset-top)) 74px 12px 74px !important;
+    }
+
+    #smsActiveCustomerCard {
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      text-align:center !important;
+      min-height:44px !important;
+      margin-bottom:10px !important;
+    }
+
+    #smsActiveCustomerPhone:empty {
+      display:none !important;
+    }
+
+    #smsManualFields {
+      width:100% !important;
+    }
+  }
+
 </style>
 
 <script>
@@ -2724,7 +2757,7 @@ function renderNewMessageState() {
   resetSmsComposeView();
 
   document.getElementById("smsActiveCustomerName").innerText = "New Message";
-  document.getElementById("smsActiveCustomerPhone").innerText = "Enter a customer name and phone number to start a text.";
+  document.getElementById("smsActiveCustomerPhone").innerText = "";
 
   const threadBox = document.getElementById("smsThread");
   if (threadBox) {
