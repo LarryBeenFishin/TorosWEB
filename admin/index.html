@@ -1394,7 +1394,7 @@
 <div id="textPanelOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;align-items:center;justify-content:center;padding:14px;">
   <div style="width:100%;max-width:980px;height:min(92vh,820px);background:white;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;display:flex;flex-direction:column;">
     
-    <div id="smsPanelHeader" style="background:#163051;color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-shrink:0;">
+    <div id="smsPanelHeader" style="background:#163051;color:white;padding:0;display:block;flex-shrink:0;">
       <div>
         <div style="font-size:20px;font-weight:bold;">Texting Inbox</div>
         <div style="font-size:13px;opacity:.85;">Two-way SMS for Toro's Auto Care</div>
@@ -1463,6 +1463,7 @@
 
           <div id="smsStatus" style="margin-top:8px;font-size:14px;font-weight:bold;min-height:18px;"></div>
         </div>
+        <div id="smsKeyboardSpacer" aria-hidden="true"></div>
       </div>
     </div>
   </div>
@@ -1673,6 +1674,184 @@
       font-size:16px;
     }
   }
+/* TOROS MOBILE KEYBOARD TARGET OVERRIDE */
+
+  @media (max-width: 760px) {
+    #smsPanelHeader {
+      position:fixed !important;
+      top:calc(12px + env(safe-area-inset-top)) !important;
+      right:12px !important;
+      z-index:10050 !important;
+      background:transparent !important;
+      width:44px !important;
+      height:44px !important;
+      padding:0 !important;
+      pointer-events:none !important;
+    }
+
+    #smsPanelHeader > div {
+      display:none !important;
+    }
+
+    #smsPanelHeader button {
+      pointer-events:auto !important;
+      width:44px !important;
+      height:44px !important;
+      border-radius:999px !important;
+      background:rgba(22,48,81,.92) !important;
+      color:white !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      font-size:30px !important;
+      box-shadow:0 8px 22px rgba(0,0,0,.28) !important;
+    }
+
+    #textPanelOverlay > div {
+      height:100dvh !important;
+      max-height:100dvh !important;
+    }
+
+    #smsConversationView {
+      height:100% !important;
+      min-height:0 !important;
+      overflow:hidden !important;
+      background:#eef3fa !important;
+    }
+
+    #smsComposeCard {
+      position:sticky !important;
+      top:0 !important;
+      z-index:30 !important;
+      padding:18px 74px 14px 22px !important;
+      background:rgba(255,255,255,.98) !important;
+      border-bottom:1px solid #d8dee9 !important;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      flex-shrink:0 !important;
+    }
+
+    #smsActiveCustomerCard {
+      display:block;
+      border:0 !important;
+      background:transparent !important;
+      padding:0 0 12px !important;
+      margin:0 !important;
+    }
+
+    #smsActiveCustomerName {
+      font-size:24px !important;
+      font-weight:800 !important;
+      color:#163051 !important;
+      line-height:1.15 !important;
+    }
+
+    #smsActiveCustomerPhone {
+      font-size:17px !important;
+      color:#6b7280 !important;
+      margin-top:4px !important;
+    }
+
+    #smsComposeCard label {
+      font-size:15px !important;
+      margin:8px 0 6px !important;
+      color:#163051 !important;
+    }
+
+    #smsTemplate {
+      height:38px !important;
+      padding:6px 14px !important;
+      border-radius:12px !important;
+      font-size:16px !important;
+    }
+
+    #smsThread {
+      flex:1 1 auto !important;
+      min-height:0 !important;
+      overflow:auto !important;
+      padding:18px 14px 18px !important;
+      background:#eef3fa !important;
+      -webkit-overflow-scrolling:touch !important;
+      overscroll-behavior:contain !important;
+    }
+
+    #smsComposer {
+      position:relative !important;
+      z-index:40 !important;
+      flex-shrink:0 !important;
+      display:flex !important;
+      align-items:center !important;
+      gap:8px !important;
+      padding:8px 10px 8px !important;
+      background:rgba(255,255,255,.98) !important;
+      border-top:1px solid #d8dee9 !important;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+    }
+
+    #smsComposer label {
+      display:none !important;
+    }
+
+    #smsMessage {
+      flex:1 !important;
+      height:44px !important;
+      min-height:44px !important;
+      max-height:96px !important;
+      border-radius:22px !important;
+      padding:12px 15px !important;
+      resize:none !important;
+      line-height:20px !important;
+      font-size:16px !important;
+      background:white !important;
+    }
+
+    #smsComposer button {
+      width:44px !important;
+      height:44px !important;
+      min-width:44px !important;
+      border-radius:50% !important;
+      padding:0 !important;
+      margin:0 !important;
+      font-size:0 !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      background:#af2727 !important;
+    }
+
+    #smsComposer button::after {
+      content:"↑";
+      font-size:25px;
+      line-height:1;
+      font-weight:bold;
+      color:white;
+      transform:translateY(-1px);
+    }
+
+    #smsKeyboardSpacer {
+      display:block;
+      height:0px;
+      flex-shrink:0;
+      background:#cbd5e1;
+    }
+
+    #smsStatus {
+      position:absolute;
+      left:12px;
+      bottom:56px;
+      background:rgba(255,255,255,.94);
+      padding:4px 8px;
+      border-radius:999px;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+      max-width:calc(100vw - 24px);
+    }
+
+    #smsManualFields > div:first-child {
+      padding-right:42px !important;
+    }
+  }
+
 </style>
 
 <script>
@@ -1922,15 +2101,31 @@ function getMessageKey(msg) {
 
 function adjustSmsForKeyboard() {
   const overlay = document.getElementById("textPanelOverlay");
+  const spacer = document.getElementById("smsKeyboardSpacer");
   const thread = document.getElementById("smsThread");
 
   if (!overlay || overlay.style.display !== "flex" || !isMobileSmsView()) return;
+
+  let keyboardHeight = 0;
+
+  if (window.visualViewport) {
+    keyboardHeight = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+  }
+
+  if (spacer) {
+    spacer.style.height = keyboardHeight + "px";
+  }
 
   if (thread && document.activeElement && document.activeElement.id === "smsMessage") {
     requestAnimationFrame(() => {
       thread.scrollTop = thread.scrollHeight;
     });
   }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", adjustSmsForKeyboard);
+  window.visualViewport.addEventListener("scroll", adjustSmsForKeyboard);
 }
 
 
@@ -1941,6 +2136,9 @@ function lockPageBehindSms() {
 }
 
 function unlockPageBehindSms() {
+  const spacer = document.getElementById("smsKeyboardSpacer");
+  if (spacer) spacer.style.height = "0px";
+
   const overlay = document.getElementById("textPanelOverlay");
   const panel = overlay ? overlay.firstElementChild : null;
 
@@ -1952,6 +2150,7 @@ function unlockPageBehindSms() {
 function openTextPanel(mode = "new") {
   unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
+  setTimeout(adjustSmsForKeyboard, 300);
   lockPageBehindSms();
 
   if (isMobileSmsView()) {
