@@ -1154,6 +1154,159 @@
       }
     }
 
+
+    /* TOROS FINAL NO-ICON ADMIN CARDS */
+    .admin-hero {
+      background:#163051 !important;
+      color:white !important;
+      padding:26px !important;
+      display:block !important;
+    }
+
+    .admin-action-grid.no-icon-actions {
+      display:grid !important;
+      grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+      gap:18px !important;
+      max-width:1500px !important;
+      margin:0 auto !important;
+    }
+
+    .admin-action-grid.no-icon-actions .admin-action-card {
+      min-height:118px !important;
+      border-radius:18px !important;
+      background:white !important;
+      color:#163051 !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:0 !important;
+      padding:22px 24px !important;
+      text-align:center !important;
+      text-decoration:none !important;
+      box-shadow:0 12px 28px rgba(0,0,0,.16) !important;
+      border:0 !important;
+      cursor:pointer !important;
+      font-family:Arial, sans-serif !important;
+      overflow:hidden !important;
+    }
+
+    .admin-action-grid.no-icon-actions .logo-card {
+      padding:16px !important;
+    }
+
+    .admin-action-grid.no-icon-actions .logo-card img {
+      height:auto !important;
+      max-height:92px !important;
+      width:100% !important;
+      object-fit:contain !important;
+      background:transparent !important;
+      padding:0 !important;
+      border-radius:0 !important;
+    }
+
+    .admin-action-grid.no-icon-actions .logout-card {
+      background:linear-gradient(135deg, #af2727, #cf2f2f) !important;
+      color:white !important;
+    }
+
+    .admin-action-grid.no-icon-actions .action-title {
+      display:block !important;
+      font-size:25px !important;
+      font-weight:800 !important;
+      line-height:1.1 !important;
+      color:#163051 !important;
+    }
+
+    .admin-action-grid.no-icon-actions .logout-card .action-title {
+      color:white !important;
+      font-size:28px !important;
+    }
+
+    .admin-action-grid.no-icon-actions .action-subtitle {
+      display:block !important;
+      margin-top:8px !important;
+      font-size:18px !important;
+      font-weight:400 !important;
+      color:#3f4c5f !important;
+      line-height:1.25 !important;
+    }
+
+    .admin-action-grid.no-icon-actions .wide-action-card {
+      grid-column:1 / -1 !important;
+      min-height:100px !important;
+    }
+
+    .calendar-nav-btn {
+      font-size:14px !important;
+      padding:12px 10px !important;
+      min-width:60px !important;
+    }
+
+    @media (max-width:900px) {
+      .admin-hero {
+        padding:24px 14px 26px !important;
+      }
+
+      .admin-action-grid.no-icon-actions {
+        grid-template-columns:1fr 1fr !important;
+        gap:12px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .admin-action-card {
+        min-height:76px !important;
+        border-radius:14px !important;
+        padding:13px 10px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .logo-card {
+        min-height:74px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .logo-card img {
+        max-height:58px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .action-title {
+        font-size:16px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .logout-card .action-title {
+        font-size:20px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .action-subtitle {
+        font-size:13px !important;
+        margin-top:5px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .wide-action-card {
+        min-height:70px !important;
+      }
+    }
+
+    @media (max-width:430px) {
+      .admin-hero {
+        padding:22px 12px 24px !important;
+      }
+
+      .admin-action-grid.no-icon-actions {
+        gap:10px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .admin-action-card {
+        min-height:72px !important;
+        padding:12px 8px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .action-title {
+        font-size:15px !important;
+      }
+
+      .admin-action-grid.no-icon-actions .action-subtitle {
+        font-size:12px !important;
+      }
+    }
+
   </style>
 </head>
 
@@ -1173,57 +1326,48 @@
 
   <section class="admin" id="adminDashboard">
     <header class="admin-hero">
-      <div class="admin-action-grid">
+      <div class="admin-action-grid no-icon-actions">
         <div class="admin-action-card logo-card">
           <img src="/logo.png" alt="Toro's Auto Care Logo">
         </div>
 
         <button class="admin-action-card logout-card" onclick="logout()">
-          <span class="css-icon icon-logout" aria-hidden="true"></span>
           <span class="action-title">Logout</span>
         </button>
 
-        <button class="admin-action-card appointment-card" onclick="openCreateModal()">
-          <span class="css-icon icon-calendar" aria-hidden="true"></span>
+        <button class="admin-action-card" onclick="openCreateModal()">
           <span>
             <span class="action-title">New Appointment</span>
             <span class="action-subtitle">Schedule a new<br>service appointment</span>
           </span>
         </button>
 
-        <a class="admin-action-card inspection-card" href="/admin/inspection">
-          <span class="css-icon icon-clipboard" aria-hidden="true"></span>
+        <a class="admin-action-card" href="/admin/inspection">
           <span>
             <span class="action-title">Inspection Form</span>
             <span class="action-subtitle">Create a new<br>inspection form</span>
           </span>
         </a>
 
-        <a class="admin-action-card history-card" href="/admin/inspection-history">
-          <span class="css-icon icon-history" aria-hidden="true"></span>
+        <a class="admin-action-card" href="/admin/inspection-history">
           <span>
             <span class="action-title">Inspection History</span>
             <span class="action-subtitle">View past<br>inspections</span>
           </span>
         </a>
 
-        <a class="admin-action-card customer-card" href="/admin/customers">
-          <span class="css-icon icon-customers" aria-hidden="true"></span>
+        <a class="admin-action-card" href="/admin/customers">
           <span>
             <span class="action-title">Customer Profiles</span>
             <span class="action-subtitle">Manage customer<br>information</span>
           </span>
         </a>
 
-        <button class="admin-action-card wide-action-card notifications-card" onclick="enablePushNotifications()">
-          <span class="notification-circle">
-            <span class="icon-bell" aria-hidden="true"></span>
-          </span>
+        <button class="admin-action-card wide-action-card" onclick="enablePushNotifications()">
           <span>
             <span class="action-title">Enable Notifications</span>
             <span class="action-subtitle">Stay updated on appointments and texts</span>
           </span>
-          <span class="action-chevron" aria-hidden="true"></span>
         </button>
       </div>
     </header>
@@ -1231,14 +1375,14 @@
     <main class="dashboard">
       <div class="card">
         <div class="calendar-header">
-          <button onclick="changeMonth(-1)">â</button>
+          <button class="calendar-nav-btn" onclick="changeMonth(-1)">Prev</button>
 
           <div class="calendar-title-wrap">
             <h2 id="monthTitle">Calendar</h2>
             <button class="today-btn" onclick="goToToday()">Today</button>
           </div>
 
-          <button onclick="changeMonth(1)">â</button>
+          <button class="calendar-nav-btn" onclick="changeMonth(1)">Next</button>
         </div>
 
         <div class="calendar-grid" id="calendarGrid"></div>
@@ -4157,3 +4301,6 @@ window.addEventListener("load", function() {
     });
   }
 </script>
+
+</body>
+</html>
