@@ -738,6 +738,422 @@
         padding: 12px 14px;
       }
     }
+
+    /* TOROS CLEAN ADMIN ACTION CARDS - CSS ONLY ICONS */
+    .admin-hero {
+      background:#163051;
+      color:white;
+      padding:26px;
+      display:block;
+    }
+
+    .admin-action-grid {
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:18px;
+      max-width:1500px;
+      margin:0 auto;
+    }
+
+    .admin-action-card {
+      min-height:124px;
+      border-radius:18px;
+      background:white;
+      color:#163051;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      padding:22px 24px;
+      text-align:left;
+      text-decoration:none;
+      box-shadow:0 12px 28px rgba(0,0,0,.16);
+      border:0;
+      cursor:pointer;
+      font-family:Arial, sans-serif;
+      transition:transform .15s ease;
+      overflow:hidden;
+    }
+
+    .admin-action-card:hover {
+      background:white;
+      transform:translateY(-1px);
+    }
+
+    .admin-action-card.logo-card {
+      justify-content:center;
+      padding:16px;
+    }
+
+    .admin-action-card.logo-card img {
+      height:auto;
+      max-height:92px;
+      width:100%;
+      object-fit:contain;
+      background:transparent;
+      padding:0;
+      border-radius:0;
+    }
+
+    .logout-card {
+      justify-content:center;
+      background:linear-gradient(135deg, #af2727, #cf2f2f) !important;
+      color:white !important;
+      font-size:26px;
+    }
+
+    .css-icon {
+      width:58px;
+      height:58px;
+      flex:0 0 58px;
+      position:relative;
+      display:inline-block;
+    }
+
+    .green-icon,
+    .appointment-card .css-icon,
+    .inspection-card .css-icon,
+    .history-card .css-icon,
+    .customer-card .css-icon {
+      color:#1d9958;
+    }
+
+    .action-title {
+      display:block;
+      font-size:24px;
+      font-weight:800;
+      line-height:1.1;
+      color:#163051;
+    }
+
+    .action-subtitle {
+      display:block;
+      margin-top:8px;
+      font-size:18px;
+      font-weight:400;
+      color:#3f4c5f;
+      line-height:1.25;
+    }
+
+    .logout-card .action-title {
+      color:white;
+      font-size:26px;
+    }
+
+    .wide-action-card {
+      grid-column:1 / -1;
+      min-height:104px;
+      position:relative;
+    }
+
+    .notification-circle {
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      background:#0e5a89;
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 58px;
+      position:relative;
+    }
+
+    .action-chevron {
+      margin-left:auto;
+      width:18px;
+      height:18px;
+      border-top:4px solid #163051;
+      border-right:4px solid #163051;
+      transform:rotate(45deg);
+      opacity:.95;
+      flex:0 0 auto;
+    }
+
+    /* logout icon */
+    .icon-logout::before {
+      content:"";
+      position:absolute;
+      left:9px;
+      top:14px;
+      width:22px;
+      height:28px;
+      border:4px solid white;
+      border-right:0;
+      border-radius:7px 0 0 7px;
+    }
+
+    .icon-logout::after {
+      content:"";
+      position:absolute;
+      right:7px;
+      top:27px;
+      width:28px;
+      height:4px;
+      background:white;
+      border-radius:999px;
+      box-shadow:10px -7px 0 -1px white, 10px 7px 0 -1px white;
+    }
+
+    /* calendar plus icon */
+    .icon-calendar::before {
+      content:"";
+      position:absolute;
+      left:8px;
+      top:11px;
+      width:34px;
+      height:36px;
+      border:4px solid #1d9958;
+      border-radius:8px;
+      box-shadow:0 -10px 0 -6px #1d9958;
+    }
+
+    .icon-calendar::after {
+      content:"";
+      position:absolute;
+      right:2px;
+      bottom:1px;
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      background:#1d9958;
+      box-shadow:inset 0 0 0 0 #1d9958;
+    }
+
+    .appointment-card .css-icon span,
+    .inspection-card .css-icon span,
+    .history-card .css-icon span,
+    .customer-card .css-icon span {
+      display:none;
+    }
+
+    .appointment-card .icon-calendar {
+      position:relative;
+    }
+
+    .appointment-card .icon-calendar > i {
+      display:none;
+    }
+
+    .appointment-card .icon-calendar .plus-line {
+      display:none;
+    }
+
+    .appointment-card .icon-calendar::after {
+      color:white;
+    }
+
+    .appointment-card .icon-calendar {
+      --plus-color:white;
+    }
+
+    .appointment-card .icon-calendar + span {
+      min-width:0;
+    }
+
+    .appointment-card .icon-calendar::selection {
+      background:transparent;
+    }
+
+    .appointment-card .icon-calendar {
+      background:
+        linear-gradient(#fff,#fff) right 10px bottom 12px / 14px 4px no-repeat,
+        linear-gradient(#fff,#fff) right 15px bottom 7px / 4px 14px no-repeat;
+    }
+
+    /* clipboard icon */
+    .icon-clipboard::before {
+      content:"";
+      position:absolute;
+      left:13px;
+      top:13px;
+      width:32px;
+      height:39px;
+      border:4px solid #1d9958;
+      border-radius:7px;
+    }
+
+    .icon-clipboard::after {
+      content:"";
+      position:absolute;
+      left:20px;
+      top:6px;
+      width:18px;
+      height:13px;
+      border:4px solid #1d9958;
+      border-bottom:0;
+      border-radius:8px 8px 0 0;
+      background:white;
+      box-shadow:0 20px 0 -8px #1d9958, 0 30px 0 -8px #1d9958;
+    }
+
+    /* history icon */
+    .icon-history::before {
+      content:"";
+      position:absolute;
+      left:8px;
+      top:8px;
+      width:40px;
+      height:40px;
+      border:5px solid #1d9958;
+      border-right-color:transparent;
+      border-radius:50%;
+      transform:rotate(-30deg);
+    }
+
+    .icon-history::after {
+      content:"";
+      position:absolute;
+      left:7px;
+      top:11px;
+      width:16px;
+      height:16px;
+      border-left:5px solid #1d9958;
+      border-top:5px solid #1d9958;
+      transform:rotate(-20deg);
+    }
+
+    /* customers icon */
+    .icon-customers::before {
+      content:"";
+      position:absolute;
+      left:9px;
+      top:11px;
+      width:21px;
+      height:21px;
+      border-radius:50%;
+      background:#1d9958;
+      box-shadow:20px 3px 0 -2px #1d9958;
+    }
+
+    .icon-customers::after {
+      content:"";
+      position:absolute;
+      left:2px;
+      bottom:7px;
+      width:31px;
+      height:22px;
+      border-radius:20px 20px 6px 6px;
+      background:#1d9958;
+      box-shadow:24px 2px 0 -3px #1d9958;
+    }
+
+    /* bell icon */
+    .icon-bell::before {
+      content:"";
+      position:absolute;
+      left:18px;
+      top:14px;
+      width:22px;
+      height:27px;
+      background:white;
+      border-radius:14px 14px 7px 7px;
+    }
+
+    .icon-bell::after {
+      content:"";
+      position:absolute;
+      left:15px;
+      top:39px;
+      width:28px;
+      height:5px;
+      background:white;
+      border-radius:999px;
+      box-shadow:8px 7px 0 -5px white;
+    }
+
+    @media (max-width:900px) {
+      .admin-hero {
+        padding:24px 14px 26px !important;
+      }
+
+      .admin-action-grid {
+        grid-template-columns:1fr 1fr;
+        gap:12px;
+      }
+
+      .admin-action-card {
+        min-height:78px;
+        border-radius:14px;
+        padding:14px;
+        gap:12px;
+        box-shadow:0 8px 18px rgba(0,0,0,.14);
+      }
+
+      .admin-action-card.logo-card {
+        min-height:74px;
+      }
+
+      .admin-action-card.logo-card img {
+        max-height:58px;
+      }
+
+      .logout-card {
+        min-height:74px;
+      }
+
+      .css-icon {
+        width:42px;
+        height:42px;
+        flex-basis:42px;
+        transform:scale(.78);
+        transform-origin:center;
+      }
+
+      .action-title {
+        font-size:15px;
+      }
+
+      .action-subtitle {
+        font-size:13px;
+        margin-top:5px;
+      }
+
+      .logout-card .action-title {
+        font-size:17px;
+      }
+
+      .wide-action-card {
+        min-height:72px;
+        grid-column:1 / -1;
+      }
+
+      .notification-circle {
+        width:44px;
+        height:44px;
+        flex-basis:44px;
+        transform:scale(.82);
+        transform-origin:center;
+      }
+
+      .action-chevron {
+        width:12px;
+        height:12px;
+        border-width:3px;
+      }
+    }
+
+    @media (max-width:430px) {
+      .admin-hero {
+        padding:22px 12px 24px !important;
+      }
+
+      .admin-action-grid {
+        gap:10px;
+      }
+
+      .admin-action-card {
+        padding:12px;
+      }
+
+      .action-title {
+        font-size:14px;
+      }
+
+      .action-subtitle {
+        font-size:12px;
+      }
+    }
+
   </style>
 </head>
 
@@ -763,49 +1179,51 @@
         </div>
 
         <button class="admin-action-card logout-card" onclick="logout()">
-          <span class="action-icon">â¥</span>
+          <span class="css-icon icon-logout" aria-hidden="true"></span>
           <span class="action-title">Logout</span>
         </button>
 
-        <button class="admin-action-card" onclick="openCreateModal()">
-          <span class="action-icon green-icon">â£</span>
+        <button class="admin-action-card appointment-card" onclick="openCreateModal()">
+          <span class="css-icon icon-calendar" aria-hidden="true"></span>
           <span>
             <span class="action-title">New Appointment</span>
             <span class="action-subtitle">Schedule a new<br>service appointment</span>
           </span>
         </button>
 
-        <a class="admin-action-card" href="/admin/inspection">
-          <span class="action-icon green-icon">â¤</span>
+        <a class="admin-action-card inspection-card" href="/admin/inspection">
+          <span class="css-icon icon-clipboard" aria-hidden="true"></span>
           <span>
             <span class="action-title">Inspection Form</span>
             <span class="action-subtitle">Create a new<br>inspection form</span>
           </span>
         </a>
 
-        <a class="admin-action-card" href="/admin/inspection-history">
-          <span class="action-icon green-icon">âº</span>
+        <a class="admin-action-card history-card" href="/admin/inspection-history">
+          <span class="css-icon icon-history" aria-hidden="true"></span>
           <span>
             <span class="action-title">Inspection History</span>
             <span class="action-subtitle">View past<br>inspections</span>
           </span>
         </a>
 
-        <a class="admin-action-card" href="/admin/customers">
-          <span class="action-icon green-icon">ð¥</span>
+        <a class="admin-action-card customer-card" href="/admin/customers">
+          <span class="css-icon icon-customers" aria-hidden="true"></span>
           <span>
             <span class="action-title">Customer Profiles</span>
             <span class="action-subtitle">Manage customer<br>information</span>
           </span>
         </a>
 
-        <button class="admin-action-card wide-action-card" onclick="enablePushNotifications()">
-          <span class="notification-circle">ð</span>
+        <button class="admin-action-card wide-action-card notifications-card" onclick="enablePushNotifications()">
+          <span class="notification-circle">
+            <span class="icon-bell" aria-hidden="true"></span>
+          </span>
           <span>
             <span class="action-title">Enable Notifications</span>
             <span class="action-subtitle">Stay updated on appointments and texts</span>
           </span>
-          <span class="action-chevron">âº</span>
+          <span class="action-chevron" aria-hidden="true"></span>
         </button>
       </div>
     </header>
@@ -3739,6 +4157,3 @@ window.addEventListener("load", function() {
     });
   }
 </script>
-
-</body>
-</html>
