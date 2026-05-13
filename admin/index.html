@@ -2373,6 +2373,52 @@
     }
   }
 
+/* TOROS MOBILE MANUAL FIELDS WIDER */
+
+  @media (max-width:760px) {
+    #smsLockedTop {
+      padding-left:74px !important;
+      padding-right:74px !important;
+    }
+
+    #smsManualFields {
+      width:100% !important;
+      max-width:none !important;
+      margin-left:auto !important;
+      margin-right:auto !important;
+    }
+
+    .sms-manual-grid {
+      width:100% !important;
+      max-width:none !important;
+      grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) !important;
+      gap:14px !important;
+    }
+
+    #smsCustomerName,
+    #smsPhone {
+      width:100% !important;
+      min-width:0 !important;
+      padding:12px 14px !important;
+      border-radius:14px !important;
+    }
+
+    #smsTemplate {
+      width:100% !important;
+    }
+  }
+
+  @media (max-width:430px) {
+    #smsLockedTop {
+      padding-left:62px !important;
+      padding-right:62px !important;
+    }
+
+    .sms-manual-grid {
+      gap:10px !important;
+    }
+  }
+
 </style>
 
 <script>
