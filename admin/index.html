@@ -1396,18 +1396,13 @@
     <div id="smsApp">
       <aside id="smsSidebar">
         <div id="smsSidebarTop">
-          <div id="smsMobileMessagesHeader">
-            <div></div>
-            <div id="smsMobileMessagesTitle">Messages</div>
-            <button id="smsMobileComposeBtn" onclick="startNewSmsMessage()" aria-label="New message">✎</button>
-          </div>
+          <div id="smsMobileTopRow">
+            <button id="smsNewMessageBtn" onclick="startNewSmsMessage()">+ New Message</button>
 
-          <button id="smsNewMessageBtn" onclick="startNewSmsMessage()">+ New Message</button>
-
-          <div id="smsSearchWrap">
-            <span id="smsSearchIcon">⌕</span>
-            <input id="smsSearch" oninput="renderConversationList()" placeholder="Search">
-            <span id="smsMicIcon">🎙</span>
+            <div id="smsSearchWrap">
+              <span id="smsSearchIcon">⌕</span>
+              <input id="smsSearch" oninput="renderConversationList()" placeholder="Search">
+            </div>
           </div>
         </div>
         <div id="conversationList"></div>
@@ -2113,6 +2108,107 @@
       background:white !important;
       font-size:16px !important;
       height:auto !important;
+    }
+  }
+
+/* TOROS MOBILE TOP ROW OVERRIDE */
+
+  @media (max-width:760px) {
+    #smsSidebarTop {
+      padding:calc(70px + env(safe-area-inset-top)) 14px 12px !important;
+      background:#f5f5f7 !important;
+      border-bottom:1px solid #e5e5e5 !important;
+    }
+
+    #smsMobileMessagesHeader,
+    #smsMobileMessagesTitle,
+    #smsMobileComposeBtn,
+    #smsMicIcon {
+      display:none !important;
+    }
+
+    #smsMobileTopRow {
+      display:grid !important;
+      grid-template-columns:minmax(135px, 155px) minmax(0, 1fr) 54px;
+      align-items:center;
+      gap:10px;
+      width:100%;
+    }
+
+    #smsNewMessageBtn {
+      display:block !important;
+      width:100% !important;
+      height:46px !important;
+      margin:0 !important;
+      border-radius:16px !important;
+      background:#1d7f4f !important;
+      color:white !important;
+      font-size:16px !important;
+      font-weight:800 !important;
+      padding:0 10px !important;
+      white-space:nowrap !important;
+      box-shadow:0 4px 10px rgba(29,127,79,.18) !important;
+    }
+
+    #smsSearchWrap {
+      display:block !important;
+      position:relative !important;
+      width:100% !important;
+      grid-column:2 !important;
+    }
+
+    #smsSearch {
+      width:100% !important;
+      height:46px !important;
+      border:0 !important;
+      border-radius:16px !important;
+      background:#e9e9eb !important;
+      color:#111 !important;
+      font-size:18px !important;
+      padding:8px 14px 8px 42px !important;
+      outline:none !important;
+    }
+
+    #smsSearch::placeholder {
+      color:#7c7c80 !important;
+      opacity:1 !important;
+    }
+
+    #smsSearchIcon {
+      display:block !important;
+      position:absolute !important;
+      left:13px !important;
+      top:50% !important;
+      transform:translateY(-50%) !important;
+      z-index:2 !important;
+      color:#7c7c80 !important;
+      font-size:25px !important;
+      line-height:1 !important;
+      pointer-events:none !important;
+    }
+
+    #smsCloseButton {
+      position:fixed !important;
+      top:calc(70px + env(safe-area-inset-top)) !important;
+      right:14px !important;
+      z-index:10050 !important;
+      width:46px !important;
+      height:46px !important;
+      border-radius:999px !important;
+      background:rgba(22,48,81,.92) !important;
+      color:white !important;
+      font-size:30px !important;
+      box-shadow:0 8px 22px rgba(0,0,0,.28) !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      padding:0 !important;
+      line-height:1 !important;
+    }
+
+    #conversationList {
+      padding:12px 14px !important;
+      background:#f5f5f7 !important;
     }
   }
 
