@@ -1,4 +1,5 @@
 const twilio = require("twilio");
+const { requireAuth } = require("./_auth");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -7,6 +8,8 @@ module.exports = async function handler(req, res) {
       error: "Method not allowed"
     });
   }
+
+  if (!requireAuth(req, res)) return;
 
   try {
     const { to, message, name } = req.body;

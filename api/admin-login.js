@@ -1,3 +1,5 @@
+const { generateToken } = require("./_auth");
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
@@ -17,8 +19,10 @@ module.exports = async function handler(req, res) {
     }
 
     if (password === process.env.ADMIN_PASSWORD) {
+      const token = generateToken();
       return res.status(200).json({
-        success: true
+        success: true,
+        token: token
       });
     }
 

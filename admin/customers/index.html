@@ -167,6 +167,14 @@
   </main>
 
   <script>
+    // Auth
+    function getAdminToken() { return localStorage.getItem("torosAdminToken") || ""; }
+    function adminAuthHeaders() { return { "x-admin-token": getAdminToken() }; }
+    
+    if (!localStorage.getItem("torosAdminLoggedIn")) {
+      window.location.href = "/admin";
+    }
+
     let customers = [];
 
     async function loadCustomers() {
@@ -174,7 +182,7 @@
       grid.innerHTML = '<div class="empty">Loading customers...</div>';
 
       try {
-        const response = await fetch("/api/get-customers");
+        const response = await fetch("/api/get-customers", { headers: adminAuthHeaders() });
         const data = await response.json();
 
         customers = data.customers || [];

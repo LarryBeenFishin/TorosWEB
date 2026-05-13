@@ -292,10 +292,19 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
+    const INSPECTION_API = "/api/public-inspection";
 
     const params = new URLSearchParams(window.location.search);
     const inspectionId = params.get("id");
+
+    function escapeHTML(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
     async function loadInspection() {
       const report = document.getElementById("report");
@@ -307,7 +316,7 @@
 
       try {
         const response = await fetch(
-          `${SCRIPT_URL}?action=getInspection&id=${inspectionId}`
+          `${INSPECTION_API}?id=${encodeURIComponent(inspectionId)}`
         );
 
         const data = await response.json();
@@ -331,7 +340,7 @@
           <h1>Vehicle Inspection Report</h1>
 
           <div class="subtitle">
-            Inspection ID: ${inspection.inspectionId}
+            Inspection ID: ${escapeHTML(inspection.inspectionId)}
           </div>
 
           <div class="section">
@@ -340,27 +349,27 @@
             <div class="info-grid">
               <div class="info-card">
                 <strong>Customer</strong>
-                ${inspection.customerName || "-"}
+                ${escapeHTML(inspection.customerName || "-")}
               </div>
 
               <div class="info-card">
                 <strong>Phone</strong>
-                ${inspection.phone || "-"}
+                ${escapeHTML(inspection.phone || "-")}
               </div>
 
               <div class="info-card">
                 <strong>Vehicle</strong>
-                ${inspection.vehicle || "-"}
+                ${escapeHTML(inspection.vehicle || "-")}
               </div>
 
               <div class="info-card">
                 <strong>Mileage</strong>
-                ${inspection.mileage || "-"}
+                ${escapeHTML(inspection.mileage || "-")}
               </div>
 
               <div class="info-card">
                 <strong>Technician</strong>
-                ${inspection.technician || "-"}
+                ${escapeHTML(inspection.technician || "-")}
               </div>
 
               <div class="info-card">
@@ -388,7 +397,7 @@
             <h2>Recommendations</h2>
 
             <div class="recommendations">
-              ${inspection.recommendations || "No recommendations added."}
+              ${escapeHTML(inspection.recommendations || "No recommendations added.")}
             </div>
           </div>
         `;
@@ -402,7 +411,7 @@
       return `
         <div class="inspection-item">
           <div class="inspection-header">
-            <div class="inspection-title">${title}</div>
+            <div class="inspection-title">${escapeHTML(title)}</div>
 
             <div class="status">
               ${formatStatus(status)}
@@ -410,7 +419,7 @@
           </div>
 
           <div>
-            ${notes || "No notes added."}
+            ${escapeHTML(notes || "No notes added.")}
           </div>
         </div>
       `;

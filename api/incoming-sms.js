@@ -1,6 +1,25 @@
+// Twilio webhook for incoming SMS. 
+// Validates the request is actually from Twilio using the X-Twilio-Signature header.
+const twilio = require("twilio");
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).send("Method Not Allowed");
+  }
+
+  // Validate Twilio signature if auth token is configured
+  if (process.env.TWILIO_AUTH_TOKEN) {
+    const signature = req.headers["x-twilio-signature"] || "";
+    const url = `https://${req.headers.host}${req.url}`;
+    const isValid = twilio.validateRequest(
+      process.env.TWILIO_AUTH_TOKEN,
+      signature,
+      url,
+      req.body || {}
+    );
+    if (!isValid) {
+      return res.status(403).send("Forbidden");
+    }
   }
 
   try {

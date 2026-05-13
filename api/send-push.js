@@ -1,4 +1,5 @@
 const webpush = require("web-push");
+const { requireAuth } = require("./_auth");
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT,
@@ -13,6 +14,8 @@ module.exports = async function handler(req, res) {
       message: "Method not allowed"
     });
   }
+
+  if (!requireAuth(req, res)) return;
 
   try {
     const title = req.body?.title || "Toro's Auto Care";

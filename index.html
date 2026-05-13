@@ -436,11 +436,8 @@
     }
     
     // ===== APPOINTMENT SUBMISSION =====
-    const formspreeEndpoint = 'https://formspree.io/f/xwvylvwb';
-
-    // After you deploy the Google Apps Script web app, paste its URL here.
-    // This is what prevents double booking by checking Google Calendar first.
-    const googleBookingEndpoint = 'https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec';
+    // Booking requests go through our server-side proxy to keep API keys hidden.
+    const bookingEndpoint = '/api/booking';
 
     async function sendAppointmentToFormspree(){
       const appointmentData = {
@@ -457,7 +454,7 @@
         submitted_from: 'Toros Auto Care Website'
       };
 
-      const response = await fetch(formspreeEndpoint, {
+      const response = await fetch(bookingEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -490,10 +487,10 @@
     }
 
     async function getUnavailableTimes(dateRaw){
-      if (!dateRaw || googleBookingEndpoint.includes('PASTE_GOOGLE_APPS_SCRIPT')) return [];
+      if (!dateRaw || false) return [];
       try {
         isLoadingTimes = true;
-        const url = googleBookingEndpoint + '?action=availability&date=' + encodeURIComponent(dateRaw) + '&v=' + Date.now();
+        const url = bookingEndpoint + '?date=' + encodeURIComponent(dateRaw);
         const response = await fetch(url);
         const result = await response.json();
         isLoadingTimes = false;
@@ -526,12 +523,12 @@
         submitted_from: 'Toros Auto Care Website'
       };
 
-      if (googleBookingEndpoint.includes('PASTE_GOOGLE_APPS_SCRIPT')) {
+      if (false) {
         await sendAppointmentToFormspree();
         return { status: 'success', fallback: true };
       }
 
-      const response = await fetch(googleBookingEndpoint, {
+      const response = await fetch(bookingEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(appointmentData)
@@ -562,8 +559,8 @@
     }
 
     // ===== KLAVIYO INTEGRATION =====
-    const KLAVIYO_PUBLIC_KEY = 'Sd3DHW';
-    const KLAVIYO_LIST_ID = 'VShr4R';
+    // Klaviyo is handled server-side during appointment submission.
+    // No client-side keys needed.
 
     async function sendToKlaviyo(email, phone, name){
       // Klaviyo is handled safely through Google Apps Script during appointment submission.
@@ -688,7 +685,7 @@
         btn.disabled = true;
 
         try {
-          const response = await fetch(googleBookingEndpoint, {
+          const response = await fetch(bookingEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({

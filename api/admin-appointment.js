@@ -1,3 +1,5 @@
+const { requireAuth } = require("./_auth");
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
@@ -5,6 +7,8 @@ module.exports = async function handler(req, res) {
       message: "Method not allowed"
     });
   }
+
+  if (!requireAuth(req, res)) return;
 
   try {
     const payload = req.body || {};

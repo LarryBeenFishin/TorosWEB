@@ -1,8 +1,12 @@
-const CACHE_NAME = "toros-admin-v3";
+const CACHE_NAME = "toros-admin-v4";
 
 const STATIC_ASSETS = [
   "/logo.png",
-  "/manifest.json"
+  "/manifest.json",
+  "/admin",
+  "/admin/customers",
+  "/admin/inspection",
+  "/admin/inspection-history"
 ];
 
 self.addEventListener("install", event => {
@@ -35,33 +39,43 @@ self.addEventListener("fetch", event => {
 
   if (request.method !== "GET") return;
 
-  if (
-    url.pathname.startsWith("/api/") ||
-    url.hostname.includes("script.google.com")
-  ) {
+  // Never cache API calls — always go to network
+  if (url.pathname.startsWith("/api/")) {
     event.respondWith(fetch(request));
     return;
   }
 
+  // HTML pages: network-first with offline fallback
   if (
     url.pathname === "/" ||
-    url.pathname.startsWith("/admin")
+    url.pathname.startsWith("/admin") ||
+    url.pathname.startsWith("/inspection")
   ) {
     event.respondWith(
-      fetch(request).catch(() => caches.match(request))
+      fetch(request)
+        .then(response => {
+          // Cache the fresh HTML for offline use
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, copy).catch(() => {});
+          });
+          return response;
+        })
+        .catch(() => caches.match(request))
     );
     return;
   }
 
+  // Static assets (images, logo, manifest): cache-first
   event.respondWith(
     caches.match(request).then(cached => {
-      return cached || fetch(request).then(response => {
-        const copy = response.clone();
+      if (cached) return cached;
 
+      return fetch(request).then(response => {
+        const copy = response.clone();
         caches.open(CACHE_NAME).then(cache => {
           cache.put(request, copy).catch(() => {});
         });
-
         return response;
       });
     })
@@ -86,15 +100,22 @@ self.addEventListener("push", event => {
       body: data.body || "New notification",
       icon: "/logo.png",
       badge: "/logo.png",
+      vibrate: [100, 50, 100],
       data: {
         url: data.url || "/admin"
-      }
+      },
+      actions: [
+        { action: "open", title: "Open" },
+        { action: "dismiss", title: "Dismiss" }
+      ]
     })
   );
 });
 
 self.addEventListener("notificationclick", event => {
   event.notification.close();
+
+  if (event.action === "dismiss") return;
 
   const url = event.notification.data?.url || "/admin";
 
@@ -103,12 +124,13 @@ self.addEventListener("notificationclick", event => {
       type: "window",
       includeUncontrolled: true
     }).then(clientList => {
+      // Focus existing window if open
       for (const client of clientList) {
         if (client.url.includes(url) && "focus" in client) {
           return client.focus();
         }
       }
-
+      // Otherwise open new window
       if (clients.openWindow) {
         return clients.openWindow(url);
       }

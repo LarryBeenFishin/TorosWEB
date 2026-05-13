@@ -5,9 +5,31 @@
   "start_url": "/admin",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#f4f7fb",
+  "background_color": "#163051",
   "theme_color": "#163051",
   "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "New Appointment",
+      "short_name": "New Appt",
+      "url": "/admin",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Inspections",
+      "short_name": "Inspect",
+      "url": "/admin/inspection",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Customers",
+      "short_name": "Customers",
+      "url": "/admin/customers",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/logo.png",

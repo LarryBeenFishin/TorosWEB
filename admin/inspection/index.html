@@ -233,8 +233,14 @@
   </div>
 
   <script>
-    const ADMIN_PASSWORD = "toros123";
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec";
+    // Auth token is stored in localStorage by the admin login page
+    function getAdminToken() { return localStorage.getItem("torosAdminToken") || ""; }
+    function adminHeaders() { return { "Content-Type": "application/json", "x-admin-token": getAdminToken() }; }
+    
+    // Redirect to admin login if not authenticated
+    if (!localStorage.getItem("torosAdminLoggedIn")) {
+      window.location.href = "/admin";
+    }
 
     const items = [
       "Brakes",
@@ -282,8 +288,6 @@
 
       const payload = {
         action: "createInspection",
-        password: ADMIN_PASSWORD,
-
         customerName: document.getElementById("customerName").value,
         phone: document.getElementById("phone").value,
         email: document.getElementById("email").value,
@@ -329,8 +333,10 @@
       }
 
       try {
-        const response = await fetch(SCRIPT_URL, {
+        payload.action = "createInspection";
+        const response = await fetch("/api/admin-appointment", {
           method: "POST",
+          headers: adminHeaders(),
           body: JSON.stringify(payload)
         });
 

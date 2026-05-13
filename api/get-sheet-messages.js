@@ -1,7 +1,9 @@
+const { requireAuth } = require("./_auth");
+
 module.exports = async function handler(req, res) {
+  if (!requireAuth(req, res)) return;
 
   try {
-
     const response = await fetch(
       `${process.env.SHEETS_WEB_APP_URL}?secret=${process.env.SHEETS_SECRET_KEY}`
     );
@@ -11,12 +13,9 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(data);
 
   } catch (err) {
-
     return res.status(500).json({
       success: false,
       error: err.message
     });
-
   }
-
 };
