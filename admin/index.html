@@ -1393,7 +1393,7 @@
       <button onclick="closeTextPanel()" style="background:transparent;color:white;border:0;font-size:30px;cursor:pointer;padding:0;line-height:1;">×</button>
     </div>
 
-    <div id="textPanelGrid" style="display:grid;grid-template-columns:300px minmax(0,1fr);flex:1;min-height:0;overflow:hidden;">
+    <div id="textPanelGrid" style="display:grid;grid-template-columns:300px minmax(0,1fr);flex:1;min-height:0;overflow:hidden;position:relative;">
       <div id="smsSidebar" style="border-right:1px solid #e5e5e5;background:#f7f9fc;display:flex;flex-direction:column;min-width:0;min-height:0;">
         <div style="padding:14px;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
           <button onclick="startNewSmsMessage()" style="width:100%;background:#1d7f4f;color:white;border:0;border-radius:12px;padding:12px;font-weight:bold;margin-bottom:10px;">
@@ -1404,8 +1404,10 @@
         <div id="conversationList" style="overflow:auto;flex:1;padding:10px;min-height:0;"></div>
       </div>
 
-      <div style="display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;">
+      <div id="smsConversationView" style="display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;">
         <div id="smsComposeCard" style="padding:18px 16px;background:white;border-bottom:1px solid #e5e5e5;flex-shrink:0;">
+
+          <div class="sms-mobile-back" onclick="showSmsConversationList()" style="display:none;">← Back</div>
 
           <div id="smsActiveCustomerCard" style="display:none;background:white;border:1px solid #dbe3ef;border-radius:14px;padding:14px;margin-bottom:0;">
             <div style="font-size:18px;font-weight:bold;color:#163051;" id="smsActiveCustomerName">Customer</div>
@@ -1464,6 +1466,7 @@
       padding:0 !important;
       align-items:stretch !important;
       justify-content:stretch !important;
+      background:#f5f5f7 !important;
     }
 
     #textPanelOverlay > div {
@@ -1471,12 +1474,14 @@
       height:100vh !important;
       max-width:none !important;
       border-radius:0 !important;
+      box-shadow:none !important;
     }
 
     #textPanelGrid {
       display:block !important;
       height:100% !important;
-      position:relative;
+      position:relative !important;
+      background:#f5f5f7 !important;
     }
 
     #smsSidebar {
@@ -1490,6 +1495,7 @@
 
     #conversationList {
       padding:8px !important;
+      background:#f5f5f7 !important;
     }
 
     #smsSidebar.sms-mobile-hidden {
@@ -1497,12 +1503,13 @@
     }
 
     #smsConversationView {
-      position:absolute;
-      inset:0;
-      background:#eef3fa;
-      display:flex;
-      flex-direction:column;
+      position:absolute !important;
+      inset:0 !important;
+      background:#eef3fa !important;
+      display:none;
+      flex-direction:column !important;
       z-index:5;
+      min-height:0 !important;
     }
 
     #smsComposeCard {
@@ -1510,17 +1517,32 @@
       padding:12px 14px !important;
       background:white !important;
       border-bottom:1px solid #e5e5e5 !important;
+      flex-shrink:0 !important;
+    }
+
+    #smsActiveCustomerCard {
+      border:0 !important;
+      padding:4px 0 8px !important;
+      background:white !important;
+    }
+
+    #smsManualFields > div:first-child {
+      font-size:22px !important;
     }
 
     #smsThread {
       flex:1 !important;
       padding:14px !important;
+      min-height:0 !important;
+      overflow:auto !important;
+      background:#eef3fa !important;
     }
 
     #smsComposer {
-      padding:10px 12px !important;
+      padding:10px 12px calc(10px + env(safe-area-inset-bottom)) !important;
       background:white !important;
       border-top:1px solid #e5e5e5 !important;
+      flex-shrink:0 !important;
     }
 
     #smsComposer textarea {
@@ -1533,16 +1555,18 @@
 
     #smsComposer button {
       border-radius:18px !important;
+      padding:13px !important;
     }
 
     .sms-mobile-back {
       display:flex !important;
       align-items:center;
       gap:6px;
-      color:#163051;
+      color:#007aff;
       font-weight:bold;
       margin-bottom:10px;
       cursor:pointer;
+      font-size:16px;
     }
   }
 </style>
@@ -1781,6 +1805,14 @@ function openTextPanel(mode = "new") {
   unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
 
+  if (isMobileSmsView()) {
+    const convo = document.getElementById("smsConversationView");
+    const sidebar = document.getElementById("smsSidebar");
+
+    if (convo) convo.style.display = "none";
+    if (sidebar) sidebar.classList.remove("sms-mobile-hidden");
+  }
+
   loadCachedSmsMessages();
 
   if (mode === "new") {
@@ -1867,6 +1899,7 @@ function startNewSmsMessage() {
   }
 
   renderConversationList();
+  showSmsConversationView();
 }
 
 function useSmsTemplate() {
@@ -2032,6 +2065,30 @@ function renderConversationList() {
   }).join("");
 }
 
+function isMobileSmsView() {
+  return window.innerWidth <= 760;
+}
+
+function showSmsConversationList() {
+  const sidebar = document.getElementById("smsSidebar");
+  const convo = document.getElementById("smsConversationView");
+
+  if (isMobileSmsView()) {
+    if (sidebar) sidebar.classList.remove("sms-mobile-hidden");
+    if (convo) convo.style.display = "none";
+  }
+}
+
+function showSmsConversationView() {
+  const sidebar = document.getElementById("smsSidebar");
+  const convo = document.getElementById("smsConversationView");
+
+  if (isMobileSmsView()) {
+    if (sidebar) sidebar.classList.add("sms-mobile-hidden");
+    if (convo) convo.style.display = "flex";
+  }
+}
+
 function selectConversation(phoneKey, rerenderList = true) {
   smsIsNewMessageMode = false;
   smsRestoreConversationOnOpen = true;
@@ -2061,6 +2118,7 @@ function selectConversation(phoneKey, rerenderList = true) {
     }
   }
 
+  showSmsConversationView();
   renderActiveThread();
   if (rerenderList) renderConversationList();
 }
@@ -2214,6 +2272,24 @@ function escapeJs(text) {
   return String(text || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
+
+
+window.addEventListener("resize", function() {
+  const overlay = document.getElementById("textPanelOverlay");
+  if (!overlay || overlay.style.display !== "flex") return;
+
+  const sidebar = document.getElementById("smsSidebar");
+  const convo = document.getElementById("smsConversationView");
+
+  if (!isMobileSmsView()) {
+    if (sidebar) sidebar.classList.remove("sms-mobile-hidden");
+    if (convo) convo.style.display = "flex";
+  } else if (smsIsNewMessageMode || activeSmsPhone) {
+    showSmsConversationView();
+  } else {
+    showSmsConversationList();
+  }
+});
 
 window.addEventListener("load", function() {
   if (localStorage.getItem("torosRestoreSmsConversation") === null) {
