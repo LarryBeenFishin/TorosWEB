@@ -2271,6 +2271,48 @@
   }
 }
 
+
+/* TOROS LOGIN STATE FIX */
+#openTextPanelBtn {
+  display:none !important;
+}
+
+body.toros-admin-logged-in #openTextPanelBtn {
+  display:flex !important;
+}
+
+/* Clean modal close button with CSS only */
+.modal-x {
+  font-size:0 !important;
+  color:transparent !important;
+  position:absolute !important;
+}
+
+.modal-x::before,
+.modal-x::after {
+  content:"" !important;
+  position:absolute !important;
+  width:22px !important;
+  height:4px !important;
+  background:#333 !important;
+  border-radius:999px !important;
+  left:6px !important;
+  top:15px !important;
+}
+
+.modal-x::before {
+  transform:rotate(45deg) !important;
+}
+
+.modal-x::after {
+  transform:rotate(-45deg) !important;
+}
+
+.modal-x:hover::before,
+.modal-x:hover::after {
+  background:white !important;
+}
+
 </style>
 </head>
 
@@ -2480,7 +2522,7 @@
 
   <div class="modal-overlay" id="createModal">
     <div class="modal" style="position:relative;">
-      <button type="button" class="modal-x" onclick="closeCreateModal()">Ã</button>
+      <button type="button" class="modal-x" onclick="closeCreateModal()" aria-label="Close"></button>
 
       <h2>New Appointment</h2>
       <div class="modal-date">Create an appointment from the admin portal</div>
@@ -2669,6 +2711,7 @@
           localStorage.setItem("torosAdminLoggedIn", "true");
           document.getElementById("loginScreen").style.display = "none";
           document.getElementById("adminDashboard").style.display = "block";
+          document.body.classList.add("toros-admin-logged-in");
           error.textContent = "";
           loadCachedAppointments();
           loadAppointments();
@@ -2692,6 +2735,7 @@
 
     function logout() {
       localStorage.removeItem("torosAdminLoggedIn");
+      document.body.classList.remove("toros-admin-logged-in");
       location.reload();
     }
 
@@ -2866,7 +2910,7 @@
       const email = app.email || "";
 
       document.getElementById("modalName").textContent = app.name || app.customer || "Customer";
-      document.getElementById("modalDate").textContent = `${formatDisplayDate(app)} â¢ ${app.time || ""}`;
+      document.getElementById("modalDate").textContent = cleanDisplayText(`${formatDisplayDate(app)} - ${app.time || ""}`);
       document.getElementById("modalPhone").textContent = phone || "Not provided";
       document.getElementById("modalEmail").textContent = email || "Not provided";
       document.getElementById("modalVehicle").textContent = app.vehicle || "Not provided";
@@ -3157,6 +3201,7 @@
       if (localStorage.getItem("torosAdminLoggedIn") === "true") {
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminDashboard").style.display = "block";
+        document.body.classList.add("toros-admin-logged-in");
         loadCachedAppointments();
         loadAppointments();
 
@@ -5185,7 +5230,7 @@ function renderActiveThread(forceScroll = true) {
         ">
           <div style="font-size:16px;line-height:1.4;white-space:pre-wrap;">${escapeHtml(msg.message)}</div>
           <div style="font-size:12px;opacity:.72;margin-top:6px;text-align:${outgoing ? 'right' : 'left'};">
-            ${outgoing ? "Toro's Auto Care" : escapeHtml(msg.name || 'Customer')} â¢ ${formatFullDate(msg.date)}
+            ${outgoing ? "Toro's Auto Care" : escapeHtml(msg.name || 'Customer')} - ${formatFullDate(msg.date)}
           </div>
         </div>
       </div>
@@ -5277,8 +5322,25 @@ function formatFullDate(dateText) {
   });
 }
 
-function escapeHtml(value) {
+
+function cleanDisplayText(value) {
   return String(value || "")
+    .replace(/â¢/g, "-")
+    .replace(//g, "")
+    .replace(//g, "")
+    .replace(//g, "")
+    .replace(//g, "")
+    .replace(//g, "")
+    .replace(//g, "")
+    .replace(//g, "")
+    .replace(//g, "")
+    .replace(//g, "")
+    .replace(//g, "")
+    .replace(//g, "");
+}
+
+function escapeHtml(value) {
+  return cleanDisplayText(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
