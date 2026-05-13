@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#163051">
   <link rel="manifest" href="/manifest.json">
@@ -34,12 +34,21 @@
 
     button:hover { background: #911f1f; }
 
+
+    body.sms-panel-open {
+      overflow: hidden !important;
+      position: fixed !important;
+      width: 100% !important;
+      height: 100% !important;
+      touch-action: none;
+    }
+
     input, select, textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #d8dee9;
       border-radius: 12px;
-      font-size: 15px;
+      font-size: 16px;
       font-family: Arial, sans-serif;
     }
 
@@ -1399,7 +1408,7 @@
           <button onclick="startNewSmsMessage()" style="width:100%;background:#1d7f4f;color:white;border:0;border-radius:12px;padding:12px;font-weight:bold;margin-bottom:10px;">
             + New Message
           </button>
-          <input id="smsSearch" oninput="renderConversationList()" placeholder="Search name or phone" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:14px;">
+          <input id="smsSearch" oninput="renderConversationList()" placeholder="Search name or phone" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px;">
         </div>
         <div id="conversationList" style="overflow:auto;flex:1;padding:10px;min-height:0;"></div>
       </div>
@@ -1420,17 +1429,17 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
               <div>
                 <label style="font-weight:bold;font-size:13px;margin-top:0;">Customer Name</label>
-                <input id="smsCustomerName" placeholder="John Smith" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:14px;">
+                <input id="smsCustomerName" placeholder="John Smith" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px;">
               </div>
               <div>
                 <label style="font-weight:bold;font-size:13px;margin-top:0;">Phone Number</label>
-                <input id="smsPhone" placeholder="+18475551234" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:14px;">
+                <input id="smsPhone" placeholder="+18475551234" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px;">
               </div>
             </div>
           </div>
 
           <label style="font-weight:bold;font-size:13px;">Quick Templates</label>
-          <select id="smsTemplate" onchange="useSmsTemplate()" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:14px;">
+          <select id="smsTemplate" onchange="useSmsTemplate()" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px;">
             <option value="">Choose a template</option>
             <option value="Hi, this is Toro's Auto Care. Your appointment has been confirmed. Reply here if you have any questions.">Appointment Confirmed</option>
             <option value="Hi, this is Toro's Auto Care. Your vehicle inspection is ready. Please review it when you have a chance.">Inspection Ready</option>
@@ -1446,7 +1455,7 @@
 
         <div id="smsComposer" style="padding:12px 16px;background:white;border-top:1px solid #e5e5e5;flex-shrink:0;">
           <label style="font-weight:bold;font-size:13px;margin-top:0;">Message</label>
-          <textarea id="smsMessage" placeholder="Type your message..." style="width:100%;height:76px;min-height:76px;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:15px;resize:vertical;"></textarea>
+          <textarea id="smsMessage" placeholder="Type your message..." style="width:100%;height:76px;min-height:76px;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;resize:vertical;"></textarea>
 
           <button onclick="sendCustomerText()" style="width:100%;background:#af2727;color:white;border:0;border-radius:12px;padding:13px;font-weight:bold;font-size:16px;cursor:pointer;margin-top:8px;">
             Send Text
@@ -1558,6 +1567,18 @@
       padding:13px !important;
     }
 
+
+    #smsThread,
+    #conversationList {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+    }
+
+    #textPanelOverlay {
+      overscroll-behavior: contain;
+    }
+
     .sms-mobile-back {
       display:flex !important;
       align-items:center;
@@ -1587,6 +1608,7 @@ let lastIncomingKey = localStorage.getItem("torosLastIncomingKey") || "";
 let unreadPhones = new Set(JSON.parse(localStorage.getItem("torosUnreadSmsPhones") || "[]"));
 let audioReady = false;
 let audioContext = null;
+let smsPageScrollY = 0;
 
 
 function loadCachedSmsMessages() {
@@ -1635,6 +1657,17 @@ function unlockNotificationSound() {
     audioReady = false;
   }
 }
+
+
+document.addEventListener("touchmove", function(event) {
+  const overlay = document.getElementById("textPanelOverlay");
+  if (!overlay || overlay.style.display !== "flex") return;
+
+  const scrollable = event.target.closest("#smsThread, #conversationList, textarea, select, input");
+  if (!scrollable) {
+    event.preventDefault();
+  }
+}, { passive: false });
 
 document.addEventListener("click", unlockNotificationSound, { once: true });
 document.addEventListener("touchstart", unlockNotificationSound, { once: true });
@@ -1801,9 +1834,23 @@ function getMessageKey(msg) {
   return [msg.sid || "", msg.date || "", msg.phone || "", msg.message || ""].join("|");
 }
 
+
+function lockPageBehindSms() {
+  smsPageScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.classList.add("sms-panel-open");
+  document.body.style.top = "-" + smsPageScrollY + "px";
+}
+
+function unlockPageBehindSms() {
+  document.body.classList.remove("sms-panel-open");
+  document.body.style.top = "";
+  window.scrollTo(0, smsPageScrollY || 0);
+}
+
 function openTextPanel(mode = "new") {
   unlockNotificationSound();
   document.getElementById("textPanelOverlay").style.display = "flex";
+  lockPageBehindSms();
 
   if (isMobileSmsView()) {
     const convo = document.getElementById("smsConversationView");
@@ -1842,6 +1889,7 @@ function openTextPanel(mode = "new") {
 
 function closeTextPanel() {
   document.getElementById("textPanelOverlay").style.display = "none";
+  unlockPageBehindSms();
 
   if (activeSmsPhone && !smsIsNewMessageMode) {
     smsRestoreConversationOnOpen = true;
