@@ -1307,7 +1307,521 @@
       }
     }
 
-  </style>
+  
+/* TOROS FINAL ADMIN CARDS - REFERENCE STYLE, CSS ICONS ONLY */
+.admin-hero {
+  background:#163051 !important;
+  color:white !important;
+  padding:26px !important;
+  display:block !important;
+}
+
+.admin-action-grid.toros-card-actions {
+  display:grid !important;
+  grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+  gap:18px !important;
+  max-width:1500px !important;
+  margin:0 auto !important;
+}
+
+.admin-action-grid.toros-card-actions .admin-action-card {
+  min-height:124px !important;
+  border-radius:18px !important;
+  background:white !important;
+  color:#163051 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:22px !important;
+  padding:22px 26px !important;
+  text-align:left !important;
+  text-decoration:none !important;
+  box-shadow:0 12px 28px rgba(0,0,0,.16) !important;
+  border:0 !important;
+  cursor:pointer !important;
+  font-family:Arial, sans-serif !important;
+  overflow:hidden !important;
+}
+
+.admin-action-grid.toros-card-actions .logo-card {
+  justify-content:center !important;
+  padding:16px !important;
+}
+
+.admin-action-grid.toros-card-actions .logo-card img {
+  height:auto !important;
+  max-height:92px !important;
+  width:100% !important;
+  object-fit:contain !important;
+  background:transparent !important;
+  padding:0 !important;
+  border-radius:0 !important;
+}
+
+.admin-action-grid.toros-card-actions .logout-card {
+  justify-content:center !important;
+  background:linear-gradient(135deg,#af2727,#cf2f2f) !important;
+  color:white !important;
+}
+
+.admin-action-grid.toros-card-actions .action-title {
+  display:block !important;
+  font-size:24px !important;
+  font-weight:800 !important;
+  line-height:1.1 !important;
+  color:#163051 !important;
+}
+
+.admin-action-grid.toros-card-actions .logout-card .action-title {
+  color:white !important;
+  font-size:27px !important;
+}
+
+.admin-action-grid.toros-card-actions .action-subtitle {
+  display:block !important;
+  margin-top:8px !important;
+  font-size:18px !important;
+  font-weight:400 !important;
+  color:#3f4c5f !important;
+  line-height:1.25 !important;
+}
+
+.admin-action-grid.toros-card-actions .wide-action-card {
+  grid-column:1 / -1 !important;
+  min-height:104px !important;
+  position:relative !important;
+}
+
+.card-icon {
+  width:64px !important;
+  height:64px !important;
+  min-width:64px !important;
+  position:relative !important;
+  display:block !important;
+  color:#1d9958 !important;
+  background:transparent !important;
+}
+
+.notification-circle {
+  width:58px !important;
+  height:58px !important;
+  min-width:58px !important;
+  border-radius:50% !important;
+  background:#0e5a89 !important;
+  position:relative !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.chevron-line-icon {
+  width:16px !important;
+  height:16px !important;
+  border-top:4px solid #163051 !important;
+  border-right:4px solid #163051 !important;
+  transform:rotate(45deg) !important;
+  margin-left:auto !important;
+  display:block !important;
+}
+
+/* logout door/arrow */
+.logout-line-icon {
+  color:white !important;
+}
+.logout-line-icon::before {
+  content:"" !important;
+  position:absolute !important;
+  left:12px !important;
+  top:16px !important;
+  width:22px !important;
+  height:30px !important;
+  border:4px solid white !important;
+  border-right:0 !important;
+  border-radius:7px 0 0 7px !important;
+}
+.logout-line-icon::after {
+  content:"" !important;
+  position:absolute !important;
+  right:8px !important;
+  top:31px !important;
+  width:27px !important;
+  height:4px !important;
+  background:white !important;
+  border-radius:999px !important;
+  box-shadow:9px -7px 0 -1px white, 9px 7px 0 -1px white !important;
+}
+
+/* calendar + */
+.appointment-line-icon::before {
+  content:"" !important;
+  position:absolute !important;
+  left:7px !important;
+  top:12px !important;
+  width:42px !important;
+  height:38px !important;
+  border:5px solid #1d9958 !important;
+  border-radius:8px !important;
+}
+.appointment-line-icon::after {
+  content:"" !important;
+  position:absolute !important;
+  right:1px !important;
+  bottom:1px !important;
+  width:27px !important;
+  height:27px !important;
+  border-radius:50% !important;
+  background:#1d9958 !important;
+  background-image:
+    linear-gradient(#fff,#fff),
+    linear-gradient(#fff,#fff) !important;
+  background-size:15px 4px,4px 15px !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+}
+.appointment-line-icon {
+  background:
+    linear-gradient(#1d9958,#1d9958) 16px 7px/6px 12px no-repeat,
+    linear-gradient(#1d9958,#1d9958) 36px 7px/6px 12px no-repeat,
+    linear-gradient(#1d9958,#1d9958) 17px 28px/23px 5px no-repeat,
+    linear-gradient(#1d9958,#1d9958) 17px 39px/20px 5px no-repeat !important;
+}
+
+/* clipboard */
+.clipboard-line-icon::before {
+  content:"" !important;
+  position:absolute !important;
+  left:13px !important;
+  top:14px !important;
+  width:36px !important;
+  height:42px !important;
+  border:5px solid #1d9958 !important;
+  border-radius:8px !important;
+}
+.clipboard-line-icon::after {
+  content:"" !important;
+  position:absolute !important;
+  left:22px !important;
+  top:6px !important;
+  width:18px !important;
+  height:15px !important;
+  border:5px solid #1d9958 !important;
+  border-bottom:0 !important;
+  border-radius:9px 9px 0 0 !important;
+  background:white !important;
+}
+.clipboard-line-icon {
+  background:
+    linear-gradient(#1d9958,#1d9958) 24px 35px/16px 4px no-repeat,
+    linear-gradient(#1d9958,#1d9958) 24px 46px/16px 4px no-repeat !important;
+}
+
+/* history clock */
+.history-line-icon::before {
+  content:"" !important;
+  position:absolute !important;
+  left:7px !important;
+  top:7px !important;
+  width:46px !important;
+  height:46px !important;
+  border:5px solid #1d9958 !important;
+  border-left-color:transparent !important;
+  border-radius:50% !important;
+}
+.history-line-icon::after {
+  content:"" !important;
+  position:absolute !important;
+  left:8px !important;
+  top:10px !important;
+  width:18px !important;
+  height:18px !important;
+  border-left:5px solid #1d9958 !important;
+  border-top:5px solid #1d9958 !important;
+  transform:rotate(-25deg) !important;
+}
+.history-line-icon {
+  background:
+    linear-gradient(#1d9958,#1d9958) 32px 24px/5px 17px no-repeat,
+    linear-gradient(#1d9958,#1d9958) 32px 36px/17px 5px no-repeat !important;
+}
+
+/* customers */
+.customers-line-icon::before {
+  content:"" !important;
+  position:absolute !important;
+  left:8px !important;
+  top:13px !important;
+  width:26px !important;
+  height:26px !important;
+  border-radius:50% !important;
+  background:#1d9958 !important;
+  box-shadow:22px 4px 0 -3px #1d9958 !important;
+}
+.customers-line-icon::after {
+  content:"" !important;
+  position:absolute !important;
+  left:1px !important;
+  bottom:7px !important;
+  width:39px !important;
+  height:24px !important;
+  border-radius:22px 22px 7px 7px !important;
+  background:#1d9958 !important;
+  box-shadow:27px 2px 0 -5px #1d9958 !important;
+}
+
+/* bell in blue circle */
+.bell-line-icon {
+  width:36px !important;
+  height:36px !important;
+  position:relative !important;
+  display:block !important;
+}
+.bell-line-icon::before {
+  content:"" !important;
+  position:absolute !important;
+  left:7px !important;
+  top:5px !important;
+  width:22px !important;
+  height:26px !important;
+  background:white !important;
+  border-radius:14px 14px 6px 6px !important;
+}
+.bell-line-icon::after {
+  content:"" !important;
+  position:absolute !important;
+  left:4px !important;
+  top:29px !important;
+  width:28px !important;
+  height:5px !important;
+  background:white !important;
+  border-radius:999px !important;
+  box-shadow:9px 7px 0 -5px white !important;
+}
+
+@media (max-width:900px) {
+  .admin-hero {
+    padding:24px 14px 26px !important;
+  }
+
+  .admin-action-grid.toros-card-actions {
+    grid-template-columns:1fr 1fr !important;
+    gap:12px !important;
+  }
+
+  .admin-action-grid.toros-card-actions .admin-action-card {
+    min-height:78px !important;
+    border-radius:14px !important;
+    padding:14px !important;
+    gap:12px !important;
+    box-shadow:0 8px 18px rgba(0,0,0,.14) !important;
+  }
+
+  .admin-action-grid.toros-card-actions .logo-card {
+    min-height:74px !important;
+  }
+
+  .admin-action-grid.toros-card-actions .logo-card img {
+    max-height:58px !important;
+  }
+
+  .admin-action-grid.toros-card-actions .action-title {
+    font-size:15px !important;
+  }
+
+  .admin-action-grid.toros-card-actions .logout-card .action-title {
+    font-size:18px !important;
+  }
+
+  .admin-action-grid.toros-card-actions .action-subtitle {
+    font-size:13px !important;
+    margin-top:5px !important;
+  }
+
+  .admin-action-grid.toros-card-actions .wide-action-card {
+    min-height:72px !important;
+  }
+
+  .card-icon {
+    width:48px !important;
+    height:48px !important;
+    min-width:48px !important;
+    transform:scale(.78) !important;
+    transform-origin:center !important;
+  }
+
+  .notification-circle {
+    width:44px !important;
+    height:44px !important;
+    min-width:44px !important;
+  }
+
+  .bell-line-icon {
+    transform:scale(.78) !important;
+  }
+
+  .chevron-line-icon {
+    width:12px !important;
+    height:12px !important;
+    border-width:3px !important;
+  }
+}
+
+@media (max-width:430px) {
+  .admin-hero {
+    padding:22px 12px 24px !important;
+  }
+
+  .admin-action-grid.toros-card-actions {
+    gap:10px !important;
+  }
+
+  .admin-action-grid.toros-card-actions .admin-action-card {
+    padding:12px !important;
+  }
+
+  .admin-action-grid.toros-card-actions .action-title {
+    font-size:14px !important;
+  }
+
+  .admin-action-grid.toros-card-actions .action-subtitle {
+    font-size:12px !important;
+  }
+}
+
+/* TOROS FINAL TEXTING BUTTONS - CSS SHAPES ONLY */
+@media (max-width:760px) {
+  #smsCloseButton,
+  #smsBackBtn,
+  #smsSendButton,
+  #smsSearchIcon {
+    font-size:0 !important;
+    color:transparent !important;
+    text-indent:-9999px !important;
+    overflow:hidden !important;
+  }
+
+  #smsCloseButton,
+  #smsBackBtn {
+    position:fixed !important;
+    top:calc(16px + env(safe-area-inset-top)) !important;
+    z-index:10050 !important;
+    width:44px !important;
+    height:44px !important;
+    border-radius:999px !important;
+    background:#203f66 !important;
+    box-shadow:0 8px 22px rgba(0,0,0,.28) !important;
+    padding:0 !important;
+    margin:0 !important;
+    border:0 !important;
+  }
+
+  #smsBackBtn { left:20px !important; }
+  #smsCloseButton { right:20px !important; }
+
+  #smsCloseButton::before,
+  #smsCloseButton::after,
+  #smsBackBtn::before,
+  #smsBackBtn::after,
+  #smsSendButton::before,
+  #smsSendButton::after,
+  #smsSearchIcon::before,
+  #smsSearchIcon::after {
+    content:"" !important;
+    position:absolute !important;
+    display:block !important;
+    text-indent:0 !important;
+    font-size:0 !important;
+  }
+
+  #smsCloseButton::before,
+  #smsCloseButton::after {
+    width:24px !important;
+    height:5px !important;
+    background:#fff !important;
+    border-radius:999px !important;
+    left:10px !important;
+    top:19px !important;
+  }
+
+  #smsCloseButton::before { transform:rotate(45deg) !important; }
+  #smsCloseButton::after { transform:rotate(-45deg) !important; }
+
+  #smsBackBtn::before {
+    width:15px !important;
+    height:15px !important;
+    border-left:5px solid #fff !important;
+    border-bottom:5px solid #fff !important;
+    transform:rotate(45deg) !important;
+    left:17px !important;
+    top:14px !important;
+    background:transparent !important;
+  }
+
+  #smsSendButton {
+    position:relative !important;
+    width:44px !important;
+    height:44px !important;
+    min-width:44px !important;
+    border-radius:50% !important;
+    background:#af2727 !important;
+    padding:0 !important;
+    margin:0 !important;
+    border:0 !important;
+    flex-shrink:0 !important;
+  }
+
+  #smsSendButton::before {
+    width:5px !important;
+    height:22px !important;
+    background:#fff !important;
+    border-radius:999px !important;
+    left:19px !important;
+    top:13px !important;
+  }
+
+  #smsSendButton::after {
+    width:14px !important;
+    height:14px !important;
+    border-left:5px solid #fff !important;
+    border-top:5px solid #fff !important;
+    background:transparent !important;
+    transform:rotate(45deg) !important;
+    left:13px !important;
+    top:10px !important;
+  }
+
+  #smsSearchIcon {
+    position:absolute !important;
+    left:15px !important;
+    top:50% !important;
+    transform:translateY(-50%) !important;
+    width:20px !important;
+    height:20px !important;
+    z-index:2 !important;
+    pointer-events:none !important;
+  }
+
+  #smsSearchIcon::before {
+    width:13px !important;
+    height:13px !important;
+    border:3px solid #7c7c80 !important;
+    border-radius:50% !important;
+    left:0 !important;
+    top:0 !important;
+    background:transparent !important;
+  }
+
+  #smsSearchIcon::after {
+    width:9px !important;
+    height:3px !important;
+    background:#7c7c80 !important;
+    border-radius:999px !important;
+    left:12px !important;
+    top:14px !important;
+    transform:rotate(45deg) !important;
+  }
+}
+
+</style>
 </head>
 
 <body>
@@ -1326,48 +1840,57 @@
 
   <section class="admin" id="adminDashboard">
     <header class="admin-hero">
-      <div class="admin-action-grid no-icon-actions">
+      <div class="admin-action-grid toros-card-actions">
         <div class="admin-action-card logo-card">
           <img src="/logo.png" alt="Toro's Auto Care Logo">
         </div>
 
         <button class="admin-action-card logout-card" onclick="logout()">
+          <span class="card-icon logout-line-icon" aria-hidden="true"></span>
           <span class="action-title">Logout</span>
         </button>
 
-        <button class="admin-action-card" onclick="openCreateModal()">
+        <button class="admin-action-card appointment-card" onclick="openCreateModal()">
+          <span class="card-icon appointment-line-icon" aria-hidden="true"></span>
           <span>
             <span class="action-title">New Appointment</span>
             <span class="action-subtitle">Schedule a new<br>service appointment</span>
           </span>
         </button>
 
-        <a class="admin-action-card" href="/admin/inspection">
+        <a class="admin-action-card inspection-card" href="/admin/inspection">
+          <span class="card-icon clipboard-line-icon" aria-hidden="true"></span>
           <span>
             <span class="action-title">Inspection Form</span>
             <span class="action-subtitle">Create a new<br>inspection form</span>
           </span>
         </a>
 
-        <a class="admin-action-card" href="/admin/inspection-history">
+        <a class="admin-action-card history-card" href="/admin/inspection-history">
+          <span class="card-icon history-line-icon" aria-hidden="true"></span>
           <span>
             <span class="action-title">Inspection History</span>
             <span class="action-subtitle">View past<br>inspections</span>
           </span>
         </a>
 
-        <a class="admin-action-card" href="/admin/customers">
+        <a class="admin-action-card customers-card" href="/admin/customers">
+          <span class="card-icon customers-line-icon" aria-hidden="true"></span>
           <span>
             <span class="action-title">Customer Profiles</span>
             <span class="action-subtitle">Manage customer<br>information</span>
           </span>
         </a>
 
-        <button class="admin-action-card wide-action-card" onclick="enablePushNotifications()">
+        <button class="admin-action-card wide-action-card notifications-card" onclick="enablePushNotifications()">
+          <span class="notification-circle">
+            <span class="bell-line-icon" aria-hidden="true"></span>
+          </span>
           <span>
             <span class="action-title">Enable Notifications</span>
-            <span class="action-subtitle">Stay updated on appointments and texts</span>
+            <span class="action-subtitle">Stay updated on appointments and inspections</span>
           </span>
+          <span class="chevron-line-icon" aria-hidden="true"></span>
         </button>
       </div>
     </header>
@@ -2297,7 +2820,7 @@
 
 <div id="textPanelOverlay">
   <div id="textPanelShell">
-    <button id="smsCloseButton" onclick="closeTextPanel()">Ã</button>
+    <button id="smsCloseButton" onclick="closeTextPanel()" aria-label="Close"></button>
 
     <div id="smsDesktopHeader">
       <div>
@@ -2313,7 +2836,7 @@
             <button id="smsNewMessageBtn" onclick="startNewSmsMessage()">+ New Message</button>
 
             <div id="smsSearchWrap">
-              <span id="smsSearchIcon">â</span>
+              <span id="smsSearchIcon" aria-hidden="true"></span>
               <input id="smsSearch" oninput="renderConversationList()" placeholder="Search">
             </div>
           </div>
@@ -2323,7 +2846,7 @@
 
       <section id="smsConversationView">
         <div id="smsLockedTop">
-          <button type="button" id="smsBackBtn" onclick="showSmsConversationList()">â Back</button>
+          <button type="button" id="smsBackBtn" onclick="showSmsConversationList()" aria-label="Back"></button>
 
           <div id="smsActiveCustomerCard">
             <div id="smsActiveCustomerName">New Message</div>
@@ -2866,14 +3389,7 @@
       background:#af2727 !important;
     }
 
-    #smsSendButton::after {
-      content:"â";
-      font-size:25px;
-      line-height:1;
-      font-weight:bold;
-      color:white;
-      transform:translateY(-1px);
-    }
+    
 
     #smsStatus {
       bottom:58px !important;
@@ -3207,13 +3723,7 @@
       line-height:1 !important;
     }
 
-    #smsBackBtn::after {
-      content:"â¹";
-      font-size:42px;
-      line-height:1;
-      font-weight:600;
-      transform:translateY(-2px);
-    }
+    
 
     #smsActiveCustomerCard {
       text-align:center !important;
@@ -3429,151 +3939,6 @@
       right:20px !important;
     }
   }
-
-
-/* TOROS FINAL TEXTING BUTTON FIX - NO TEXT CHARACTERS */
-@media (max-width:760px) {
-  #smsCloseButton,
-  #smsBackBtn,
-  #smsSendButton,
-  #smsSearchIcon {
-    font-size:0 !important;
-    color:transparent !important;
-    text-indent:-9999px !important;
-    overflow:hidden !important;
-  }
-
-  #smsCloseButton,
-  #smsBackBtn {
-    position:fixed !important;
-    top:calc(16px + env(safe-area-inset-top)) !important;
-    z-index:10050 !important;
-    width:44px !important;
-    height:44px !important;
-    border-radius:999px !important;
-    background:#203f66 !important;
-    box-shadow:0 8px 22px rgba(0,0,0,.28) !important;
-    padding:0 !important;
-    margin:0 !important;
-    border:0 !important;
-  }
-
-  #smsBackBtn {
-    left:20px !important;
-  }
-
-  #smsCloseButton {
-    right:20px !important;
-  }
-
-  #smsCloseButton::before,
-  #smsCloseButton::after,
-  #smsBackBtn::before,
-  #smsBackBtn::after,
-  #smsSendButton::before,
-  #smsSendButton::after,
-  #smsSearchIcon::before,
-  #smsSearchIcon::after {
-    content:"" !important;
-    position:absolute !important;
-    display:block !important;
-    text-indent:0 !important;
-    font-size:0 !important;
-  }
-
-  #smsCloseButton::before,
-  #smsCloseButton::after {
-    width:24px !important;
-    height:5px !important;
-    background:#fff !important;
-    border-radius:999px !important;
-    left:10px !important;
-    top:19px !important;
-  }
-
-  #smsCloseButton::before {
-    transform:rotate(45deg) !important;
-  }
-
-  #smsCloseButton::after {
-    transform:rotate(-45deg) !important;
-  }
-
-  #smsBackBtn::before {
-    width:15px !important;
-    height:15px !important;
-    border-left:5px solid #fff !important;
-    border-bottom:5px solid #fff !important;
-    transform:rotate(45deg) !important;
-    left:17px !important;
-    top:14px !important;
-    background:transparent !important;
-  }
-
-  #smsSendButton {
-    position:relative !important;
-    width:44px !important;
-    height:44px !important;
-    min-width:44px !important;
-    border-radius:50% !important;
-    background:#af2727 !important;
-    padding:0 !important;
-    margin:0 !important;
-    border:0 !important;
-    flex-shrink:0 !important;
-  }
-
-  #smsSendButton::before {
-    width:5px !important;
-    height:22px !important;
-    background:#fff !important;
-    border-radius:999px !important;
-    left:19px !important;
-    top:13px !important;
-  }
-
-  #smsSendButton::after {
-    width:14px !important;
-    height:14px !important;
-    border-left:5px solid #fff !important;
-    border-top:5px solid #fff !important;
-    background:transparent !important;
-    transform:rotate(45deg) !important;
-    left:13px !important;
-    top:10px !important;
-  }
-
-  #smsSearchIcon {
-    position:absolute !important;
-    left:15px !important;
-    top:50% !important;
-    transform:translateY(-50%) !important;
-    width:20px !important;
-    height:20px !important;
-    z-index:2 !important;
-    pointer-events:none !important;
-  }
-
-  #smsSearchIcon::before {
-    width:13px !important;
-    height:13px !important;
-    border:3px solid #7c7c80 !important;
-    border-radius:50% !important;
-    left:0 !important;
-    top:0 !important;
-    background:transparent !important;
-  }
-
-  #smsSearchIcon::after {
-    width:9px !important;
-    height:3px !important;
-    background:#7c7c80 !important;
-    border-radius:999px !important;
-    left:12px !important;
-    top:14px !important;
-    transform:rotate(45deg) !important;
-  }
-}
 
 </style>
 
@@ -4152,7 +4517,7 @@ function renderConversationList() {
         </div>
         <div style="font-size:13px;opacity:.86;margin-top:4px;">${escapeHtml(group.phone)}</div>
         <div style="font-size:13px;margin-top:8px;opacity:.9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:${unread ? 'bold' : 'normal'};">
-          ${incoming ? 'â© ' : 'âª '} ${escapeHtml(latestText)}
+          ${escapeHtml(latestText)}
         </div>
       </div>
     `;
@@ -4342,109 +4707,4 @@ function escapeJs(value) {
 }
 
 window.addEventListener("resize", function() {
-  const overlay = document.getElementById("textPanelOverlay");
-  if (!overlay || overlay.style.display !== "flex") return;
-
-  const sidebar = document.getElementById("smsSidebar");
-  const convo = document.getElementById("smsConversationView");
-
-  if (!isMobileSmsView()) {
-    if (sidebar) sidebar.classList.remove("sms-mobile-hidden");
-    if (convo) convo.style.display = "grid";
-  } else if (smsIsNewMessageMode || activeSmsPhone) {
-    showSmsConversationView();
-  } else {
-    showSmsConversationList();
-  }
-
-  setTimeout(adjustSmsForKeyboard, 150);
-});
-
-window.addEventListener("load", function() {
-  updateUnreadBadge();
-
-  if (localStorage.getItem("torosAdminLoggedIn") === "true") {
-    startSmsGlobalPolling();
-  }
-});
-</script>
-
-<script>
-  const VAPID_PUBLIC_KEY = "BI4DHPaAW8ZietuTFi4wIkIL49KSqylLqZb4jHIY6OwiyKDNs9BBlLbXU9Q6Z-jsfb6b6uty6HbyyLRWNdeh6l8";
-
-  function urlBase64ToUint8Array(base64String) {
-    const padding = "=".repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-
-    return outputArray;
-  }
-
-  async function enablePushNotifications() {
-    if (!("serviceWorker" in navigator)) {
-      alert("Push notifications are not supported on this device/browser.");
-      return;
-    }
-
-    if (!("PushManager" in window)) {
-      alert("Push notifications are not supported on this device/browser.");
-      return;
-    }
-
-    try {
-      const permission = await Notification.requestPermission();
-
-      if (permission !== "granted") {
-        alert("Notifications were not enabled.");
-        return;
-      }
-
-      const registration = await navigator.serviceWorker.register("/sw.js");
-
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
-
-      const response = await fetch("/api/subscribe-push", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          subscription
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert("Notifications enabled for this device.");
-      } else {
-        alert(data.message || "Could not enable notifications.");
-      }
-    } catch (err) {
-      alert("Could not enable notifications: " + err.message);
-    }
-  }
-</script>
-
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function() {
-      navigator.serviceWorker.register("/sw.js").catch(function(error) {
-        console.log("Service worker registration failed:", error);
-      });
-    });
-  }
-</script>
-
-</body>
+  const ove
