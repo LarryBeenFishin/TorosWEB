@@ -2988,6 +2988,86 @@ body.toros-admin-logged-in #openTextPanelBtn {
 
 
 
+
+
+/* ===== TOROS DESKTOP ONLY FIX — LOGO ALIGNMENT + FOOTER LEFT ===== */
+/* Desktop only. Mobile/tablet stays unchanged. */
+@media (min-width:901px) {
+  .admin-hero {
+    padding:16px 22px !important;
+  }
+
+  .admin-action-grid {
+    display:grid !important;
+    grid-template-columns:220px repeat(4, minmax(180px, 1fr)) !important;
+    grid-template-areas:"logo new inspection history customers" !important;
+    gap:14px !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    align-items:center !important;
+  }
+
+  .admin-action-card.logo-card {
+    display:flex !important;
+    grid-area:logo !important;
+    height:92px !important;
+    min-height:92px !important;
+    padding:12px 16px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    align-self:center !important;
+    background:#ffffff !important;
+  }
+
+  .admin-action-card.logo-card img {
+    display:block !important;
+    max-height:64px !important;
+    width:100% !important;
+    height:auto !important;
+    object-fit:contain !important;
+    margin:0 auto !important;
+    background:transparent !important;
+    padding:0 !important;
+    border-radius:0 !important;
+  }
+
+  .appointment-card,
+  .inspection-card,
+  .history-card,
+  .customers-card {
+    height:92px !important;
+    min-height:92px !important;
+    align-self:center !important;
+    align-items:center !important;
+  }
+
+  .admin-footer-actions {
+    justify-content:flex-start !important;
+    align-items:center !important;
+  }
+}
+
+@media (min-width:901px) and (max-width:1250px) {
+  .admin-action-grid {
+    grid-template-columns:220px repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas:
+      "logo new inspection"
+      "logo history customers" !important;
+    align-items:center !important;
+  }
+
+  .admin-action-card.logo-card {
+    height:100% !important;
+    min-height:198px !important;
+    align-self:stretch !important;
+  }
+
+  .admin-footer-actions {
+    justify-content:flex-start !important;
+  }
+}
+
 </style>
 </head>
 
@@ -3046,6 +3126,17 @@ body.toros-admin-logged-in #openTextPanelBtn {
         </a>
       </div>
     </header>
+
+    <section class="toros-page-intro" aria-label="Admin dashboard overview">
+      <div>
+        <span class="toros-kicker">Toro's Auto Care</span>
+        <h1>Admin Dashboard</h1>
+        <p>Appointments, inspections, customer texting, and shop updates in one clean workspace.</p>
+      </div>
+      <div class="toros-status-chip">
+        <span></span> Live shop tools
+      </div>
+    </section>
 
     <main class="dashboard">
       <div class="card">
@@ -7742,6 +7833,617 @@ window.addEventListener("load", function() {
     gap:10px;
     padding:14px;
     background:#163051;
+  }
+}
+
+
+
+/* =====================================================================
+   TOROS VISUAL REDESIGN — POLISHED APP SKIN, FEATURES PRESERVED
+   Added as the final override so existing HTML/JS/features stay intact.
+===================================================================== */
+:root {
+  --toros-navy:#122945;
+  --toros-navy-2:#183a61;
+  --toros-red:#af2727;
+  --toros-red-2:#cf3434;
+  --toros-green:#168052;
+  --toros-bg:#eef3f8;
+  --toros-surface:#ffffff;
+  --toros-surface-soft:#f7f9fc;
+  --toros-border:#dde6f1;
+  --toros-text:#122945;
+  --toros-muted:#64748b;
+  --toros-shadow:0 18px 45px rgba(18,41,69,.12);
+  --toros-shadow-soft:0 10px 28px rgba(18,41,69,.08);
+  --toros-radius:22px;
+}
+
+html {
+  background:var(--toros-bg) !important;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(175,39,39,.11), transparent 34%),
+    linear-gradient(180deg, #f7fafe 0%, var(--toros-bg) 44%, #e8eef6 100%) !important;
+  color:var(--toros-text) !important;
+  letter-spacing:-.01em;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color:transparent;
+}
+
+button {
+  border-radius:14px !important;
+  box-shadow:none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline:3px solid rgba(175,39,39,.24) !important;
+  outline-offset:2px !important;
+}
+
+input,
+select,
+textarea {
+  border:1px solid var(--toros-border) !important;
+  background:#ffffff !important;
+  color:var(--toros-text) !important;
+  box-shadow:0 1px 0 rgba(18,41,69,.03) !important;
+  transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color:rgba(175,39,39,.55) !important;
+  box-shadow:0 0 0 4px rgba(175,39,39,.10) !important;
+}
+
+/* Login */
+.login-screen {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(207,52,52,.26), transparent 28%),
+    radial-gradient(circle at 80% 75%, rgba(255,255,255,.13), transparent 30%),
+    linear-gradient(135deg, #10233b 0%, #183a61 55%, #0d1c31 100%) !important;
+}
+
+.login-card {
+  max-width:440px !important;
+  padding:34px !important;
+  border-radius:28px !important;
+  border:1px solid rgba(255,255,255,.55) !important;
+  box-shadow:0 28px 80px rgba(0,0,0,.34) !important;
+}
+
+.login-card img {
+  max-width:230px !important;
+  padding:10px 14px !important;
+  border:1px solid #edf1f7 !important;
+  border-radius:18px !important;
+  background:#fff !important;
+  box-shadow:0 12px 28px rgba(18,41,69,.10) !important;
+}
+
+.login-card h2 {
+  margin:6px 0 8px !important;
+  font-size:30px !important;
+  letter-spacing:-.04em !important;
+}
+
+.login-card p {
+  margin:0 0 20px !important;
+  color:var(--toros-muted) !important;
+  font-size:15px !important;
+}
+
+.login-card button {
+  width:100% !important;
+  margin-top:14px !important;
+  padding:14px 18px !important;
+  background:linear-gradient(135deg,var(--toros-red),var(--toros-red-2)) !important;
+  box-shadow:0 12px 26px rgba(175,39,39,.22) !important;
+}
+
+/* Top app actions */
+.admin-hero {
+  background:linear-gradient(135deg,var(--toros-navy) 0%, var(--toros-navy-2) 100%) !important;
+  padding:18px 22px !important;
+  border-bottom:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:0 14px 40px rgba(18,41,69,.20) !important;
+}
+
+.exact-reference-actions,
+.admin-action-grid.exact-reference-actions {
+  max-width:1540px !important;
+  margin:0 auto !important;
+}
+
+.exact-reference-actions .admin-action-card {
+  background:rgba(255,255,255,.96) !important;
+  border:1px solid rgba(255,255,255,.7) !important;
+  box-shadow:0 14px 32px rgba(0,0,0,.16) !important;
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease !important;
+}
+
+.exact-reference-actions .admin-action-card:hover {
+  transform:translateY(-2px) !important;
+  box-shadow:0 18px 42px rgba(0,0,0,.22) !important;
+  border-color:rgba(255,255,255,1) !important;
+}
+
+.exact-reference-actions .logo-card {
+  background:#ffffff !important;
+  box-shadow:0 16px 36px rgba(0,0,0,.18) !important;
+}
+
+.exact-reference-actions .logo-card img {
+  filter:drop-shadow(0 4px 8px rgba(18,41,69,.08));
+}
+
+.exact-reference-actions .action-title {
+  letter-spacing:-.035em !important;
+}
+
+.exact-reference-actions .action-subtitle {
+  color:#64748b !important;
+}
+
+.card-icon-wrap {
+  width:58px !important;
+  height:58px !important;
+  min-width:58px !important;
+  border-radius:18px !important;
+  background:rgba(22,128,82,.10) !important;
+}
+
+.card-svg {
+  width:38px !important;
+  height:38px !important;
+  stroke:var(--toros-green) !important;
+}
+
+.exact-reference-actions .logout-card,
+.admin-footer-actions .logout-card {
+  background:linear-gradient(135deg,var(--toros-red),var(--toros-red-2)) !important;
+  box-shadow:0 14px 30px rgba(175,39,39,.26) !important;
+}
+
+.exact-reference-actions .logout-card .card-icon-wrap,
+.admin-footer-actions .logout-card .card-icon-wrap {
+  background:rgba(255,255,255,.14) !important;
+}
+
+/* Dashboard intro */
+.toros-page-intro {
+  max-width:1540px;
+  margin:22px auto 0;
+  padding:0 24px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+}
+
+.toros-kicker {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--toros-red);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.toros-kicker::before {
+  content:"";
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--toros-red);
+  box-shadow:0 0 0 5px rgba(175,39,39,.10);
+}
+
+.toros-page-intro h1 {
+  margin:7px 0 4px;
+  font-size:34px;
+  line-height:1;
+  letter-spacing:-.055em;
+  color:var(--toros-text);
+}
+
+.toros-page-intro p {
+  margin:0;
+  color:var(--toros-muted);
+  font-size:15px;
+}
+
+.toros-status-chip {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  white-space:nowrap;
+  padding:10px 14px;
+  border-radius:999px;
+  background:#ffffff;
+  border:1px solid var(--toros-border);
+  color:var(--toros-text);
+  font-size:13px;
+  font-weight:800;
+  box-shadow:var(--toros-shadow-soft);
+}
+
+.toros-status-chip span {
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--toros-green);
+  box-shadow:0 0 0 5px rgba(22,128,82,.12);
+}
+
+/* Main dashboard */
+.dashboard {
+  max-width:1540px !important;
+  padding:20px 24px 18px !important;
+  gap:20px !important;
+  grid-template-columns:minmax(0,1.35fr) minmax(330px,.65fr) !important;
+}
+
+.card {
+  background:rgba(255,255,255,.94) !important;
+  border:1px solid rgba(221,230,241,.95) !important;
+  border-radius:var(--toros-radius) !important;
+  box-shadow:var(--toros-shadow-soft) !important;
+}
+
+.card h2 {
+  margin-top:0 !important;
+  letter-spacing:-.035em !important;
+}
+
+.calendar-header {
+  padding-bottom:12px !important;
+  border-bottom:1px solid var(--toros-border) !important;
+  margin-bottom:14px !important;
+}
+
+.calendar-title-wrap h2 {
+  font-size:31px !important;
+  letter-spacing:-.055em !important;
+}
+
+.today-btn,
+.secondary-btn {
+  background:var(--toros-navy) !important;
+}
+
+.calendar-nav-icon {
+  background:linear-gradient(135deg,var(--toros-red),var(--toros-red-2)) !important;
+  box-shadow:0 10px 22px rgba(175,39,39,.18) !important;
+}
+
+.calendar-grid {
+  gap:9px !important;
+}
+
+.day-name {
+  color:#718096 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.08em !important;
+  font-size:11px !important;
+}
+
+.day {
+  min-height:98px !important;
+  background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%) !important;
+  border:1px solid #e2e8f0 !important;
+  border-radius:16px !important;
+  box-shadow:0 1px 0 rgba(18,41,69,.03) !important;
+}
+
+.day.today {
+  border:2px solid rgba(175,39,39,.85) !important;
+  background:linear-gradient(180deg,#fffafa 0%,#ffffff 100%) !important;
+  box-shadow:0 10px 22px rgba(175,39,39,.08) !important;
+}
+
+.day-number {
+  font-size:13px !important;
+  color:var(--toros-text) !important;
+}
+
+.appointment-dot {
+  border-radius:10px !important;
+  padding:6px 8px !important;
+  font-weight:800 !important;
+  box-shadow:0 4px 10px rgba(18,41,69,.10) !important;
+}
+
+.appointment {
+  border-left:0 !important;
+  border:1px solid #e2e8f0 !important;
+  background:#ffffff !important;
+  border-radius:16px !important;
+  padding:14px !important;
+  box-shadow:0 6px 16px rgba(18,41,69,.06) !important;
+  transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease !important;
+}
+
+.appointment:hover {
+  transform:translateY(-1px) !important;
+  border-color:rgba(175,39,39,.25) !important;
+  box-shadow:0 10px 24px rgba(18,41,69,.10) !important;
+}
+
+.status-pill {
+  padding:5px 9px !important;
+  font-size:10px !important;
+  letter-spacing:.04em !important;
+  text-transform:uppercase !important;
+}
+
+.skeleton {
+  border-radius:14px !important;
+}
+
+/* Footer */
+.admin-footer-actions {
+  max-width:1540px !important;
+  margin:0 auto 24px !important;
+  padding:0 24px !important;
+  display:flex !important;
+  justify-content:flex-start !important;
+  gap:12px !important;
+}
+
+.admin-footer-actions .admin-action-card {
+  border-radius:18px !important;
+  border:1px solid rgba(221,230,241,.95) !important;
+  box-shadow:var(--toros-shadow-soft) !important;
+}
+
+.admin-footer-actions .notifications-card {
+  background:#ffffff !important;
+}
+
+.admin-footer-actions .notification-circle {
+  background:linear-gradient(135deg,var(--toros-navy-2),#0e5a89) !important;
+  box-shadow:0 10px 20px rgba(14,90,137,.20) !important;
+}
+
+/* Modal polish */
+.modal-overlay {
+  backdrop-filter:blur(8px) !important;
+  background:rgba(7,16,28,.58) !important;
+}
+
+.modal {
+  border-radius:26px !important;
+  border:1px solid rgba(255,255,255,.80) !important;
+  box-shadow:0 30px 90px rgba(0,0,0,.34) !important;
+}
+
+.modal h2 {
+  letter-spacing:-.045em !important;
+}
+
+.modal-x {
+  border-radius:12px !important;
+  border:1px solid #e2e8f0 !important;
+  box-shadow:0 8px 18px rgba(18,41,69,.08) !important;
+}
+
+/* Floating text button */
+#openTextPanelBtn {
+  border-radius:999px !important;
+  background:linear-gradient(135deg,var(--toros-red),var(--toros-red-2)) !important;
+  box-shadow:0 18px 38px rgba(175,39,39,.28) !important;
+  padding:14px 20px !important;
+}
+
+/* Texting app */
+#textPanelOverlay {
+  background:rgba(7,16,28,.66) !important;
+  backdrop-filter:blur(9px) !important;
+}
+
+#textPanelShell,
+#textPanelOverlay > div {
+  border:1px solid rgba(255,255,255,.18) !important;
+  box-shadow:0 34px 100px rgba(0,0,0,.42) !important;
+}
+
+#smsDesktopHeader {
+  background:linear-gradient(135deg,var(--toros-navy),var(--toros-navy-2)) !important;
+  border-bottom:1px solid rgba(255,255,255,.12) !important;
+}
+
+.sms-desktop-title {
+  letter-spacing:-.035em !important;
+}
+
+#smsApp,
+#smsThread {
+  background:#edf3f9 !important;
+}
+
+#smsSidebar,
+#smsLockedTop,
+#smsComposer {
+  background:rgba(255,255,255,.96) !important;
+}
+
+#smsNewMessageBtn,
+#smsSendButton {
+  background:linear-gradient(135deg,var(--toros-red),var(--toros-red-2)) !important;
+}
+
+#conversationList > div,
+.sms-conversation-item {
+  border-radius:14px !important;
+}
+
+#smsActiveCustomerCard {
+  border-radius:18px !important;
+  box-shadow:0 8px 18px rgba(18,41,69,.06) !important;
+}
+
+#smsMessage {
+  box-shadow:none !important;
+}
+
+#smsCloseButton {
+  background:rgba(255,255,255,.14) !important;
+}
+
+#smsCloseButton:hover {
+  background:var(--toros-red) !important;
+}
+
+.toast,
+#smsToast {
+  border-radius:16px !important;
+  box-shadow:0 18px 45px rgba(0,0,0,.22) !important;
+}
+
+/* Desktop-specific calm layout */
+@media (min-width:901px) {
+  .admin-action-grid.exact-reference-actions {
+    grid-template-columns:220px repeat(4,minmax(170px,1fr)) !important;
+    grid-template-areas:"logo new inspection history customers" !important;
+    align-items:center !important;
+  }
+
+  .exact-reference-actions .logo-card {
+    grid-area:logo !important;
+    height:96px !important;
+    min-height:96px !important;
+  }
+
+  .exact-reference-actions .appointment-card { grid-area:new !important; }
+  .exact-reference-actions .inspection-card { grid-area:inspection !important; }
+  .exact-reference-actions .history-card { grid-area:history !important; }
+  .exact-reference-actions .customers-card { grid-area:customers !important; }
+
+  .exact-reference-actions .admin-action-card:not(.logo-card) {
+    height:96px !important;
+    min-height:96px !important;
+  }
+
+  .exact-reference-actions .action-title {
+    font-size:21px !important;
+  }
+
+  .exact-reference-actions .action-subtitle {
+    font-size:14px !important;
+  }
+
+  .admin-footer-actions .notifications-card,
+  .admin-footer-actions .logout-card {
+    width:auto !important;
+    min-width:255px !important;
+    height:82px !important;
+    min-height:82px !important;
+  }
+}
+
+@media (min-width:901px) and (max-width:1250px) {
+  .admin-action-grid.exact-reference-actions {
+    grid-template-columns:220px repeat(2,minmax(0,1fr)) !important;
+    grid-template-areas:
+      "logo new inspection"
+      "logo history customers" !important;
+  }
+
+  .exact-reference-actions .logo-card {
+    height:100% !important;
+    min-height:206px !important;
+  }
+}
+
+/* Tablet/mobile keeps the simple existing behavior, just visually cleaner */
+@media (max-width:900px) {
+  body {
+    background:#eef3f8 !important;
+  }
+
+  .admin-hero {
+    padding:18px 12px 20px !important;
+  }
+
+  .toros-page-intro {
+    margin:16px auto 0;
+    padding:0 14px;
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .toros-page-intro h1 {
+    font-size:28px;
+  }
+
+  .toros-status-chip {
+    padding:8px 12px;
+  }
+
+  .dashboard {
+    padding:14px !important;
+    grid-template-columns:1fr !important;
+  }
+
+  .card {
+    border-radius:20px !important;
+  }
+
+  .exact-reference-actions .admin-action-card {
+    border-radius:18px !important;
+  }
+
+  .card-icon-wrap {
+    width:44px !important;
+    height:44px !important;
+    min-width:44px !important;
+    border-radius:14px !important;
+  }
+
+  .card-svg {
+    width:34px !important;
+    height:34px !important;
+  }
+
+  .admin-footer-actions {
+    padding:0 14px 16px !important;
+    margin-bottom:0 !important;
+  }
+}
+
+@media (max-width:560px) {
+  .toros-page-intro p {
+    font-size:14px;
+  }
+
+  .calendar-title-wrap h2 {
+    font-size:24px !important;
+  }
+
+  .day {
+    border-radius:12px !important;
+  }
+
+  #openTextPanelBtn {
+    right:14px !important;
+    bottom:14px !important;
   }
 }
 
