@@ -2775,6 +2775,133 @@ body.toros-admin-logged-in #openTextPanelBtn {
   }
 }
 
+
+/* ===== DESKTOP TEXT HEADER CLEANUP ===== */
+@media (min-width: 901px) {
+  #smsLockedTop {
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:18px !important;
+    padding:14px 18px !important;
+  }
+
+  /* New message mode: hide the New Message card text and center the fields */
+  #smsActiveCustomerCard {
+    max-width:260px !important;
+    min-width:260px !important;
+    margin:0 !important;
+  }
+
+  #smsActiveCustomerName,
+  #smsActiveCustomerPhone,
+  .sms-template-label {
+    display:none !important;
+  }
+
+  #smsManualFields {
+    flex:1 !important;
+    max-width:650px !important;
+    margin:0 !important;
+  }
+
+  .sms-manual-grid {
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:12px !important;
+    align-items:end !important;
+  }
+
+  .sms-manual-grid label {
+    display:block !important;
+    font-size:12px !important;
+    margin:0 0 5px !important;
+  }
+
+  #smsCustomerName,
+  #smsPhone {
+    height:40px !important;
+    border-radius:10px !important;
+  }
+
+  #smsTemplate {
+    width:100% !important;
+    max-width:320px !important;
+    height:40px !important;
+    border-radius:10px !important;
+  }
+
+  /* Existing conversation mode: contact card and template side-by-side */
+  #smsManualFields[style*="display: none"] + .sms-template-label,
+  #smsManualFields[style*="display:none"] + .sms-template-label {
+    display:none !important;
+  }
+
+  #smsActiveCustomerCard:not([style*="display: none"]) {
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:center !important;
+    align-items:center !important;
+    text-align:center !important;
+    height:54px !important;
+  }
+
+  #smsActiveCustomerCard:not([style*="display: none"]) #smsActiveCustomerName,
+  #smsActiveCustomerCard:not([style*="display: none"]) #smsActiveCustomerPhone {
+    display:block !important;
+  }
+
+  #smsActiveCustomerCard:not([style*="display: none"]) ~ #smsTemplate {
+    max-width:320px !important;
+  }
+
+  /* When new message card has no phone/name shown, collapse its visual space */
+  #smsActiveCustomerCard:has(#smsActiveCustomerPhone:empty) {
+    display:none !important;
+  }
+}
+
+@media (min-width: 901px) {
+  #smsLockedTop.sms-header-new-mode {
+    justify-content:center !important;
+  }
+
+  #smsLockedTop.sms-header-new-mode #smsActiveCustomerCard,
+  #smsLockedTop.sms-header-new-mode .sms-template-label {
+    display:none !important;
+  }
+
+  #smsLockedTop.sms-header-new-mode #smsManualFields {
+    display:block !important;
+    flex:0 1 650px !important;
+  }
+
+  #smsLockedTop.sms-header-new-mode #smsTemplate {
+    flex:0 1 320px !important;
+    margin-top:17px !important;
+  }
+
+  #smsLockedTop.sms-header-conversation-mode {
+    justify-content:center !important;
+  }
+
+  #smsLockedTop.sms-header-conversation-mode #smsActiveCustomerCard {
+    display:flex !important;
+    flex:0 0 260px !important;
+  }
+
+  #smsLockedTop.sms-header-conversation-mode #smsManualFields,
+  #smsLockedTop.sms-header-conversation-mode .sms-template-label {
+    display:none !important;
+  }
+
+  #smsLockedTop.sms-header-conversation-mode #smsTemplate {
+    flex:0 1 320px !important;
+    max-width:320px !important;
+    margin:0 !important;
+  }
+}
+
 </style>
 </head>
 
@@ -5718,7 +5845,22 @@ function resetSmsComposeView() {
   if (manualFields) manualFields.style.display = "block";
 }
 
+
+function updateSmsHeaderMode() {
+  const lockedTop = document.getElementById("smsLockedTop");
+  if (!lockedTop) return;
+
+  if (smsIsNewMessageMode) {
+    lockedTop.classList.add("sms-header-new-mode");
+    lockedTop.classList.remove("sms-header-conversation-mode");
+  } else {
+    lockedTop.classList.remove("sms-header-new-mode");
+    lockedTop.classList.add("sms-header-conversation-mode");
+  }
+}
+
 function renderNewMessageState() {
+  updateSmsHeaderMode();
   resetSmsComposeView();
 
   document.getElementById("smsActiveCustomerName").innerText = "New Message";
@@ -5924,6 +6066,7 @@ function renderConversationList() {
 
 function selectConversation(phoneKey, rerenderList = true) {
   smsIsNewMessageMode = false;
+  updateSmsHeaderMode();
   smsRestoreConversationOnOpen = true;
   activeSmsPhone = phoneKey;
   smsLastActivePhone = phoneKey;
