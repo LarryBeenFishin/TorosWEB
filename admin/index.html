@@ -6809,6 +6809,179 @@ window.addEventListener("load", function() {
   }
 }
 
+
+
+/* ===== DESKTOP ACTION BUTTON ROW ORDER + READABILITY ===== */
+@media (min-width:901px) {
+
+  .admin-hero {
+    padding:14px 18px !important;
+  }
+
+  .admin-action-grid {
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    grid-template-areas:
+      "logo logout"
+      "new inspection"
+      "history customers"
+      "notifications notifications" !important;
+    gap:12px !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    align-items:stretch !important;
+  }
+
+  .admin-action-card {
+    min-height:74px !important;
+    height:auto !important;
+    padding:12px 18px !important;
+    border-radius:14px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    gap:14px !important;
+  }
+
+  .admin-action-card.logo-card {
+    grid-area:logo !important;
+    min-height:74px !important;
+    height:74px !important;
+    justify-content:center !important;
+  }
+
+  .admin-action-card.logo-card img {
+    max-height:54px !important;
+    object-fit:contain !important;
+  }
+
+  .logout-card {
+    grid-area:logout !important;
+    min-height:74px !important;
+    height:74px !important;
+    justify-content:center !important;
+  }
+
+  /* Match cards by visible text using existing order/classes where possible */
+  .admin-action-card[onclick*="appointment"],
+  .admin-action-card[href*="appointment"],
+  .admin-action-card:nth-of-type(3) {
+    grid-area:new !important;
+  }
+
+  .admin-action-card[onclick*="inspection"]:not([onclick*="history"]),
+  .admin-action-card[href*="inspection"]:not([href*="history"]),
+  .admin-action-card:nth-of-type(4) {
+    grid-area:inspection !important;
+  }
+
+  .admin-action-card[onclick*="history"],
+  .admin-action-card[href*="inspection-history"],
+  .admin-action-card:nth-of-type(5) {
+    grid-area:history !important;
+  }
+
+  .admin-action-card[onclick*="customers"],
+  .admin-action-card[href*="customers"],
+  .admin-action-card:nth-of-type(6) {
+    grid-area:customers !important;
+  }
+
+  .wide-action-card,
+  .admin-action-card[onclick*="Notification"],
+  .admin-action-card[onclick*="notification"],
+  .admin-action-card:nth-of-type(7) {
+    grid-area:notifications !important;
+    min-height:74px !important;
+    height:74px !important;
+  }
+
+  .card-icon-wrap,
+  .action-icon,
+  .notification-circle {
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    flex:0 0 42px !important;
+  }
+
+  .card-svg {
+    width:42px !important;
+    height:42px !important;
+  }
+
+  .action-title {
+    font-size:18px !important;
+    line-height:1.15 !important;
+    font-weight:800 !important;
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    word-break:normal !important;
+  }
+
+  .action-subtitle {
+    font-size:13px !important;
+    line-height:1.2 !important;
+    margin-top:3px !important;
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+  }
+
+  .wide-action-card .action-chevron {
+    margin-left:auto !important;
+    font-size:28px !important;
+  }
+}
+
+/* Extra-wide desktop: put all five requested action buttons in one row */
+@media (min-width:1200px) {
+  .admin-action-grid {
+    grid-template-columns:1fr 1fr 1fr 1fr 1fr !important;
+    grid-template-areas:
+      "logo logo logout logout logout"
+      "new inspection history customers notifications" !important;
+  }
+
+  .admin-action-card,
+  .wide-action-card {
+    min-height:86px !important;
+    height:86px !important;
+    padding:12px 16px !important;
+  }
+
+  .admin-action-card.logo-card,
+  .logout-card {
+    height:74px !important;
+    min-height:74px !important;
+  }
+
+  .action-title {
+    font-size:17px !important;
+  }
+
+  .action-subtitle {
+    font-size:12px !important;
+  }
+}
+
+@media (min-width:1500px) {
+  .admin-action-card,
+  .wide-action-card {
+    padding:14px 20px !important;
+  }
+
+  .action-title {
+    font-size:18px !important;
+  }
+
+  .action-subtitle {
+    font-size:13px !important;
+  }
+}
+
 </style>
 
 </body>
