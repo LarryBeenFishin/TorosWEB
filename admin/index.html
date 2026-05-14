@@ -3050,11 +3050,11 @@ body.toros-admin-logged-in #openTextPanelBtn {
           </span>
         </a>
 
-        <button class="admin-action-card wide-action-card notifications-card" onclick="enablePushNotifications()">
+        <button id="notificationToggleBtn" class="admin-action-card wide-action-card notifications-card notifications-off" onclick="togglePushNotifications()">
           <span class="notification-circle"><svg class="bell-svg" viewBox="0 0 64 64" aria-hidden="true"><path d="M20 45h24l-3-5V29c0-7-4-12-9-12s-9 5-9 12v11l-3 5z"/><path d="M28 49c1 3 3 5 4 5s3-2 4-5"/></svg></span>
           <span>
-            <span class="action-title">Enable Notifications</span>
-            <span class="action-subtitle">Stay updated on appointments and inspections</span>
+            <span class="action-title" id="notificationToggleTitle">Notifications Off</span>
+            <span class="action-subtitle" id="notificationToggleSubtitle">Click to turn on</span>
           </span>
           <span class="chevron-svg" aria-hidden="true"></span>
         </button>
@@ -6442,26 +6442,76 @@ window.addEventListener("load", function() {
     return outputArray;
   }
 
-  async function enablePushNotifications() {
-    if (!("serviceWorker" in navigator)) {
+  async function getPushSubscription() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return null;
+
+    const registration = await navigator.serviceWorker.register("/sw.js");
+    return await registration.pushManager.getSubscription();
+  }
+
+  function setNotificationButtonState(isOn) {
+    const button = document.getElementById("notificationToggleBtn");
+    const title = document.getElementById("notificationToggleTitle");
+    const subtitle = document.getElementById("notificationToggleSubtitle");
+
+    if (!button || !title) return;
+
+    button.classList.toggle("notifications-on", !!isOn);
+    button.classList.toggle("notifications-off", !isOn);
+
+    title.textContent = isOn ? "Notifications On" : "Notifications Off";
+    if (subtitle) subtitle.textContent = isOn ? "Click to turn off" : "Click to turn on";
+  }
+
+  async function refreshNotificationToggle() {
+    try {
+      const subscription = await getPushSubscription();
+      setNotificationButtonState(!!subscription);
+    } catch (err) {
+      setNotificationButtonState(false);
+    }
+  }
+
+  async function togglePushNotifications() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       alert("Push notifications are not supported on this device/browser.");
+      setNotificationButtonState(false);
       return;
     }
 
-    if (!("PushManager" in window)) {
-      alert("Push notifications are not supported on this device/browser.");
-      return;
-    }
+    const button = document.getElementById("notificationToggleBtn");
+    if (button) button.disabled = true;
 
     try {
-      const permission = await Notification.requestPermission();
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      const existingSubscription = await registration.pushManager.getSubscription();
 
-      if (permission !== "granted") {
-        alert("Notifications were not enabled.");
+      if (existingSubscription) {
+        await existingSubscription.unsubscribe();
+        setNotificationButtonState(false);
+
+        if (typeof showToast === "function") {
+          showToast("Notifications turned off for this device.", "success", 2500);
+        } else {
+          alert("Notifications turned off for this device.");
+        }
+
         return;
       }
 
-      const registration = await navigator.serviceWorker.register("/sw.js");
+      const permission = await Notification.requestPermission();
+
+      if (permission !== "granted") {
+        setNotificationButtonState(false);
+
+        if (typeof showToast === "function") {
+          showToast("Notifications were not enabled.", "error", 2500);
+        } else {
+          alert("Notifications were not enabled.");
+        }
+
+        return;
+      }
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -6471,22 +6521,37 @@ window.addEventListener("load", function() {
       const response = await fetch("/api/subscribe-push", {
         method: "POST",
         headers: adminHeaders(),
-        body: JSON.stringify({
-          subscription
-        })
+        body: JSON.stringify({ subscription })
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert("Notifications enabled for this device.");
+        setNotificationButtonState(true);
+
+        if (typeof showToast === "function") {
+          showToast("Notifications turned on for this device.", "success", 2500);
+        } else {
+          alert("Notifications turned on for this device.");
+        }
       } else {
+        setNotificationButtonState(false);
         alert(data.message || "Could not enable notifications.");
       }
     } catch (err) {
-      alert("Could not enable notifications: " + err.message);
+      setNotificationButtonState(false);
+      alert("Could not update notifications: " + err.message);
+    } finally {
+      if (button) button.disabled = false;
     }
   }
+
+  // Backwards-compatible name for any older onclick references.
+  async function enablePushNotifications() {
+    return togglePushNotifications();
+  }
+
+  window.addEventListener("load", refreshNotificationToggle);
 </script>
 
 <script>
@@ -6979,6 +7044,202 @@ window.addEventListener("load", function() {
 
   .action-subtitle {
     font-size:13px !important;
+  }
+}
+
+
+
+/* ===== DESKTOP FINAL TOP ACTION LAYOUT + NOTIFICATION TOGGLE ===== */
+/* Desktop only. Mobile/tablet stays unchanged. */
+@media (min-width:901px) {
+  .admin-hero {
+    padding:16px 22px !important;
+  }
+
+  .admin-action-grid {
+    display:grid !important;
+    grid-template-columns:repeat(4, minmax(190px, 1fr)) minmax(150px, .55fr) !important;
+    grid-template-areas:
+      "logo logo logo logo logout"
+      "new inspection history customers notifications" !important;
+    gap:14px !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    align-items:center !important;
+  }
+
+  .admin-action-card.logo-card {
+    grid-area:logo !important;
+    min-height:92px !important;
+    height:92px !important;
+    padding:12px 18px !important;
+    justify-content:center !important;
+  }
+
+  .admin-action-card.logo-card img {
+    max-height:68px !important;
+    width:100% !important;
+    object-fit:contain !important;
+  }
+
+  .logout-card {
+    grid-area:logout !important;
+    min-height:48px !important;
+    height:48px !important;
+    width:100% !important;
+    padding:0 14px !important;
+    justify-content:center !important;
+    gap:8px !important;
+    align-self:center !important;
+  }
+
+  .appointment-card {
+    grid-area:new !important;
+  }
+
+  .inspection-card {
+    grid-area:inspection !important;
+  }
+
+  .history-card {
+    grid-area:history !important;
+  }
+
+  .customers-card {
+    grid-area:customers !important;
+  }
+
+  .notifications-card {
+    grid-area:notifications !important;
+    min-height:48px !important;
+    height:48px !important;
+    width:100% !important;
+    padding:0 12px !important;
+    justify-content:center !important;
+    align-self:center !important;
+    gap:8px !important;
+    background:#eef3fa !important;
+    color:#163051 !important;
+    box-shadow:0 8px 18px rgba(0,0,0,.10) !important;
+    border:1px solid rgba(255,255,255,.25) !important;
+  }
+
+  .appointment-card,
+  .inspection-card,
+  .history-card,
+  .customers-card {
+    min-height:92px !important;
+    height:92px !important;
+    padding:16px 18px !important;
+    border-radius:16px !important;
+    gap:14px !important;
+    align-items:center !important;
+  }
+
+  .appointment-card .card-icon-wrap,
+  .inspection-card .card-icon-wrap,
+  .history-card .card-icon-wrap,
+  .customers-card .card-icon-wrap {
+    width:46px !important;
+    height:46px !important;
+    min-width:46px !important;
+    flex:0 0 46px !important;
+  }
+
+  .appointment-card .card-svg,
+  .inspection-card .card-svg,
+  .history-card .card-svg,
+  .customers-card .card-svg {
+    width:46px !important;
+    height:46px !important;
+  }
+
+  .logout-card .card-icon-wrap,
+  .notifications-card .notification-circle {
+    width:26px !important;
+    height:26px !important;
+    min-width:26px !important;
+    flex:0 0 26px !important;
+  }
+
+  .logout-card .card-svg,
+  .notifications-card .bell-svg {
+    width:26px !important;
+    height:26px !important;
+  }
+
+  .appointment-card .action-title,
+  .inspection-card .action-title,
+  .history-card .action-title,
+  .customers-card .action-title {
+    font-size:18px !important;
+    line-height:1.12 !important;
+    font-weight:800 !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+  }
+
+  .appointment-card .action-subtitle,
+  .inspection-card .action-subtitle,
+  .history-card .action-subtitle,
+  .customers-card .action-subtitle {
+    font-size:13px !important;
+    line-height:1.2 !important;
+    margin-top:5px !important;
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+  }
+
+  .logout-card .action-title,
+  .notifications-card .action-title {
+    font-size:14px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+  }
+
+  .logout-card .action-subtitle,
+  .notifications-card .action-subtitle,
+  .notifications-card .chevron-svg {
+    display:none !important;
+  }
+
+  .notifications-card.notifications-on {
+    background:#1d7f4f !important;
+    color:white !important;
+  }
+
+  .notifications-card.notifications-off {
+    background:#eef3fa !important;
+    color:#163051 !important;
+  }
+
+  .notifications-card.notifications-on .notification-circle {
+    background:rgba(255,255,255,.16) !important;
+    color:white !important;
+  }
+
+  .notifications-card.notifications-off .notification-circle {
+    background:#dce8f5 !important;
+    color:#163051 !important;
+  }
+}
+
+@media (min-width:901px) and (max-width:1180px) {
+  .admin-action-grid {
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas:
+      "logo logout"
+      "new inspection"
+      "history customers"
+      "notifications notifications" !important;
+  }
+
+  .notifications-card {
+    max-width:260px !important;
+    justify-self:center !important;
   }
 }
 
