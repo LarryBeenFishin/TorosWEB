@@ -2483,19 +2483,11 @@ body.toros-admin-logged-in #openTextPanelBtn {
     min-width:54px !important;
     height:46px !important;
     border-radius:14px !important;
-    font-size:0 !important;
     padding:0 !important;
     display:flex !important;
     align-items:center !important;
     justify-content:center !important;
     background:#af2727 !important;
-  }
-
-  #smsSendButton::after {
-    content:"➤";
-    font-size:22px;
-    color:#fff;
-    transform:rotate(-20deg);
   }
 
   #smsStatus {
@@ -2753,7 +2745,6 @@ body.toros-admin-logged-in #openTextPanelBtn {
     min-width:48px !important;
     height:44px !important;
     border-radius:999px !important;
-    font-size:0 !important;
     padding:0 !important;
     margin:0 !important;
     display:flex !important;
@@ -2761,13 +2752,6 @@ body.toros-admin-logged-in #openTextPanelBtn {
     justify-content:center !important;
     background:#af2727 !important;
     box-shadow:0 4px 12px rgba(175,39,39,.25) !important;
-  }
-
-  #smsSendButton::after {
-    content:"➤";
-    font-size:21px;
-    color:#fff;
-    transform:translateX(-1px) rotate(-18deg);
   }
 
   #smsStatus {
@@ -2982,23 +2966,6 @@ body.toros-admin-logged-in #openTextPanelBtn {
 
   /* Send button: remove double-arrow look and use one clean icon */
   #smsSendButton {
-    color:transparent !important;
-    font-size:0 !important;
-    overflow:hidden !important;
-  }
-
-  #smsSendButton::before {
-    content:"➤" !important;
-    color:white !important;
-    font-size:22px !important;
-    line-height:1 !important;
-    display:block !important;
-    transform:translateX(-1px) rotate(-18deg);
-  }
-
-  #smsSendButton::after {
-    content:"" !important;
-    display:none !important;
   }
 }
 
@@ -3019,117 +2986,63 @@ body.toros-admin-logged-in #openTextPanelBtn {
   }
 
   #smsSendButton {
-    color:transparent !important;
-    font-size:0 !important;
-    overflow:hidden !important;
-  }
-
-  #smsSendButton::before {
-    content:"↑" !important;
-    color:white !important;
-    font-size:25px !important;
-    font-weight:800 !important;
-    line-height:1 !important;
-    display:block !important;
-    transform:translateY(-1px);
-  }
-
-  #smsSendButton::after {
-    content:"" !important;
-    display:none !important;
   }
 }
 
 
-/* ===== SIMPLE SEND ARROW BUTTON ===== */
+
+
+/* ===== FINAL SEND BUTTON ICON RESET ===== */
+/* This block intentionally comes last. It removes every old arrow/text layer and adds ONE centered arrow. */
 #smsSendButton {
-  color:transparent !important;
-  font-size:0 !important;
-  overflow:hidden !important;
-}
-
-#smsSendButton::before {
-  content:"➜" !important;
-  color:white !important;
-  font-size:24px !important;
-  font-weight:800 !important;
-  line-height:1 !important;
-  display:block !important;
-  transform:none !important;
-}
-
-#smsSendButton::after {
-  content:"" !important;
-  display:none !important;
-}
-
-@media (max-width:900px) {
-  #smsSendButton::before {
-    content:"➜" !important;
-    font-size:25px !important;
-    transform:none !important;
-  }
-}
-
-
-/* ===== SMS SEND LOCK STATE ===== */
-#smsSendButton:disabled,
-#smsSendButton.sms-sending {
-  opacity:.55 !important;
-  cursor:not-allowed !important;
-  pointer-events:none !important;
-}
-
-#smsSendButton.sms-sending::before {
-  content:"…" !important;
-  font-size:28px !important;
-  transform:none !important;
-}
-
-
-/* ===== SINGLE CENTERED SEND ARROW FIX ===== */
-#smsSendButton {
-  color:transparent !important;
-  font-size:0 !important;
   position:relative !important;
+  color:transparent !important;
+  font-size:0 !important;
   overflow:hidden !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
 }
 
-#smsSendButton::before {
-  content:"➤" !important;
-  position:absolute !important;
-  left:50% !important;
-  top:50% !important;
-  transform:translate(-50%, -50%) rotate(-18deg) !important;
-  color:white !important;
-  font-size:22px !important;
-  font-weight:800 !important;
-  line-height:1 !important;
-  display:block !important;
-}
-
+#smsSendButton::before,
 #smsSendButton::after {
   content:none !important;
   display:none !important;
 }
 
-#smsSendButton.sms-sending::before {
-  content:"…" !important;
-  transform:translate(-50%, -55%) !important;
-  font-size:28px !important;
+#smsSendButton .sms-send-arrow-final {
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  transform:translate(-50%, -50%) rotate(-18deg) !important;
+  color:white !important;
+  font-size:23px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  pointer-events:none !important;
 }
 
-@media (max-width:900px) {
-  #smsSendButton::before {
-    content:"➤" !important;
-    font-size:23px !important;
-    transform:translate(-50%, -50%) rotate(-18deg) !important;
-  }
+#smsSendButton.sms-sending .sms-send-arrow-final {
+  display:none !important;
+}
 
-  #smsSendButton::after {
-    content:none !important;
-    display:none !important;
-  }
+#smsSendButton.sms-sending::before {
+  content:"…" !important;
+  display:block !important;
+  color:white !important;
+  font-size:28px !important;
+  line-height:1 !important;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  transform:translate(-50%, -55%) !important;
+}
+
+#smsSendButton:disabled,
+#smsSendButton.sms-sending {
+  opacity:.55 !important;
+  cursor:not-allowed !important;
+  pointer-events:none !important;
 }
 
 </style>
@@ -4245,7 +4158,7 @@ body.toros-admin-logged-in #openTextPanelBtn {
 
         <div id="smsComposer">
           <textarea id="smsMessage" placeholder="Type your message..."></textarea>
-          <button id="smsSendButton" onclick="sendCustomerText()" aria-label="Send text"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2" fill="white" stroke="white"></polygon></svg></button>
+          <button id="smsSendButton" onclick="sendCustomerText()" aria-label="Send text"><span class="sms-send-arrow-final">➤</span></button>
           <div id="smsStatus"></div>
         </div>
       </section>
@@ -4744,7 +4657,6 @@ body.toros-admin-logged-in #openTextPanelBtn {
       border-radius:50% !important;
       padding:0 !important;
       margin:0 !important;
-      font-size:0 !important;
       display:flex !important;
       align-items:center !important;
       justify-content:center !important;
