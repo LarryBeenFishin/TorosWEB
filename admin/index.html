@@ -2988,6 +2988,49 @@ body.toros-admin-logged-in #openTextPanelBtn {
 
 
 
+
+
+/* ===== DESKTOP THICK SEND ICON ONLY ===== */
+@media (min-width:901px) {
+  #smsSendButton {
+    position:relative !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    color:transparent !important;
+    font-size:0 !important;
+    overflow:hidden !important;
+  }
+
+  #smsSendButton .sms-send-arrow-final {
+    display:none !important;
+  }
+
+  #smsSendButton::after {
+    content:none !important;
+    display:none !important;
+  }
+
+  #smsSendButton::before {
+    content:"➤" !important;
+    display:block !important;
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    transform:translate(-50%, -50%) !important;
+    color:white !important;
+    font-size:24px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+  }
+
+  #smsSendButton.sms-sending::before {
+    content:"…" !important;
+    font-size:28px !important;
+    transform:translate(-50%, -55%) !important;
+  }
+}
+
 </style>
 </head>
 
