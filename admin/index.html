@@ -7763,16 +7763,50 @@ window.addEventListener("load", function() {
 
 
 
-/* ===== FINAL LOGO SHAPE + FOOTER LEFT + MOBILE TOP CONTROLS ===== */
+/* ===== FINAL SAFE HEADER / FOOTER LAYOUT ===== */
+/* Desktop: logo + 4 main cards in header. Footer controls on the left.
+   Mobile: footer hidden, mobile header controls shown in the top card area. */
+
 @media (min-width:901px) {
   .mobile-header-control {
     display:none !important;
   }
 
+  .admin-hero {
+    background:#163051 !important;
+    padding:16px 22px !important;
+  }
+
   .admin-action-grid {
-    grid-template-columns:repeat(5, minmax(180px, 1fr)) !important;
+    display:grid !important;
+    grid-template-columns:repeat(5, minmax(175px, 1fr)) !important;
     grid-template-areas:"logo new inspection history customers" !important;
+    gap:14px !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
     align-items:stretch !important;
+  }
+
+  .admin-action-card.logo-card {
+    display:flex !important;
+    grid-area:logo !important;
+  }
+
+  .appointment-card {
+    grid-area:new !important;
+  }
+
+  .inspection-card {
+    grid-area:inspection !important;
+  }
+
+  .history-card {
+    grid-area:history !important;
+  }
+
+  .customers-card {
+    grid-area:customers !important;
   }
 
   .admin-action-card.logo-card,
@@ -7784,19 +7818,22 @@ window.addEventListener("load", function() {
     height:92px !important;
     border-radius:16px !important;
     box-sizing:border-box !important;
+    padding:16px 18px !important;
+    background:white !important;
+    color:#163051 !important;
+    box-shadow:0 10px 22px rgba(0,0,0,.12) !important;
   }
 
   .admin-action-card.logo-card {
-    padding:16px 18px !important;
-    display:flex !important;
     align-items:center !important;
     justify-content:center !important;
     overflow:hidden !important;
   }
 
   .admin-action-card.logo-card img {
+    display:block !important;
     max-height:58px !important;
-    max-width:86% !important;
+    max-width:88% !important;
     width:auto !important;
     height:auto !important;
     object-fit:contain !important;
@@ -7805,9 +7842,63 @@ window.addEventListener("load", function() {
     border-radius:0 !important;
   }
 
-  .admin-footer-actions {
+  .appointment-card,
+  .inspection-card,
+  .history-card,
+  .customers-card {
+    align-items:center !important;
     justify-content:flex-start !important;
+    gap:14px !important;
+  }
+
+  .appointment-card .card-icon-wrap,
+  .inspection-card .card-icon-wrap,
+  .history-card .card-icon-wrap,
+  .customers-card .card-icon-wrap {
+    width:46px !important;
+    height:46px !important;
+    min-width:46px !important;
+    flex:0 0 46px !important;
+  }
+
+  .appointment-card .card-svg,
+  .inspection-card .card-svg,
+  .history-card .card-svg,
+  .customers-card .card-svg {
+    width:46px !important;
+    height:46px !important;
+  }
+
+  .appointment-card .action-title,
+  .inspection-card .action-title,
+  .history-card .action-title,
+  .customers-card .action-title {
+    font-size:18px !important;
+    line-height:1.12 !important;
+    font-weight:800 !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+  }
+
+  .appointment-card .action-subtitle,
+  .inspection-card .action-subtitle,
+  .history-card .action-subtitle,
+  .customers-card .action-subtitle {
+    font-size:13px !important;
+    line-height:1.2 !important;
+    margin-top:5px !important;
+    white-space:normal !important;
+  }
+
+  .admin-footer-actions {
+    display:flex !important;
+    justify-content:flex-start !important;
+    align-items:center !important;
+    gap:12px !important;
     padding:14px 22px 18px !important;
+    background:#163051 !important;
+    border-top:1px solid rgba(255,255,255,.12) !important;
   }
 
   .admin-footer-actions .notifications-card,
@@ -7817,7 +7908,79 @@ window.addEventListener("load", function() {
     max-width:220px !important;
     height:58px !important;
     min-height:58px !important;
+    padding:0 18px !important;
+    border-radius:14px !important;
+    display:flex !important;
+    align-items:center !important;
     justify-content:center !important;
+    gap:10px !important;
+    align-self:auto !important;
+    grid-area:auto !important;
+    box-shadow:0 8px 18px rgba(0,0,0,.14) !important;
+  }
+
+  .admin-footer-actions .notifications-card.notifications-on {
+    background:#1d7f4f !important;
+    color:white !important;
+  }
+
+  .admin-footer-actions .notifications-card.notifications-off {
+    background:#af2727 !important;
+    color:white !important;
+  }
+
+  .admin-footer-actions .logout-card {
+    background:linear-gradient(135deg, #af2727, #cf2f2f) !important;
+    color:white !important;
+  }
+
+  .admin-footer-actions .notifications-card .action-title,
+  .admin-footer-actions .logout-card .action-title {
+    font-size:18px !important;
+    line-height:1 !important;
+    font-weight:800 !important;
+    color:white !important;
+    white-space:nowrap !important;
+  }
+
+  .admin-footer-actions .notifications-card .action-subtitle,
+  .admin-footer-actions .logout-card .action-subtitle,
+  .admin-footer-actions .notifications-card .chevron-svg {
+    display:none !important;
+  }
+
+  .admin-footer-actions .notification-circle,
+  .admin-footer-actions .card-icon-wrap {
+    width:34px !important;
+    height:34px !important;
+    min-width:34px !important;
+    flex:0 0 34px !important;
+    background:rgba(255,255,255,.16) !important;
+    color:white !important;
+  }
+
+  .admin-footer-actions .bell-svg,
+  .admin-footer-actions .card-svg {
+    width:30px !important;
+    height:30px !important;
+  }
+
+  .admin-footer-actions svg,
+  .admin-footer-actions svg path {
+    stroke:white !important;
+  }
+}
+
+@media (min-width:901px) and (max-width:1250px) {
+  .admin-action-grid {
+    grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+    grid-template-areas:
+      "logo new inspection"
+      "history customers customers" !important;
+  }
+
+  .admin-footer-actions {
+    justify-content:flex-start !important;
   }
 }
 
