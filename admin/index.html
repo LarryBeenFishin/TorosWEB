@@ -2503,6 +2503,278 @@ body.toros-admin-logged-in #openTextPanelBtn {
   }
 }
 
+
+
+/* ===== DESKTOP REFINEMENT OVERRIDE ===== */
+@media (min-width: 901px) {
+
+  /* Main desktop dashboard/menu cards */
+  .admin {
+    background:#f4f7fb !important;
+  }
+
+  header {
+    max-width:100% !important;
+    width:100% !important;
+    margin:0 !important;
+    border-radius:0 !important;
+    padding:14px 24px !important;
+  }
+
+  .dashboard {
+    max-width:100% !important;
+    width:100% !important;
+    padding:18px 24px !important;
+    gap:18px !important;
+  }
+
+  /* Make Claude-style menu/home cards smaller and full-width feeling */
+  .admin .card,
+  .admin [class*="card"],
+  .admin [class*="tile"],
+  .admin [class*="menu"],
+  .admin [class*="action"] {
+    border-radius:14px !important;
+  }
+
+  .admin button {
+    min-height:auto !important;
+  }
+
+  .header-buttons button,
+  .header-buttons a button {
+    min-height:42px !important;
+    padding:10px 14px !important;
+    font-size:14px !important;
+  }
+
+  /* Top menu area if present */
+  .admin-dashboard,
+  .admin-menu,
+  .quick-actions,
+  .home-grid,
+  .admin-home,
+  .main-menu {
+    max-width:100% !important;
+    width:100% !important;
+    padding:14px 24px !important;
+    gap:12px !important;
+  }
+
+  .admin-home a,
+  .admin-menu a,
+  .quick-actions a,
+  .home-grid a,
+  .main-menu a,
+  .admin-home button,
+  .admin-menu button,
+  .quick-actions button,
+  .home-grid button,
+  .main-menu button {
+    min-height:78px !important;
+    padding:14px 18px !important;
+    border-radius:14px !important;
+  }
+
+  /* Desktop texting modal */
+  #textPanelOverlay {
+    padding:28px !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+
+  #textPanelShell,
+  #textPanelOverlay > div {
+    width:min(1240px, calc(100vw - 56px)) !important;
+    max-width:1240px !important;
+    height:min(780px, calc(100vh - 56px)) !important;
+    max-height:780px !important;
+    border-radius:18px !important;
+    overflow:hidden !important;
+    box-shadow:0 24px 80px rgba(0,0,0,.32) !important;
+  }
+
+  #smsDesktopHeader {
+    display:flex !important;
+    min-height:64px !important;
+    padding:14px 56px 14px 22px !important;
+    background:#163051 !important;
+  }
+
+  #smsCloseButton {
+    position:absolute !important;
+    top:13px !important;
+    right:16px !important;
+    width:38px !important;
+    height:38px !important;
+    border-radius:10px !important;
+    background:rgba(255,255,255,.14) !important;
+    color:white !important;
+    font-size:28px !important;
+    z-index:99999 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:0 !important;
+    line-height:1 !important;
+    box-shadow:none !important;
+  }
+
+  #smsCloseButton:hover {
+    background:#af2727 !important;
+  }
+
+  #smsApp {
+    display:grid !important;
+    grid-template-columns:300px minmax(0, 1fr) !important;
+    height:calc(100% - 64px) !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+    background:#eef3fa !important;
+  }
+
+  #smsSidebar {
+    grid-column:1 !important;
+    height:100% !important;
+    min-height:0 !important;
+    border-right:1px solid #dce4ef !important;
+    background:#f7f9fc !important;
+  }
+
+  #smsConversationView {
+    grid-column:2 !important;
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    grid-template-rows:auto minmax(0, 1fr) auto !important;
+    height:100% !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+    background:#eef3fa !important;
+  }
+
+  /* Contact/new message header now sits on top of chat thread */
+  #smsLockedTop {
+    grid-column:1 !important;
+    grid-row:1 !important;
+    padding:14px 18px !important;
+    border-right:0 !important;
+    border-bottom:1px solid #dce4ef !important;
+    background:#ffffff !important;
+    overflow:visible !important;
+    display:grid !important;
+    grid-template-columns:minmax(180px, 260px) minmax(220px, 1fr) !important;
+    align-items:end !important;
+    gap:16px !important;
+  }
+
+  #smsBackBtn {
+    display:none !important;
+  }
+
+  #smsActiveCustomerCard {
+    border:1px solid #dbe3ef !important;
+    border-radius:12px !important;
+    padding:12px 14px !important;
+    margin:0 !important;
+    background:#fff !important;
+    text-align:left !important;
+    min-height:58px !important;
+  }
+
+  #smsActiveCustomerName {
+    font-size:19px !important;
+    line-height:1.1 !important;
+    font-weight:800 !important;
+  }
+
+  #smsActiveCustomerPhone {
+    font-size:12px !important;
+    margin-top:4px !important;
+  }
+
+  #smsManualFields {
+    margin:0 !important;
+  }
+
+  .sms-manual-grid {
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:10px !important;
+  }
+
+  #smsLockedTop label,
+  .sms-template-label {
+    font-size:12px !important;
+    margin:0 0 5px !important;
+  }
+
+  #smsCustomerName,
+  #smsPhone,
+  #smsTemplate {
+    height:40px !important;
+    border-radius:10px !important;
+    font-size:15px !important;
+    padding:9px 11px !important;
+  }
+
+  #smsThread {
+    grid-column:1 !important;
+    grid-row:2 !important;
+    min-height:0 !important;
+    overflow:auto !important;
+    padding:18px !important;
+    background:#eef3fa !important;
+  }
+
+  #smsComposer {
+    grid-column:1 !important;
+    grid-row:3 !important;
+    min-height:70px !important;
+    padding:12px 14px !important;
+    background:#ffffff !important;
+    border-top:1px solid #dce4ef !important;
+    display:flex !important;
+    align-items:flex-end !important;
+    gap:10px !important;
+  }
+
+  #smsMessage {
+    height:44px !important;
+    min-height:44px !important;
+    max-height:120px !important;
+    border-radius:22px !important;
+    padding:11px 15px !important;
+    font-size:15px !important;
+    resize:none !important;
+  }
+
+  #smsSendButton {
+    width:48px !important;
+    min-width:48px !important;
+    height:44px !important;
+    border-radius:999px !important;
+    font-size:0 !important;
+    padding:0 !important;
+    margin:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    background:#af2727 !important;
+    box-shadow:0 4px 12px rgba(175,39,39,.25) !important;
+  }
+
+  #smsSendButton::after {
+    content:"➤";
+    font-size:21px;
+    color:#fff;
+    transform:translateX(-1px) rotate(-18deg);
+  }
+
+  #smsStatus {
+    bottom:64px !important;
+  }
+}
+
 </style>
 </head>
 
