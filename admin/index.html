@@ -7243,6 +7243,214 @@ window.addEventListener("load", function() {
   }
 }
 
+
+
+/* ===== DESKTOP NO LOGO ACTION ROW + MATCH LOGOUT/NOTIFICATIONS ===== */
+/* Desktop only. Mobile/tablet stays unchanged. */
+@media (min-width:901px) {
+  .admin-hero {
+    padding:16px 22px !important;
+  }
+
+  .admin-action-card.logo-card {
+    display:none !important;
+  }
+
+  .admin-action-grid {
+    display:grid !important;
+    grid-template-columns:
+      minmax(190px, 1fr)
+      minmax(190px, 1fr)
+      minmax(190px, 1fr)
+      minmax(190px, 1fr)
+      minmax(160px, .68fr)
+      minmax(120px, .52fr) !important;
+    grid-template-areas:
+      "new inspection history customers notifications logout" !important;
+    gap:14px !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    align-items:center !important;
+  }
+
+  .appointment-card {
+    grid-area:new !important;
+  }
+
+  .inspection-card {
+    grid-area:inspection !important;
+  }
+
+  .history-card {
+    grid-area:history !important;
+  }
+
+  .customers-card {
+    grid-area:customers !important;
+  }
+
+  .notifications-card {
+    grid-area:notifications !important;
+  }
+
+  .logout-card {
+    grid-area:logout !important;
+  }
+
+  .appointment-card,
+  .inspection-card,
+  .history-card,
+  .customers-card {
+    min-height:92px !important;
+    height:92px !important;
+    padding:16px 18px !important;
+    border-radius:16px !important;
+    gap:14px !important;
+    align-items:center !important;
+  }
+
+  .notifications-card,
+  .logout-card {
+    min-height:54px !important;
+    height:54px !important;
+    width:100% !important;
+    padding:0 14px !important;
+    border-radius:14px !important;
+    justify-content:center !important;
+    align-items:center !important;
+    gap:8px !important;
+    align-self:center !important;
+  }
+
+  .notifications-card {
+    background:#163051 !important;
+    color:white !important;
+    box-shadow:0 8px 18px rgba(0,0,0,.14) !important;
+  }
+
+  .notifications-card.notifications-on {
+    background:#1d7f4f !important;
+    color:white !important;
+  }
+
+  .notifications-card.notifications-off {
+    background:#163051 !important;
+    color:white !important;
+  }
+
+  .notifications-card .action-title,
+  .notifications-card .action-subtitle,
+  .notifications-card span {
+    color:white !important;
+  }
+
+  .notifications-card .notification-circle {
+    background:rgba(255,255,255,.16) !important;
+    color:white !important;
+  }
+
+  .notifications-card .bell-svg,
+  .notifications-card .bell-svg path {
+    stroke:white !important;
+  }
+
+  .notifications-card .action-title,
+  .logout-card .action-title {
+    font-size:14px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+  }
+
+  .notifications-card .action-subtitle,
+  .logout-card .action-subtitle,
+  .notifications-card .chevron-svg {
+    display:none !important;
+  }
+
+  .notifications-card .notification-circle,
+  .logout-card .card-icon-wrap {
+    width:26px !important;
+    height:26px !important;
+    min-width:26px !important;
+    flex:0 0 26px !important;
+  }
+
+  .notifications-card .bell-svg,
+  .logout-card .card-svg {
+    width:26px !important;
+    height:26px !important;
+  }
+
+  .appointment-card .action-title,
+  .inspection-card .action-title,
+  .history-card .action-title,
+  .customers-card .action-title {
+    font-size:18px !important;
+    line-height:1.12 !important;
+    white-space:nowrap !important;
+  }
+
+  .appointment-card .action-subtitle,
+  .inspection-card .action-subtitle,
+  .history-card .action-subtitle,
+  .customers-card .action-subtitle {
+    font-size:13px !important;
+    line-height:1.2 !important;
+    margin-top:5px !important;
+  }
+}
+
+@media (min-width:901px) and (max-width:1180px) {
+  .admin-action-grid {
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas:
+      "new inspection"
+      "history customers"
+      "notifications logout" !important;
+  }
+
+  .notifications-card,
+  .logout-card {
+    max-width:none !important;
+  }
+}
+
+
+
+/* ===== NOTIFICATIONS ON/OFF COLOR FINAL ===== */
+@media (min-width:901px) {
+  .notifications-card.notifications-on {
+    background:#1d7f4f !important;
+    color:white !important;
+  }
+
+  .notifications-card.notifications-off {
+    background:#af2727 !important;
+    color:white !important;
+  }
+
+  .notifications-card.notifications-on .notification-circle,
+  .notifications-card.notifications-off .notification-circle {
+    background:rgba(255,255,255,.16) !important;
+    color:white !important;
+  }
+
+  .notifications-card.notifications-on .action-title,
+  .notifications-card.notifications-off .action-title,
+  .notifications-card.notifications-on span,
+  .notifications-card.notifications-off span {
+    color:white !important;
+  }
+
+  .notifications-card.notifications-on .bell-svg,
+  .notifications-card.notifications-off .bell-svg,
+  .notifications-card.notifications-on .bell-svg path,
+  .notifications-card.notifications-off .bell-svg path {
+    stroke:white !important;
+  }
+}
+
 </style>
 
 </body>
