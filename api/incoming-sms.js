@@ -67,7 +67,11 @@ module.exports = async function handler(req, res) {
     const message = req.body.Body || "";
     const sid = req.body.MessageSid || req.body.SmsSid || "";
 
-    await fetch(process.env.SHEETS_WEB_APP_URL, {
+    // Save the new text first, then send the push using THIS SAME Twilio payload.
+    // The prior real-time version sent push before the Sheet write finished.
+    // On mobile, opening the notification immediately could load the inbox before the new row existed,
+    // making it look like the notification belonged to the previous text.
+    const sheetResponse = await fetch(process.env.SHEETS_WEB_APP_URL, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain"
@@ -82,12 +86,20 @@ module.exports = async function handler(req, res) {
       })
     });
 
-    // Broadcast push from the server at the actual moment Twilio receives the text.
-    // Do not let push issues cause Twilio to retry the webhook.
-    sendIncomingSmsPush({ from, message, sid }).catch(err => {
-      console.error("Incoming SMS push failed:", err.message);
-    });
+    if (!sheetResponse.ok) {
+      const sheetText = await sheetResponse.text().catch(() => "");
+      console.error("Incoming SMS sheet save failed:", sheetResponse.status, sheetText);
+      return res.status(500).send("Server Error");
+    }
 
+    // Now broadcast the current message. Await it so Vercel does not stop the function early.
+    try {
+      await sendIncomingSmsPush({ from, message, sid });
+    } catch (pushErr) {
+      console.error("Incoming SMS push failed:", pushErr.message);
+    }
+
+    res.setHeader("Cache-Control", "no-store");
     res.status(200).send("OK");
 
   } catch (err) {

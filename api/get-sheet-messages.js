@@ -10,6 +10,7 @@ module.exports = async function handler(req, res) {
 
     const data = await response.json();
 
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     return res.status(200).json(data);
 
   } catch (err) {

@@ -6170,10 +6170,11 @@ function startSmsGlobalPolling() {
   pollSmsInBackground(true);
 
   smsGlobalTimer = setInterval(() => {
-    // Poll less aggressively when tab is hidden (saves battery)
+    // Faster visible polling so the open admin feels closer to real-time.
+    // Push notifications still come from api/incoming-sms.js.
     if (document.hidden) return;
     pollSmsInBackground(false);
-  }, 4000);
+  }, 1800);
 }
 
 function getSmsSignature(messages) {
@@ -6225,8 +6226,8 @@ async function pollSmsInBackground(initialLoad) {
         updateUnreadBadge();
         showSmsToast(latestIncoming);
         playNotificationSound();
-        // Send push notification for incoming SMS
-        sendIncomingSmsPush(latestIncoming);
+        // Push notifications are sent by api/incoming-sms.js only.
+        // Do not broadcast from the browser, or new devices can resend old notifications.
       }
     }
 
@@ -6340,7 +6341,7 @@ function openTextPanel(mode = "new") {
     smsRefreshTimer = setInterval(() => {
       if (document.hidden) return;
       loadSmsHistory();
-    }, 3000);
+    }, 1500);
   }
 }
 

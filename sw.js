@@ -1,4 +1,4 @@
-const CACHE_NAME = "toros-admin-v4";
+const CACHE_NAME = "toros-admin-v6-current-text-fix";
 
 const STATIC_ASSETS = [
   "/logo.png",
@@ -102,7 +102,8 @@ self.addEventListener("push", event => {
       badge: "/logo.png",
       vibrate: [100, 50, 100],
       tag: data.tag || data.dedupeKey || undefined,
-      renotify: false,
+      renotify: true,
+      requireInteraction: false,
       data: {
         url: data.url || "/admin",
         dedupeKey: data.dedupeKey || ""
