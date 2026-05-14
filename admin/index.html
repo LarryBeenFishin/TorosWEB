@@ -6705,6 +6705,110 @@ window.addEventListener("load", function() {
   }
 }
 
+
+
+/* ===== DESKTOP COMPACT ACTION BAR FINAL ===== */
+/* Desktop only. Keeps mobile/tablet card layout unchanged. */
+@media (min-width:901px) {
+  .admin-hero {
+    padding:14px 18px !important;
+  }
+
+  .admin-action-grid {
+    width:100% !important;
+    max-width:none !important;
+    display:grid !important;
+    grid-template-columns:1.35fr repeat(6, minmax(135px, 1fr)) !important;
+    gap:12px !important;
+    margin:0 !important;
+    align-items:stretch !important;
+  }
+
+  .admin-action-card {
+    min-height:82px !important;
+    height:82px !important;
+    border-radius:14px !important;
+    padding:12px 14px !important;
+    gap:10px !important;
+    box-shadow:0 8px 18px rgba(0,0,0,.12) !important;
+    align-items:center !important;
+  }
+
+  .admin-action-card.logo-card {
+    min-height:82px !important;
+    height:82px !important;
+    padding:10px 14px !important;
+  }
+
+  .admin-action-card.logo-card img {
+    max-height:58px !important;
+    width:100% !important;
+    object-fit:contain !important;
+  }
+
+  .logout-card {
+    min-height:82px !important;
+    height:82px !important;
+    justify-content:center !important;
+  }
+
+  .card-icon-wrap,
+  .action-icon,
+  .notification-circle {
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    flex:0 0 42px !important;
+  }
+
+  .card-svg {
+    width:42px !important;
+    height:42px !important;
+  }
+
+  .action-title {
+    font-size:17px !important;
+    line-height:1.05 !important;
+    font-weight:800 !important;
+  }
+
+  .action-subtitle {
+    font-size:12px !important;
+    line-height:1.15 !important;
+    margin-top:4px !important;
+  }
+
+  .logout-card .action-title {
+    font-size:18px !important;
+  }
+
+  .wide-action-card {
+    grid-column:auto !important;
+    min-height:82px !important;
+    height:82px !important;
+    position:relative !important;
+  }
+
+  .action-chevron {
+    font-size:28px !important;
+    margin-left:auto !important;
+  }
+
+  .wide-action-card .action-subtitle {
+    white-space:normal !important;
+  }
+}
+
+@media (min-width:901px) and (max-width:1250px) {
+  .admin-action-grid {
+    grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .wide-action-card {
+    grid-column:auto !important;
+  }
+}
+
 </style>
 
 </body>
