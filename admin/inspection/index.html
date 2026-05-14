@@ -2,241 +2,559 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create Inspection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#163051">
+  <title>Create Inspection | Toro's Auto Care Admin</title>
 
   <style>
+    :root {
+      --navy: #163051;
+      --navy-dark: #0d1d33;
+      --red: #af2727;
+      --red-dark: #911f1f;
+      --green: #1d7f4f;
+      --green-dark: #17683f;
+      --gold: #f7c948;
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --line: #dfe7f2;
+      --soft: #eef4fb;
+      --text: #163051;
+      --muted: #637189;
+      --shadow: 0 18px 55px rgba(22, 48, 81, .12);
+      --shadow-soft: 0 8px 24px rgba(22, 48, 81, .08);
+    }
+
     * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: #f4f7fb;
-      color: #163051;
-      padding: 18px;
-    }
-
-    .wrap {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
-
-    .top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 22px;
-    }
-
-    img {
-      max-width: 220px;
-    }
-
-    h1 {
-      margin: 12px 0 4px;
-    }
-
-    p {
-      color: #60708a;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin: 14px 0 6px;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 13px;
-      border: 1px solid #d8dee9;
-      border-radius: 12px;
-      font-size: 16px;
-      font-family: Arial, sans-serif;
-    }
-
-    textarea {
-      min-height: 90px;
-      resize: vertical;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .item {
-      border: 1px solid #e3eaf4;
-      border-radius: 16px;
-      padding: 16px;
-      margin: 14px 0;
-      background: #fbfcff;
-    }
-
-    .item h3 {
-      margin: 0 0 10px;
+      background:
+        radial-gradient(circle at top left, rgba(175,39,39,.12), transparent 32rem),
+        radial-gradient(circle at top right, rgba(22,48,81,.12), transparent 34rem),
+        linear-gradient(180deg, #f7f9fd 0%, var(--bg) 100%);
+      color: var(--text);
+      padding: 0;
     }
 
     button, .btn {
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 13px 18px;
-      background: #af2727;
-      color: white;
-      font-weight: bold;
+      background: var(--red);
+      color: #fff;
+      font-weight: 800;
       cursor: pointer;
       font-size: 15px;
       text-decoration: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 46px;
+      box-shadow: 0 8px 18px rgba(175,39,39,.18);
+      transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
+      font-family: Arial, sans-serif;
     }
 
-    .blue {
-      background: #163051;
+    button:hover, .btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(175,39,39,.22);
     }
 
-    .green {
-      background: #1d7f4f;
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .7;
+      transform: none;
     }
 
-    .light {
-      background: #eef3fa;
-      color: #163051;
+    .blue { background: var(--navy); box-shadow: 0 8px 18px rgba(22,48,81,.2); }
+    .blue:hover { background: var(--navy-dark); }
+    .green { background: var(--green); box-shadow: 0 8px 18px rgba(29,127,79,.2); }
+    .green:hover { background: var(--green-dark); }
+    .light { background: #edf3fb; color: var(--navy); box-shadow: none; }
+    .light:hover { background: #dfe8f4; color: var(--navy); }
+
+    .page-shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 34px;
+    }
+
+    .hero {
+      overflow: hidden;
+      position: relative;
+      border-radius: 26px;
+      background: linear-gradient(135deg, var(--navy) 0%, #102640 56%, #7f1e24 100%);
+      color: #fff;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -130px;
+      top: -150px;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      border: 45px solid rgba(255,255,255,.08);
+      pointer-events: none;
+    }
+
+    .top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 132px;
+      max-width: 38vw;
+      background: #fff;
+      padding: 8px 10px;
+      border-radius: 16px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.18);
+      display: block;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.76);
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 4px rgba(247,201,72,.16);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1;
+      letter-spacing: -.04em;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      margin: 18px 0 0;
+      color: rgba(255,255,255,.82);
+      line-height: 1.55;
+      font-size: 16px;
+    }
+
+    .form-card,
+    .section-card,
+    .result {
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(223,231,242,.9);
+      border-radius: 24px;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(10px);
+    }
+
+    .form-card { padding: 22px; }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -.02em;
+    }
+
+    .section-subtitle {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: 800;
+      margin: 0 0 7px;
+      color: var(--navy);
+      font-size: 13px;
+    }
+
+    .field-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+      color: var(--navy);
+      background: #fff;
+      outline: none;
+      transition: border-color .14s ease, box-shadow .14s ease, background .14s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(175,39,39,.55);
+      box-shadow: 0 0 0 4px rgba(175,39,39,.10);
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .inspection-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    #inspectionItems {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+      background: #fff;
+      box-shadow: 0 6px 20px rgba(22,48,81,.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 5px;
+      height: 100%;
+      background: var(--green);
+    }
+
+    .item.status-monitor::before { background: #d97706; }
+    .item.status-needs::before { background: var(--red); }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .item h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -.02em;
+    }
+
+    .mini-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: var(--soft);
+      color: var(--navy);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .recommendation-card {
+      margin-top: 16px;
+      padding: 18px;
     }
 
     .actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-top: 22px;
+      margin-top: 18px;
+    }
+
+    .sticky-actions {
+      position: sticky;
+      bottom: 14px;
+      z-index: 5;
+      padding: 12px;
+      background: rgba(255,255,255,.84);
+      border: 1px solid rgba(223,231,242,.9);
+      border-radius: 20px;
+      box-shadow: 0 14px 34px rgba(22,48,81,.13);
+      backdrop-filter: blur(14px);
+      margin-top: 18px;
+    }
+
+    .notice {
+      min-height: 20px;
+      margin-top: 14px;
+      font-weight: 800;
+      color: var(--navy);
     }
 
     .result {
       display: none;
-      margin-top: 22px;
+      margin-top: 18px;
       padding: 18px;
-      border-radius: 16px;
-      background: #f7faff;
-      border: 1px solid #d8e3f2;
+      border-color: rgba(29,127,79,.24);
+      background: linear-gradient(180deg, #ffffff 0%, #f5fff9 100%);
     }
 
-    .result input {
-      margin-top: 8px;
+    .result h2 { margin-bottom: 4px; }
+    .result p { margin: 0 0 10px; color: var(--muted); }
+    .result input { margin-top: 8px; }
+
+    .success-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
-    .notice {
-      margin-top: 14px;
-      font-weight: bold;
+    .success-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: rgba(29,127,79,.12);
+      color: var(--green);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 23px;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 980px) {
+      #inspectionItems { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @media (max-width: 700px) {
-      .grid {
-        grid-template-columns: 1fr;
+      .page-shell {
+        width: min(100% - 20px, 1180px);
+        padding-top: 10px;
+        padding-bottom: 22px;
       }
 
-      .wrap {
-        padding: 18px;
+      .hero {
+        border-radius: 22px;
+        padding: 16px;
       }
+
+      .top {
+        align-items: stretch;
+      }
+
+      .brand {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+        flex-direction: column;
+      }
+
+      .brand-logo {
+        width: 154px;
+        max-width: 70vw;
+      }
+
+      .hero-actions {
+        width: 100%;
+      }
+
+      h1 { font-size: 34px; }
+
+      .hero-copy {
+        text-align: center;
+        font-size: 15px;
+      }
+
+      .form-card { padding: 16px; border-radius: 20px; }
+      .section-header { align-items: flex-start; flex-direction: column; }
+      .grid { grid-template-columns: 1fr; }
+      #inspectionItems { grid-template-columns: 1fr; }
+      .recommendation-card { padding: 16px; }
 
       button, .btn {
         width: 100%;
         text-align: center;
       }
 
-      .actions {
-        flex-direction: column;
-      }
+      .actions { flex-direction: column; }
+      .sticky-actions { bottom: calc(10px + env(safe-area-inset-bottom)); }
     }
   </style>
 </head>
 
 <body>
+  <main class="page-shell">
+    <section class="hero">
+      <div class="top">
+        <div class="brand">
+          <img class="brand-logo" src="/logo.png" alt="Toro's Auto Care">
+          <div>
+            <div class="eyebrow">Inspection Builder</div>
+            <h1>Create Inspection</h1>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <a class="btn light" href="/admin">Back to Admin</a>
+        </div>
+      </div>
+      <p class="hero-copy">Create a clean customer-ready vehicle inspection report. Fill in the vehicle info, mark each inspection category, then copy or open the final customer link.</p>
+    </section>
 
-  <div class="wrap">
-    <div class="top">
-      <img src="/logo.png" alt="Toro's Auto Care">
-      <a class="btn blue" href="/admin">Back to Admin</a>
-    </div>
-
-    <h1>Create Vehicle Inspection</h1>
-    <p>Fill this out, create the report, then print or copy the customer link.</p>
-
-    <div class="grid">
-      <div>
-        <label>Customer Name</label>
-        <input id="customerName">
+    <section class="form-card">
+      <div class="section-header">
+        <div>
+          <h2>Customer & Vehicle Details</h2>
+          <div class="section-subtitle">Customer name and vehicle are required. Everything else helps make the report look more complete.</div>
+        </div>
       </div>
 
-      <div>
-        <label>Phone</label>
-        <input id="phone">
+      <div class="grid">
+        <div>
+          <label for="customerName">Customer Name</label>
+          <input id="customerName" autocomplete="name" placeholder="Customer name">
+        </div>
+
+        <div>
+          <label for="phone">Phone</label>
+          <input id="phone" inputmode="tel" autocomplete="tel" placeholder="(847) 555-1234">
+        </div>
+
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" placeholder="customer@email.com">
+        </div>
+
+        <div>
+          <label for="vehicle">Vehicle</label>
+          <input id="vehicle" placeholder="2017 Honda Ridgeline">
+        </div>
+
+        <div>
+          <label for="mileage">Mileage</label>
+          <input id="mileage" inputmode="numeric" placeholder="123,456">
+        </div>
+
+        <div>
+          <label for="technician">Technician</label>
+          <input id="technician" autocomplete="name" placeholder="Technician name">
+        </div>
+
+        <div>
+          <label for="overallStatus">Overall Status</label>
+          <select id="overallStatus">
+            <option>Good</option>
+            <option selected>Monitor</option>
+            <option>Needs Attention</option>
+          </select>
+          <div class="field-note">This shows at the top of the customer report.</div>
+        </div>
       </div>
 
-      <div>
-        <label>Email</label>
-        <input id="email">
+      <div class="inspection-layout">
+        <div class="section-header">
+          <div>
+            <h2>Inspection Checklist</h2>
+            <div class="section-subtitle">Use short, clear notes. The report should be easy for the customer to understand.</div>
+          </div>
+        </div>
+        <div id="inspectionItems"></div>
       </div>
 
-      <div>
-        <label>Vehicle</label>
-        <input id="vehicle" placeholder="2017 Honda Ridgeline">
+      <div class="section-card recommendation-card">
+        <label for="recommendations">Recommendations</label>
+        <textarea id="recommendations" placeholder="Example: Recommend front brake pads and rotors. Rear tires should be monitored."></textarea>
       </div>
 
-      <div>
-        <label>Mileage</label>
-        <input id="mileage">
+      <div class="sticky-actions">
+        <div class="actions">
+          <button class="green" id="createInspectionBtn" onclick="createInspection()">Create Inspection Report</button>
+          <button class="blue" type="button" onclick="clearForm()">Clear Form</button>
+          <a class="btn light" href="/admin">Cancel</a>
+        </div>
+        <div class="notice" id="notice"></div>
       </div>
 
-      <div>
-        <label>Technician</label>
-        <input id="technician">
+      <div class="result" id="resultBox">
+        <div class="success-row">
+          <span class="success-icon">✓</span>
+          <div>
+            <h2>Inspection Created</h2>
+            <p>Customer report link:</p>
+          </div>
+        </div>
+        <input id="reportLink" readonly>
+
+        <div class="actions">
+          <button class="blue" onclick="copyLink()">Copy Link</button>
+          <a class="btn green" id="openReport" target="_blank" rel="noopener">Open Report</a>
+        </div>
       </div>
-
-      <div>
-        <label>Overall Status</label>
-        <select id="overallStatus">
-          <option>Good</option>
-          <option selected>Monitor</option>
-          <option>Needs Attention</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="inspectionItems"></div>
-
-    <label>Recommendations</label>
-    <textarea id="recommendations" placeholder="Example: Recommend front brake pads and rotors. Rear tires should be monitored."></textarea>
-
-    <div class="actions">
-      <button class="green" onclick="createInspection()">Create Inspection Report</button>
-      <a class="btn light" href="/admin">Cancel</a>
-    </div>
-
-    <div class="notice" id="notice"></div>
-
-    <div class="result" id="resultBox">
-      <h2>Inspection Created</h2>
-      <p>Customer report link:</p>
-      <input id="reportLink" readonly>
-
-      <div class="actions">
-        <button class="blue" onclick="copyLink()">Copy Link</button>
-        <a class="btn green" id="openReport" target="_blank">Open Report</a>
-      </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
   <script>
     // Auth token is stored in localStorage by the admin login page
     function getAdminToken() { return localStorage.getItem("torosAdminToken") || ""; }
     function adminHeaders() { return { "Content-Type": "application/json", "x-admin-token": getAdminToken() }; }
-    
+
     // Redirect to admin login if not authenticated
     if (!localStorage.getItem("torosAdminLoggedIn")) {
       window.location.href = "/admin";
@@ -254,86 +572,108 @@
       "Leaks"
     ];
 
+    function statusClass(value) {
+      if (value === "Needs Attention") return "status-needs";
+      if (value === "Monitor") return "status-monitor";
+      return "status-good";
+    }
+
     function buildItems() {
       const container = document.getElementById("inspectionItems");
 
-      container.innerHTML = items.map(item => {
+      container.innerHTML = items.map((item, index) => {
         const key = item.toLowerCase();
+        const num = String(index + 1).padStart(2, "0");
 
         return `
-          <div class="item">
-            <h3>${item}</h3>
+          <div class="item status-monitor" id="${key}Card">
+            <div class="item-top">
+              <h3>${item}</h3>
+              <span class="mini-badge">${num}</span>
+            </div>
 
-            <label>Status</label>
-            <select id="${key}Status">
+            <label for="${key}Status">Status</label>
+            <select id="${key}Status" onchange="updateItemCard('${key}')">
               <option>Good</option>
               <option selected>Monitor</option>
               <option>Needs Attention</option>
             </select>
 
-            <label>Notes</label>
+            <label for="${key}Notes" style="margin-top:12px;">Notes</label>
             <textarea id="${key}Notes" placeholder="Add notes for ${item.toLowerCase()}..."></textarea>
           </div>
         `;
       }).join("");
     }
 
+    function updateItemCard(key) {
+      const card = document.getElementById(`${key}Card`);
+      const select = document.getElementById(`${key}Status`);
+      if (!card || !select) return;
+      card.classList.remove("status-good", "status-monitor", "status-needs");
+      card.classList.add(statusClass(select.value));
+    }
+
     async function createInspection() {
       const notice = document.getElementById("notice");
       const resultBox = document.getElementById("resultBox");
+      const btn = document.getElementById("createInspectionBtn");
 
       notice.textContent = "Creating inspection...";
       notice.style.color = "#163051";
       resultBox.style.display = "none";
+      btn.disabled = true;
+      btn.textContent = "Creating...";
 
       const payload = {
         action: "createInspection",
-        customerName: document.getElementById("customerName").value,
-        phone: document.getElementById("phone").value,
-        email: document.getElementById("email").value,
-        vehicle: document.getElementById("vehicle").value,
-        mileage: document.getElementById("mileage").value,
-        technician: document.getElementById("technician").value,
+        customerName: document.getElementById("customerName").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        vehicle: document.getElementById("vehicle").value.trim(),
+        mileage: document.getElementById("mileage").value.trim(),
+        technician: document.getElementById("technician").value.trim(),
         overallStatus: document.getElementById("overallStatus").value,
 
         brakesStatus: document.getElementById("brakesStatus").value,
-        brakesNotes: document.getElementById("brakesNotes").value,
+        brakesNotes: document.getElementById("brakesNotes").value.trim(),
 
         tiresStatus: document.getElementById("tiresStatus").value,
-        tiresNotes: document.getElementById("tiresNotes").value,
+        tiresNotes: document.getElementById("tiresNotes").value.trim(),
 
         suspensionStatus: document.getElementById("suspensionStatus").value,
-        suspensionNotes: document.getElementById("suspensionNotes").value,
+        suspensionNotes: document.getElementById("suspensionNotes").value.trim(),
 
         fluidsStatus: document.getElementById("fluidsStatus").value,
-        fluidsNotes: document.getElementById("fluidsNotes").value,
+        fluidsNotes: document.getElementById("fluidsNotes").value.trim(),
 
         batteryStatus: document.getElementById("batteryStatus").value,
-        batteryNotes: document.getElementById("batteryNotes").value,
+        batteryNotes: document.getElementById("batteryNotes").value.trim(),
 
         lightsStatus: document.getElementById("lightsStatus").value,
-        lightsNotes: document.getElementById("lightsNotes").value,
+        lightsNotes: document.getElementById("lightsNotes").value.trim(),
 
         wipersStatus: document.getElementById("wipersStatus").value,
-        wipersNotes: document.getElementById("wipersNotes").value,
+        wipersNotes: document.getElementById("wipersNotes").value.trim(),
 
         filtersStatus: document.getElementById("filtersStatus").value,
-        filtersNotes: document.getElementById("filtersNotes").value,
+        filtersNotes: document.getElementById("filtersNotes").value.trim(),
 
         leaksStatus: document.getElementById("leaksStatus").value,
-        leaksNotes: document.getElementById("leaksNotes").value,
+        leaksNotes: document.getElementById("leaksNotes").value.trim(),
 
-        recommendations: document.getElementById("recommendations").value
+        recommendations: document.getElementById("recommendations").value.trim()
       };
 
       if (!payload.customerName || !payload.vehicle) {
         notice.textContent = "Customer name and vehicle are required.";
         notice.style.color = "#af2727";
+        btn.disabled = false;
+        btn.textContent = "Create Inspection Report";
         return;
       }
 
       try {
-        payload.action = "createInspection";
         const response = await fetch("/api/admin-appointment", {
           method: "POST",
           headers: adminHeaders(),
@@ -356,25 +696,48 @@
         notice.textContent = "Inspection created successfully.";
         notice.style.color = "#1d7f4f";
         resultBox.style.display = "block";
+        resultBox.scrollIntoView({ behavior: "smooth", block: "start" });
 
       } catch (err) {
         notice.textContent = "Could not create inspection.";
         notice.style.color = "#af2727";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Create Inspection Report";
       }
     }
 
-    function copyLink() {
+    async function copyLink() {
       const input = document.getElementById("reportLink");
-      input.select();
-      input.setSelectionRange(0, 99999);
-      document.execCommand("copy");
+      const notice = document.getElementById("notice");
 
-      document.getElementById("notice").textContent = "Link copied.";
-      document.getElementById("notice").style.color = "#1d7f4f";
+      try {
+        await navigator.clipboard.writeText(input.value);
+      } catch (err) {
+        input.select();
+        input.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+      }
+
+      notice.textContent = "Link copied.";
+      notice.style.color = "#1d7f4f";
+    }
+
+    function clearForm() {
+      if (!confirm("Clear this inspection form?")) return;
+      document.querySelectorAll("input, textarea").forEach(el => el.value = "");
+      document.getElementById("overallStatus").value = "Monitor";
+      items.forEach(item => {
+        const key = item.toLowerCase();
+        document.getElementById(`${key}Status`).value = "Monitor";
+        updateItemCard(key);
+      });
+      document.getElementById("resultBox").style.display = "none";
+      document.getElementById("notice").textContent = "";
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     buildItems();
   </script>
-
 </body>
 </html>

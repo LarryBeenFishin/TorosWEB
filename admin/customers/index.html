@@ -2,167 +2,515 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="robots" content="noindex, nofollow">
-  <title>Customer Profiles</title>
+  <meta name="theme-color" content="#163051">
+  <title>Customer Profiles | Toro's Auto Care Admin</title>
 
   <style>
+    :root {
+      --navy: #163051;
+      --navy-dark: #0d1d33;
+      --red: #af2727;
+      --red-dark: #911f1f;
+      --green: #1d7f4f;
+      --green-dark: #17683f;
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --line: #dfe7f2;
+      --soft: #eef4fb;
+      --text: #163051;
+      --muted: #637189;
+      --shadow: 0 18px 55px rgba(22, 48, 81, .12);
+      --shadow-soft: 0 8px 24px rgba(22, 48, 81, .08);
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: #f4f7fb;
-      color: #163051;
-    }
-
-    header {
-      background: #163051;
-      color: white;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    header img {
-      height: 54px;
-      background: white;
-      padding: 6px;
-      border-radius: 10px;
+      background:
+        radial-gradient(circle at top left, rgba(175,39,39,.10), transparent 34rem),
+        radial-gradient(circle at top right, rgba(22,48,81,.12), transparent 36rem),
+        linear-gradient(180deg, #f7f9fd 0%, var(--bg) 100%);
+      color: var(--text);
     }
 
     button, .btn {
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 12px 18px;
-      background: #af2727;
+      background: var(--red);
       color: white;
-      font-weight: bold;
+      font-weight: 800;
       cursor: pointer;
       font-size: 15px;
       text-decoration: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      box-shadow: 0 8px 18px rgba(175,39,39,.18);
+      transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
+      font-family: Arial, sans-serif;
     }
 
     button:hover, .btn:hover {
-      background: #911f1f;
+      background: var(--red-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(175,39,39,.22);
     }
 
-    .green {
-      background: #1d7f4f;
-    }
+    .green { background: var(--green); box-shadow: 0 8px 18px rgba(29,127,79,.2); }
+    .green:hover { background: var(--green-dark); }
+    .blue { background: var(--navy); box-shadow: 0 8px 18px rgba(22,48,81,.2); }
+    .blue:hover { background: var(--navy-dark); }
+    .light { background: #edf3fb; color: var(--navy); box-shadow: none; }
+    .light:hover { background: #dfe8f4; color: var(--navy); }
 
-    .green:hover {
-      background: #17683f;
-    }
-
-    .wrap {
-      max-width: 1300px;
+    .page-shell {
+      width: min(1380px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 24px;
+      padding: 22px 0 34px;
     }
 
-    .top-card {
-      background: white;
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 8px 24px rgba(22,48,81,0.08);
-      margin-bottom: 20px;
+    .hero {
+      overflow: hidden;
+      position: relative;
+      border-radius: 26px;
+      background: linear-gradient(135deg, var(--navy) 0%, #102640 58%, #7f1e24 100%);
+      color: #fff;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -120px;
+      top: -150px;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      border: 45px solid rgba(255,255,255,.08);
+      pointer-events: none;
+    }
+
+    .hero-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand img {
+      width: 132px;
+      max-width: 38vw;
+      background: #fff;
+      padding: 8px 10px;
+      border-radius: 16px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.18);
+      display: block;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.76);
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #f7c948;
+      box-shadow: 0 0 0 4px rgba(247,201,72,.16);
     }
 
     h1 {
-      margin: 0 0 8px;
+      margin: 0;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1;
+      letter-spacing: -.04em;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 18px 0 0;
+      color: rgba(255,255,255,.82);
+      line-height: 1.55;
+      font-size: 16px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar {
+      background: rgba(255,255,255,.9);
+      border: 1px solid rgba(223,231,242,.9);
+      border-radius: 24px;
+      box-shadow: var(--shadow-soft);
+      padding: 18px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .toolbar-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-wrap::before {
+      content: "⌕";
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 22px;
+      font-weight: bold;
+      pointer-events: none;
     }
 
     input {
       width: 100%;
-      padding: 14px;
-      border: 1px solid #d8dee9;
-      border-radius: 12px;
+      padding: 14px 14px 14px 44px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
       font-size: 16px;
-      margin-top: 14px;
       box-sizing: border-box;
+      color: var(--navy);
+      background: #fff;
+      outline: none;
+      transition: border-color .14s ease, box-shadow .14s ease;
+    }
+
+    input:focus {
+      border-color: rgba(175,39,39,.55);
+      box-shadow: 0 0 0 4px rgba(175,39,39,.10);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 18px;
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 24px;
+      letter-spacing: -.03em;
+      color: var(--navy);
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .status-line {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 12px;
+      min-height: 18px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
       gap: 16px;
     }
 
     .customer-card {
-      background: white;
-      border-radius: 18px;
+      background: #fff;
+      border-radius: 22px;
       padding: 18px;
-      box-shadow: 0 8px 24px rgba(22,48,81,0.08);
-      border-left: 5px solid #af2727;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .customer-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--red), var(--navy));
+    }
+
+    .customer-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 15px;
+      background: var(--soft);
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .customer-title {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      min-width: 0;
     }
 
     .customer-card h3 {
-      margin: 0 0 8px;
+      margin: 0 0 4px;
       font-size: 20px;
+      letter-spacing: -.02em;
+      overflow-wrap: anywhere;
     }
 
-    .line {
-      font-size: 14px;
-      margin: 6px 0;
-      color: #40506a;
-    }
-
-    .line strong {
-      color: #163051;
+    .customer-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      overflow-wrap: anywhere;
     }
 
     .pill {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 5px 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 9px;
       border-radius: 999px;
       background: #eaf0f7;
-      color: #163051;
+      color: var(--navy);
       font-size: 12px;
-      font-weight: bold;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .detail {
+      background: #f8fbff;
+      border: 1px solid #e7eef8;
+      border-radius: 16px;
+      padding: 11px;
+      min-width: 0;
+    }
+
+    .detail.full { grid-column: 1 / -1; }
+
+    .detail-label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      display: block;
+      color: #34445c;
+      font-size: 14px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .mini-btn {
+      padding: 9px 12px;
+      min-height: 38px;
+      border-radius: 12px;
+      font-size: 13px;
+      box-shadow: none;
+      flex: 1 1 auto;
     }
 
     .empty {
-      background: white;
-      border-radius: 18px;
-      padding: 24px;
-      color: #777;
+      background: rgba(255,255,255,.9);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 28px;
+      color: var(--muted);
+      box-shadow: var(--shadow-soft);
+      grid-column: 1 / -1;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .empty strong {
+      display: block;
+      color: var(--navy);
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 840px) {
+      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .toolbar-top { grid-template-columns: 1fr; }
+      .toolbar-top .btn { width: 100%; }
     }
 
     @media (max-width: 700px) {
-      header {
-        justify-content: center;
-        text-align: center;
+      .page-shell {
+        width: min(100% - 20px, 1380px);
+        padding-top: 10px;
+        padding-bottom: 22px;
       }
 
-      .wrap {
-        padding: 14px;
+      .hero {
+        border-radius: 22px;
+        padding: 16px;
       }
+
+      .hero-top {
+        align-items: stretch;
+      }
+
+      .brand {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+        flex-direction: column;
+      }
+
+      .brand img {
+        width: 154px;
+        max-width: 70vw;
+      }
+
+      h1 { font-size: 34px; }
+
+      .hero-copy {
+        text-align: center;
+        font-size: 15px;
+      }
+
+      .hero-actions {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .hero-actions .btn,
+      .hero-actions button {
+        width: 100%;
+      }
+
+      .toolbar { padding: 14px; border-radius: 20px; }
+      .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .stat { padding: 12px; border-radius: 16px; }
+      .stat strong { font-size: 21px; }
+      .grid { grid-template-columns: 1fr; gap: 12px; }
+      .customer-card { border-radius: 20px; padding: 16px; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .detail.full { grid-column: auto; }
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <img src="/logo.png" alt="Toro's Auto Care">
-    <div>
-      <a href="/admin" class="btn green">Back to Admin</a>
-      <button onclick="loadCustomers()">Refresh</button>
-    </div>
-  </header>
+  <main class="page-shell">
+    <section class="hero">
+      <div class="hero-top">
+        <div class="brand">
+          <img src="/logo.png" alt="Toro's Auto Care">
+          <div>
+            <div class="eyebrow">Customer Center</div>
+            <h1>Customer Profiles</h1>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <a href="/admin" class="btn light">Back to Admin</a>
+          <button onclick="loadCustomers()">Refresh</button>
+        </div>
+      </div>
+      <p class="hero-copy">Search customer history, vehicles, appointments, notes, and inspection links in one clean place.</p>
+    </section>
 
-  <main class="wrap">
-    <div class="top-card">
-      <h1>Customer Profiles</h1>
-      <div>Search customers by name, phone, vehicle, or service.</div>
-      <input id="searchInput" oninput="renderCustomers()" placeholder="Search customers...">
-    </div>
+    <section class="toolbar">
+      <div class="toolbar-top">
+        <div class="search-wrap">
+          <input id="searchInput" oninput="renderCustomers()" placeholder="Search by name, phone, email, vehicle, service, or notes..." autocomplete="off">
+        </div>
+        <button class="blue" onclick="clearSearch()">Clear Search</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat"><strong id="totalCustomers">0</strong><span>Total Customers</span></div>
+        <div class="stat"><strong id="shownCustomers">0</strong><span>Showing Now</span></div>
+        <div class="stat"><strong id="totalAppointments">0</strong><span>Total Appointments</span></div>
+        <div class="stat"><strong id="withInspections">0</strong><span>With Inspections</span></div>
+      </div>
+      <div class="status-line" id="statusLine">Loading customers...</div>
+    </section>
 
     <div id="customersGrid" class="grid">
-      <div class="empty">Loading customers...</div>
+      <div class="empty"><strong>Loading customers...</strong>Please wait while customer profiles load.</div>
     </div>
   </main>
 
@@ -170,7 +518,7 @@
     // Auth
     function getAdminToken() { return localStorage.getItem("torosAdminToken") || ""; }
     function adminAuthHeaders() { return { "x-admin-token": getAdminToken() }; }
-    
+
     if (!localStorage.getItem("torosAdminLoggedIn")) {
       window.location.href = "/admin";
     }
@@ -179,23 +527,27 @@
 
     async function loadCustomers() {
       const grid = document.getElementById("customersGrid");
-      grid.innerHTML = '<div class="empty">Loading customers...</div>';
+      const statusLine = document.getElementById("statusLine");
+      grid.innerHTML = '<div class="empty"><strong>Loading customers...</strong>Please wait while customer profiles load.</div>';
+      statusLine.textContent = "Loading customers...";
 
       try {
-        const response = await fetch("/api/get-customers", { headers: adminAuthHeaders() });
+        const response = await fetch("/api/get-customers", { headers: adminAuthHeaders(), cache: "no-store" });
         const data = await response.json();
 
         customers = data.customers || [];
         renderCustomers();
 
       } catch (err) {
-        grid.innerHTML = '<div class="empty">Could not load customers.</div>';
+        grid.innerHTML = '<div class="empty"><strong>Could not load customers.</strong>Check the connection and try refreshing again.</div>';
+        updateStats([]);
+        statusLine.textContent = "Could not load customers.";
       }
     }
 
     function renderCustomers() {
       const grid = document.getElementById("customersGrid");
-      const search = document.getElementById("searchInput").value.toLowerCase();
+      const search = document.getElementById("searchInput").value.toLowerCase().trim();
 
       const filtered = customers.filter(c => {
         return [
@@ -204,31 +556,123 @@
           c.email,
           c.vehicle,
           c.lastService,
-          c.notes
+          c.notes,
+          c.lastInspectionId,
+          c.lastAppointmentDate,
+          c.lastAppointmentTime
         ].join(" ").toLowerCase().includes(search);
       });
 
+      updateStats(filtered);
+
       if (!filtered.length) {
-        grid.innerHTML = '<div class="empty">No customers found.</div>';
+        grid.innerHTML = search
+          ? '<div class="empty"><strong>No customers found.</strong>Try a different name, phone number, vehicle, or service.</div>'
+          : '<div class="empty"><strong>No customers yet.</strong>Customers will show here after appointments or inspections are created.</div>';
         return;
       }
 
-      grid.innerHTML = filtered.map(c => `
-        <div class="customer-card">
-          <h3>${escapeHtml(c.name || "Customer")}</h3>
+      grid.innerHTML = filtered.map(c => customerCard(c)).join("");
+    }
 
-          <div class="line"><strong>Phone:</strong> ${escapeHtml(c.phone || "")}</div>
-          <div class="line"><strong>Email:</strong> ${escapeHtml(c.email || "Not provided")}</div>
-          <div class="line"><strong>Vehicle:</strong> ${escapeHtml(c.vehicle || "Not provided")}</div>
-          <div class="line"><strong>Last Service:</strong> ${escapeHtml(c.lastService || "None")}</div>
-          <div class="line"><strong>Last Appointment:</strong> ${escapeHtml(c.lastAppointmentDate || "None")} ${escapeHtml(c.lastAppointmentTime || "")}</div>
-          <div class="line"><strong>Total Appointments:</strong> ${escapeHtml(c.totalAppointments || "0")}</div>
-          <div class="line"><strong>Last Inspection:</strong> ${escapeHtml(c.lastInspectionId || "None")}</div>
-          <div class="line"><strong>Notes:</strong> ${escapeHtml(c.notes || "None")}</div>
+    function updateStats(filtered) {
+      const totalAppts = customers.reduce((sum, c) => sum + Number(c.totalAppointments || 0), 0);
+      const inspections = customers.filter(c => c.lastInspectionId).length;
 
-          <span class="pill">Updated: ${escapeHtml(c.lastUpdated || "")}</span>
-        </div>
-      `).join("");
+      document.getElementById("totalCustomers").textContent = customers.length;
+      document.getElementById("shownCustomers").textContent = filtered.length;
+      document.getElementById("totalAppointments").textContent = totalAppts;
+      document.getElementById("withInspections").textContent = inspections;
+      document.getElementById("statusLine").textContent = customers.length
+        ? `Showing ${filtered.length} of ${customers.length} customer profile${customers.length === 1 ? "" : "s"}.`
+        : "No customers loaded yet.";
+    }
+
+    function customerCard(c) {
+      const name = c.name || "Customer";
+      const initials = getInitials(name);
+      const phone = cleanText(c.phone || "");
+      const email = cleanText(c.email || "");
+      const inspectionId = cleanText(c.lastInspectionId || "");
+      const appointmentText = `${cleanText(c.lastAppointmentDate || "None")} ${cleanText(c.lastAppointmentTime || "")}`.trim();
+
+      const callBtn = phone ? `<a class="btn mini-btn green" href="tel:${escapeAttr(phone)}">Call</a>` : "";
+      const textBtn = phone ? `<a class="btn mini-btn blue" href="sms:${escapeAttr(phone)}">Text</a>` : "";
+      const emailBtn = email ? `<a class="btn mini-btn light" href="mailto:${escapeAttr(email)}">Email</a>` : "";
+      const inspectionBtn = inspectionId && inspectionId !== "None" ? `<a class="btn mini-btn" href="/inspection?id=${escapeAttr(inspectionId)}" target="_blank" rel="noopener">Open Inspection</a>` : "";
+
+      return `
+        <article class="customer-card">
+          <div class="customer-head">
+            <div class="customer-title">
+              <div class="avatar">${escapeHtml(initials)}</div>
+              <div>
+                <h3>${escapeHtml(name)}</h3>
+                <div class="customer-subtitle">${escapeHtml(c.vehicle || "Vehicle not provided")}</div>
+              </div>
+            </div>
+            <span class="pill">${escapeHtml(c.totalAppointments || "0")} appt${String(c.totalAppointments || "0") === "1" ? "" : "s"}</span>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail">
+              <span class="detail-label">Phone</span>
+              <span class="detail-value">${escapeHtml(phone || "Not provided")}</span>
+            </div>
+            <div class="detail">
+              <span class="detail-label">Email</span>
+              <span class="detail-value">${escapeHtml(email || "Not provided")}</span>
+            </div>
+            <div class="detail">
+              <span class="detail-label">Last Service</span>
+              <span class="detail-value">${escapeHtml(c.lastService || "None")}</span>
+            </div>
+            <div class="detail">
+              <span class="detail-label">Last Appointment</span>
+              <span class="detail-value">${escapeHtml(appointmentText || "None")}</span>
+            </div>
+            <div class="detail">
+              <span class="detail-label">Last Inspection</span>
+              <span class="detail-value">${escapeHtml(inspectionId || "None")}</span>
+            </div>
+            <div class="detail">
+              <span class="detail-label">Updated</span>
+              <span class="detail-value">${escapeHtml(c.lastUpdated || "")}</span>
+            </div>
+            <div class="detail full">
+              <span class="detail-label">Notes</span>
+              <span class="detail-value">${escapeHtml(c.notes || "None")}</span>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            ${callBtn}
+            ${textBtn}
+            ${emailBtn}
+            ${inspectionBtn}
+          </div>
+        </article>
+      `;
+    }
+
+    function clearSearch() {
+      document.getElementById("searchInput").value = "";
+      renderCustomers();
+      document.getElementById("searchInput").focus();
+    }
+
+    function getInitials(name) {
+      return String(name || "C")
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(part => part[0] || "")
+        .join("")
+        .toUpperCase() || "C";
+    }
+
+    function cleanText(text) {
+      return String(text || "").trim();
     }
 
     function escapeHtml(text) {
@@ -241,6 +685,10 @@
           "'": "&#039;"
         }[match];
       });
+    }
+
+    function escapeAttr(text) {
+      return escapeHtml(text).replace(/`/g, "&#096;");
     }
 
     loadCustomers();
