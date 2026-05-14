@@ -2992,8 +2992,9 @@ body.toros-admin-logged-in #openTextPanelBtn {
 
 
 
+
+
 /* ===== FINAL SEND BUTTON ICON RESET ===== */
-/* This block intentionally comes last. It removes every old arrow/text layer and adds ONE centered arrow. */
 #smsSendButton {
   position:relative !important;
   color:transparent !important;
@@ -3011,14 +3012,16 @@ body.toros-admin-logged-in #openTextPanelBtn {
 }
 
 #smsSendButton .sms-send-arrow-final {
+  display:block !important;
+  color:white !important;
+  font-size:26px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  transform:none !important;
   position:absolute !important;
   left:50% !important;
   top:50% !important;
-  transform:translate(-50%, -50%) rotate(-18deg) !important;
-  color:white !important;
-  font-size:23px !important;
-  font-weight:900 !important;
-  line-height:1 !important;
+  translate:-50% -50% !important;
   pointer-events:none !important;
 }
 
@@ -3035,7 +3038,7 @@ body.toros-admin-logged-in #openTextPanelBtn {
   position:absolute !important;
   left:50% !important;
   top:50% !important;
-  transform:translate(-50%, -55%) !important;
+  translate:-50% -55% !important;
 }
 
 #smsSendButton:disabled,
@@ -3043,6 +3046,15 @@ body.toros-admin-logged-in #openTextPanelBtn {
   opacity:.55 !important;
   cursor:not-allowed !important;
   pointer-events:none !important;
+}
+
+@media (max-width:900px) {
+  #smsSendButton .sms-send-arrow-final {
+    display:block !important;
+    font-size:27px !important;
+    transform:none !important;
+    translate:-50% -50% !important;
+  }
 }
 
 </style>
@@ -4158,7 +4170,7 @@ body.toros-admin-logged-in #openTextPanelBtn {
 
         <div id="smsComposer">
           <textarea id="smsMessage" placeholder="Type your message..."></textarea>
-          <button id="smsSendButton" onclick="sendCustomerText()" aria-label="Send text"><span class="sms-send-arrow-final">➤</span></button>
+          <button id="smsSendButton" onclick="sendCustomerText()" aria-label="Send text"><span class="sms-send-arrow-final">➜</span></button>
           <div id="smsStatus"></div>
         </div>
       </section>
