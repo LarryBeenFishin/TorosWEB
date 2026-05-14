@@ -7451,6 +7451,84 @@ window.addEventListener("load", function() {
   }
 }
 
+
+
+/* ===== DESKTOP MATCH LOGOUT + NOTIFICATIONS SIZE/TEXT FINAL ===== */
+@media (min-width:901px) {
+  .admin-action-grid {
+    grid-template-columns:
+      minmax(190px, 1fr)
+      minmax(190px, 1fr)
+      minmax(190px, 1fr)
+      minmax(190px, 1fr)
+      minmax(165px, .62fr)
+      minmax(165px, .62fr) !important;
+    grid-template-areas:
+      "new inspection history customers notifications logout" !important;
+    align-items:stretch !important;
+  }
+
+  .notifications-card,
+  .logout-card {
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    min-height:92px !important;
+    height:92px !important;
+    padding:16px 14px !important;
+    border-radius:16px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:12px !important;
+    align-self:stretch !important;
+  }
+
+  .notifications-card .action-title,
+  .logout-card .action-title {
+    font-size:18px !important;
+    line-height:1.12 !important;
+    font-weight:800 !important;
+    white-space:nowrap !important;
+  }
+
+  .notifications-card .notification-circle,
+  .logout-card .card-icon-wrap {
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    flex:0 0 42px !important;
+  }
+
+  .notifications-card .bell-svg,
+  .logout-card .card-svg {
+    width:42px !important;
+    height:42px !important;
+  }
+
+  .notifications-card .action-subtitle,
+  .logout-card .action-subtitle,
+  .notifications-card .chevron-svg {
+    display:none !important;
+  }
+}
+
+@media (min-width:901px) and (max-width:1180px) {
+  .admin-action-grid {
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas:
+      "new inspection"
+      "history customers"
+      "notifications logout" !important;
+  }
+
+  .notifications-card,
+  .logout-card {
+    min-height:78px !important;
+    height:78px !important;
+  }
+}
+
 </style>
 
 </body>
