@@ -23,6 +23,8 @@ module.exports = async function handler(req, res) {
     const title = isTest ? "Test Push" : (req.body?.title || "Toro's Auto Care");
     const body = isTest ? "This is a test notification from Toro's Auto Care." : (req.body?.body || "New notification");
     const url = isTest ? "/admin" : (req.body?.url || "/admin");
+    const tag = isTest ? "test-push" : (req.body?.tag || req.body?.dedupeKey || undefined);
+    const dedupeKey = isTest ? "test-push" : (req.body?.dedupeKey || undefined);
 
     const response = await fetch(
       `${process.env.APPOINTMENTS_SCRIPT_URL}?action=getPushSubscriptions&password=${process.env.APPS_SCRIPT_ADMIN_PASSWORD}`
@@ -31,7 +33,7 @@ module.exports = async function handler(req, res) {
     const data = await response.json();
     const subscriptions = data.subscriptions || [];
 
-    const payload = JSON.stringify({ title, body, url });
+    const payload = JSON.stringify({ title, body, url, tag, dedupeKey });
 
     const results = await Promise.allSettled(
       subscriptions.map(subscription =>

@@ -101,8 +101,11 @@ self.addEventListener("push", event => {
       icon: "/logo.png",
       badge: "/logo.png",
       vibrate: [100, 50, 100],
+      tag: data.tag || data.dedupeKey || undefined,
+      renotify: false,
       data: {
-        url: data.url || "/admin"
+        url: data.url || "/admin",
+        dedupeKey: data.dedupeKey || ""
       },
       actions: [
         { action: "open", title: "Open" },

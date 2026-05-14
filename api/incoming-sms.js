@@ -1,6 +1,46 @@
-// Twilio webhook for incoming SMS. 
+// Twilio webhook for incoming SMS.
 // Validates the request is actually from Twilio using the X-Twilio-Signature header.
+// This route is now the ONLY place that broadcasts push notifications for new incoming texts.
 const twilio = require("twilio");
+const webpush = require("web-push");
+
+webpush.setVapidDetails(
+  process.env.VAPID_SUBJECT,
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
+
+function safePhoneLabel(phone) {
+  return String(phone || "Customer").trim() || "Customer";
+}
+
+async function sendIncomingSmsPush({ from, message, sid }) {
+  // If push variables are not configured, do not fail the Twilio webhook.
+  if (!process.env.APPOINTMENTS_SCRIPT_URL || !process.env.APPS_SCRIPT_ADMIN_PASSWORD) return;
+  if (!process.env.VAPID_SUBJECT || !process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) return;
+
+  const response = await fetch(
+    `${process.env.APPOINTMENTS_SCRIPT_URL}?action=getPushSubscriptions&password=${process.env.APPS_SCRIPT_ADMIN_PASSWORD}`
+  );
+
+  const data = await response.json();
+  const subscriptions = Array.isArray(data.subscriptions) ? data.subscriptions : [];
+  if (!subscriptions.length) return;
+
+  const dedupeKey = sid || [from, message].join("|");
+
+  const payload = JSON.stringify({
+    title: "New text from " + safePhoneLabel(from),
+    body: message || "New message",
+    url: "/admin",
+    tag: "incoming-sms-" + dedupeKey,
+    dedupeKey
+  });
+
+  await Promise.allSettled(
+    subscriptions.map(subscription => webpush.sendNotification(subscription, payload))
+  );
+}
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -25,7 +65,7 @@ module.exports = async function handler(req, res) {
   try {
     const from = req.body.From || "";
     const message = req.body.Body || "";
-    const sid = req.body.MessageSid || "";
+    const sid = req.body.MessageSid || req.body.SmsSid || "";
 
     await fetch(process.env.SHEETS_WEB_APP_URL, {
       method: "POST",
@@ -40,6 +80,12 @@ module.exports = async function handler(req, res) {
         message: message,
         sid: sid
       })
+    });
+
+    // Broadcast push from the server at the actual moment Twilio receives the text.
+    // Do not let push issues cause Twilio to retry the webhook.
+    sendIncomingSmsPush({ from, message, sid }).catch(err => {
+      console.error("Incoming SMS push failed:", err.message);
     });
 
     res.status(200).send("OK");

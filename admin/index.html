@@ -6249,22 +6249,11 @@ async function pollSmsInBackground(initialLoad) {
 }
 
 
-    // Send a push notification when a new SMS comes in
+    // Push notifications for incoming SMS are now sent by api/incoming-sms.js.
+    // The admin page should NOT broadcast push notifications, because every logged-in device
+    // has different localStorage and can accidentally resend old messages to all devices.
     async function sendIncomingSmsPush(msg) {
-      try {
-        const senderName = (msg.name && msg.name !== "Customer") ? msg.name : displayPhone(msg.phone);
-        await fetch("/api/send-push", {
-          method: "POST",
-          headers: adminHeaders(),
-          body: JSON.stringify({
-            title: "New text from " + senderName,
-            body: msg.message || "New message",
-            url: "/admin"
-          })
-        });
-      } catch (err) {
-        // Push failed silently — in-app toast still works
-      }
+      return;
     }
 
 function showSmsToast(msg) {
@@ -8956,6 +8945,12 @@ textarea:focus {
     }, 1200);
   });
 })();
+</script>
+
+<script>
+/* Final safety: never let the admin browser broadcast incoming-SMS push notifications.
+   Push now comes from api/incoming-sms.js only. */
+window.sendIncomingSmsPush = async function () { return; };
 </script>
 
 </body>
