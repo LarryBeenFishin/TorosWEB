@@ -8447,7 +8447,161 @@ textarea:focus {
   }
 }
 
+
+
+/* ===== TOROS PATCH — MOBILE TEXT BUTTON + MODAL SAFE AREA ===== */
+@media (max-width:760px) {
+  body.appointment-modal-open #openTextPanelBtn,
+  body.create-modal-open #openTextPanelBtn,
+  body.modal-is-open #openTextPanelBtn {
+    display:none !important;
+    pointer-events:none !important;
+  }
+
+  #appointmentModal .modal,
+  #createModal .modal {
+    padding-bottom:28px !important;
+  }
+
+  #appointmentModal .modal-actions,
+  #createModal .modal-actions {
+    padding-bottom:4px !important;
+  }
+}
 </style>
+
+
+<script>
+/* ===== TOROS PATCH — MODAL FLOATING BUTTON + NOTIFICATION BASELINE FIX ===== */
+(function () {
+  const SMS_PUSH_WARMUP_KEY = "torosSmsPushWarmupUntil";
+  const SMS_LAST_PUSH_SENT_KEY = "torosLastSmsPushSentKey";
+
+  function isModalOpenById(id) {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    return el.classList.contains("modal-visible") || el.style.display === "flex" || el.style.display === "block";
+  }
+
+  function syncModalBodyClasses() {
+    const appointmentOpen = isModalOpenById("appointmentModal");
+    const createOpen = isModalOpenById("createModal");
+    document.body.classList.toggle("appointment-modal-open", appointmentOpen);
+    document.body.classList.toggle("create-modal-open", createOpen);
+    document.body.classList.toggle("modal-is-open", appointmentOpen || createOpen);
+  }
+
+  const originalShowModalSmooth = window.showModalSmooth;
+  window.showModalSmooth = function (overlay) {
+    const result = originalShowModalSmooth ? originalShowModalSmooth.apply(this, arguments) : undefined;
+    setTimeout(syncModalBodyClasses, 0);
+    setTimeout(syncModalBodyClasses, 280);
+    return result;
+  };
+
+  const originalHideModalSmooth = window.hideModalSmooth;
+  window.hideModalSmooth = function (overlay, callback) {
+    const wrappedCallback = function () {
+      syncModalBodyClasses();
+      if (typeof callback === "function") callback();
+    };
+    const result = originalHideModalSmooth ? originalHideModalSmooth.call(this, overlay, wrappedCallback) : undefined;
+    setTimeout(syncModalBodyClasses, 0);
+    setTimeout(syncModalBodyClasses, 300);
+    return result;
+  };
+
+  document.addEventListener("click", function () {
+    setTimeout(syncModalBodyClasses, 0);
+  }, true);
+
+  window.addEventListener("resize", syncModalBodyClasses);
+  window.addEventListener("load", syncModalBodyClasses);
+
+  async function torosPrimeLatestIncomingSmsKey() {
+    if (typeof getAdminToken === "function" && !getAdminToken()) return false;
+
+    try {
+      const headers = typeof adminAuthHeaders === "function" ? adminAuthHeaders() : {};
+      const response = await fetch("/api/get-sheet-messages?cacheBust=" + Date.now(), { headers });
+      const data = await response.json();
+      const messages = Array.isArray(data.messages) ? data.messages : [];
+      const latestIncoming = messages.find(function (msg) { return msg && msg.type === "incoming"; });
+
+      if (!latestIncoming || typeof getMessageKey !== "function") return false;
+
+      const key = getMessageKey(latestIncoming);
+      if (!key) return false;
+
+      try { lastIncomingKey = key; } catch (err) {}
+      localStorage.setItem("torosLastIncomingKey", key);
+      localStorage.setItem(SMS_LAST_PUSH_SENT_KEY, key);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  const originalSendIncomingSmsPush = window.sendIncomingSmsPush;
+  window.sendIncomingSmsPush = async function (msg) {
+    try {
+      const warmupUntil = Number(localStorage.getItem(SMS_PUSH_WARMUP_KEY) || "0");
+      if (Date.now() < warmupUntil) return;
+
+      const key = (typeof getMessageKey === "function") ? getMessageKey(msg) : "";
+      if (key && localStorage.getItem(SMS_LAST_PUSH_SENT_KEY) === key) return;
+
+      if (key) localStorage.setItem(SMS_LAST_PUSH_SENT_KEY, key);
+
+      if (originalSendIncomingSmsPush) {
+        return await originalSendIncomingSmsPush.apply(this, arguments);
+      }
+
+      const senderName = (msg && msg.name && msg.name !== "Customer" && msg.name) || (typeof displayPhone === "function" ? displayPhone(msg && msg.phone) : "Customer");
+      await fetch("/api/send-push", {
+        method: "POST",
+        headers: typeof adminHeaders === "function" ? adminHeaders() : { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "New text from " + senderName,
+          body: (msg && msg.message) || "New message",
+          url: "/admin",
+          dedupeKey: key || undefined
+        })
+      });
+    } catch (err) {}
+  };
+
+  const originalTogglePushNotifications = window.togglePushNotifications;
+  window.togglePushNotifications = async function () {
+    localStorage.setItem(SMS_PUSH_WARMUP_KEY, String(Date.now() + 12000));
+    await torosPrimeLatestIncomingSmsKey();
+
+    try {
+      const result = originalTogglePushNotifications ? await originalTogglePushNotifications.apply(this, arguments) : undefined;
+      await torosPrimeLatestIncomingSmsKey();
+      return result;
+    } finally {
+      setTimeout(function () {
+        torosPrimeLatestIncomingSmsKey().finally(function () {
+          localStorage.removeItem(SMS_PUSH_WARMUP_KEY);
+        });
+      }, 3500);
+    }
+  };
+
+  window.enablePushNotifications = function () {
+    return window.togglePushNotifications();
+  };
+
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      if ("serviceWorker" in navigator && "PushManager" in window && Notification.permission === "granted") {
+        torosPrimeLatestIncomingSmsKey();
+      }
+    }, 1200);
+  });
+})();
+</script>
 
 </body>
 </html>
