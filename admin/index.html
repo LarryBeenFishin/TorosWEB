@@ -3057,6 +3057,62 @@ body.toros-admin-logged-in #openTextPanelBtn {
   }
 }
 
+
+
+/* ===== MOBILE FORCE SAME SEND BUTTON AS DESKTOP ===== */
+@media (max-width:900px) {
+  #smsSendButton {
+    position:relative !important;
+    color:transparent !important;
+    font-size:0 !important;
+    overflow:hidden !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    background:#af2727 !important;
+  }
+
+  #smsSendButton::before,
+  #smsSendButton::after {
+    content:none !important;
+    display:none !important;
+  }
+
+  #smsSendButton .sms-send-arrow-final {
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    color:white !important;
+    font-size:26px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    transform:translate(-50%, -50%) !important;
+    translate:none !important;
+    pointer-events:none !important;
+    z-index:3 !important;
+  }
+
+  #smsSendButton.sms-sending .sms-send-arrow-final {
+    display:none !important;
+  }
+
+  #smsSendButton.sms-sending::before {
+    content:"…" !important;
+    display:block !important;
+    color:white !important;
+    font-size:28px !important;
+    line-height:1 !important;
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    transform:translate(-50%, -55%) !important;
+    z-index:3 !important;
+  }
+}
+
 </style>
 </head>
 
