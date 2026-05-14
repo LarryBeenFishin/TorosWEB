@@ -4101,7 +4101,13 @@ body.toros-admin-logged-in #openTextPanelBtn {
 
         <div id="smsComposer">
           <textarea id="smsMessage" placeholder="Type your message..."></textarea>
-          <button id="smsSendButton" onclick="sendCustomerText()" aria-label="Send text"><span class="sms-send-arrow-final" aria-hidden="true">→</span></button>
+          <button id="smsSendButton" onclick="sendCustomerText()" aria-label="Send text">
+<span class="sms-send-arrow-final">➜</span>
+<svg class="sms-send-icon-desktop" viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M4 12H18"></path>
+  <path d="M13 7L18 12L13 17"></path>
+</svg>
+</button>
           <div id="smsStatus"></div>
         </div>
       </section>
@@ -6620,6 +6626,74 @@ window.addEventListener("load", function() {
 
   #smsSendButton.sms-sending::after {
     content:none !important;
+    display:none !important;
+  }
+}
+
+
+
+/* ===== DESKTOP SVG SEND ICON FINAL ===== */
+@media (min-width:901px) {
+  #smsSendButton {
+    position:relative !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    color:transparent !important;
+    font-size:0 !important;
+    overflow:hidden !important;
+  }
+
+  #smsSendButton::before,
+  #smsSendButton::after {
+    content:none !important;
+    display:none !important;
+  }
+
+  #smsSendButton .sms-send-arrow-final {
+    display:none !important;
+  }
+
+  #smsSendButton .sms-send-icon-desktop {
+    display:block !important;
+    width:25px !important;
+    height:25px !important;
+    stroke:white !important;
+    stroke-width:3 !important;
+    stroke-linecap:round !important;
+    stroke-linejoin:round !important;
+    fill:none !important;
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    transform:translate(-50%, -50%) !important;
+    z-index:20 !important;
+    pointer-events:none !important;
+  }
+
+  #smsSendButton.sms-sending .sms-send-icon-desktop {
+    display:none !important;
+  }
+
+  #smsSendButton.sms-sending::before {
+    content:"…" !important;
+    display:block !important;
+    color:white !important;
+    background:transparent !important;
+    width:auto !important;
+    height:auto !important;
+    border:0 !important;
+    font-size:28px !important;
+    line-height:1 !important;
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    transform:translate(-50%, -55%) !important;
+  }
+}
+
+@media (max-width:900px) {
+  #smsSendButton .sms-send-icon-desktop {
     display:none !important;
   }
 }
