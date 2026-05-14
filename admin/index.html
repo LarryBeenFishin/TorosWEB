@@ -3044,6 +3044,21 @@ body.toros-admin-logged-in #openTextPanelBtn {
             <span class="action-subtitle">Manage customer<br>information</span>
           </span>
         </a>
+
+
+        <button class="admin-action-card wide-action-card notifications-card notifications-off mobile-header-control mobile-header-notifications" onclick="togglePushNotifications()">
+          <span class="notification-circle"><svg class="bell-svg" viewBox="0 0 64 64" aria-hidden="true"><path d="M20 45h24l-3-5V29c0-7-4-12-9-12s-9 5-9 12v11l-3 5z"/><path d="M28 49c1 3 3 5 4 5s3-2 4-5"/></svg></span>
+          <span>
+            <span class="action-title notification-toggle-title">Notifications Off</span>
+            <span class="action-subtitle notification-toggle-subtitle">Click to turn on</span>
+          </span>
+          <span class="chevron-svg" aria-hidden="true"></span>
+        </button>
+
+        <button class="admin-action-card logout-card mobile-header-control mobile-header-logout" onclick="logout()">
+          <span class="card-icon-wrap white-icon"><svg class="card-svg logout-svg" viewBox="0 0 64 64" aria-hidden="true"><path d="M27 14H16c-3 0-5 2-5 5v26c0 3 2 5 5 5h11"/><path d="M34 22l10 10-10 10"/><path d="M22 32h22"/></svg></span>
+          <span class="action-title">Logout</span>
+        </button>
       </div>
     </header>
 
@@ -3080,8 +3095,8 @@ body.toros-admin-logged-in #openTextPanelBtn {
       <button id="notificationToggleBtn" class="admin-action-card wide-action-card notifications-card notifications-off" onclick="togglePushNotifications()">
           <span class="notification-circle"><svg class="bell-svg" viewBox="0 0 64 64" aria-hidden="true"><path d="M20 45h24l-3-5V29c0-7-4-12-9-12s-9 5-9 12v11l-3 5z"/><path d="M28 49c1 3 3 5 4 5s3-2 4-5"/></svg></span>
           <span>
-            <span class="action-title" id="notificationToggleTitle">Notifications Off</span>
-            <span class="action-subtitle" id="notificationToggleSubtitle">Click to turn on</span>
+            <span class="action-title notification-toggle-title" id="notificationToggleTitle">Notifications Off</span>
+            <span class="action-subtitle notification-toggle-subtitle" id="notificationToggleSubtitle">Click to turn on</span>
           </span>
           <span class="chevron-svg" aria-hidden="true"></span>
         </button>
@@ -6452,17 +6467,18 @@ window.addEventListener("load", function() {
   }
 
   function setNotificationButtonState(isOn) {
-    const button = document.getElementById("notificationToggleBtn");
-    const title = document.getElementById("notificationToggleTitle");
-    const subtitle = document.getElementById("notificationToggleSubtitle");
+    document.querySelectorAll(".notifications-card").forEach(button => {
+      button.classList.toggle("notifications-on", !!isOn);
+      button.classList.toggle("notifications-off", !isOn);
+    });
 
-    if (!button || !title) return;
+    document.querySelectorAll(".notification-toggle-title").forEach(title => {
+      title.textContent = isOn ? "Notifications On" : "Notifications Off";
+    });
 
-    button.classList.toggle("notifications-on", !!isOn);
-    button.classList.toggle("notifications-off", !isOn);
-
-    title.textContent = isOn ? "Notifications On" : "Notifications Off";
-    if (subtitle) subtitle.textContent = isOn ? "Click to turn off" : "Click to turn on";
+    document.querySelectorAll(".notification-toggle-subtitle").forEach(subtitle => {
+      subtitle.textContent = isOn ? "Click to turn off" : "Click to turn on";
+    });
   }
 
   async function refreshNotificationToggle() {
@@ -7742,6 +7758,76 @@ window.addEventListener("load", function() {
     gap:10px;
     padding:14px;
     background:#163051;
+  }
+}
+
+
+
+/* ===== FINAL LOGO SHAPE + FOOTER LEFT + MOBILE TOP CONTROLS ===== */
+@media (min-width:901px) {
+  .mobile-header-control {
+    display:none !important;
+  }
+
+  .admin-action-grid {
+    grid-template-columns:repeat(5, minmax(180px, 1fr)) !important;
+    grid-template-areas:"logo new inspection history customers" !important;
+    align-items:stretch !important;
+  }
+
+  .admin-action-card.logo-card,
+  .appointment-card,
+  .inspection-card,
+  .history-card,
+  .customers-card {
+    min-height:92px !important;
+    height:92px !important;
+    border-radius:16px !important;
+    box-sizing:border-box !important;
+  }
+
+  .admin-action-card.logo-card {
+    padding:16px 18px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    overflow:hidden !important;
+  }
+
+  .admin-action-card.logo-card img {
+    max-height:58px !important;
+    max-width:86% !important;
+    width:auto !important;
+    height:auto !important;
+    object-fit:contain !important;
+    background:transparent !important;
+    padding:0 !important;
+    border-radius:0 !important;
+  }
+
+  .admin-footer-actions {
+    justify-content:flex-start !important;
+    padding:14px 22px 18px !important;
+  }
+
+  .admin-footer-actions .notifications-card,
+  .admin-footer-actions .logout-card {
+    width:220px !important;
+    min-width:220px !important;
+    max-width:220px !important;
+    height:58px !important;
+    min-height:58px !important;
+    justify-content:center !important;
+  }
+}
+
+@media (max-width:900px) {
+  .admin-footer-actions {
+    display:none !important;
+  }
+
+  .mobile-header-control {
+    display:flex !important;
   }
 }
 
