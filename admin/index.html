@@ -3040,6 +3040,52 @@ body.toros-admin-logged-in #openTextPanelBtn {
   }
 }
 
+
+/* ===== SIMPLE SEND ARROW BUTTON ===== */
+#smsSendButton {
+  color:transparent !important;
+  font-size:0 !important;
+  overflow:hidden !important;
+}
+
+#smsSendButton::before {
+  content:"➜" !important;
+  color:white !important;
+  font-size:24px !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+  display:block !important;
+  transform:none !important;
+}
+
+#smsSendButton::after {
+  content:"" !important;
+  display:none !important;
+}
+
+@media (max-width:900px) {
+  #smsSendButton::before {
+    content:"➜" !important;
+    font-size:25px !important;
+    transform:none !important;
+  }
+}
+
+
+/* ===== SMS SEND LOCK STATE ===== */
+#smsSendButton:disabled,
+#smsSendButton.sms-sending {
+  opacity:.55 !important;
+  cursor:not-allowed !important;
+  pointer-events:none !important;
+}
+
+#smsSendButton.sms-sending::before {
+  content:"…" !important;
+  font-size:28px !important;
+  transform:none !important;
+}
+
 </style>
 </head>
 
@@ -5583,6 +5629,7 @@ let unreadPhones = new Set(JSON.parse(localStorage.getItem("torosUnreadSmsPhones
 let audioReady = false;
 let audioContext = null;
 let smsPageScrollY = 0;
+let smsIsSendingText = false;
 
 function isMobileSmsView() {
   return window.innerWidth <= 760;
@@ -6294,10 +6341,31 @@ function renderActiveThread(forceScroll = true) {
   }
 }
 
+
+function setSmsSendingState(isSending) {
+  smsIsSendingText = isSending;
+
+  const button = document.getElementById("smsSendButton");
+  const messageInput = document.getElementById("smsMessage");
+
+  if (button) {
+    button.disabled = isSending;
+    button.classList.toggle("sms-sending", isSending);
+    button.setAttribute("aria-busy", isSending ? "true" : "false");
+  }
+
+  if (messageInput) {
+    messageInput.readOnly = isSending;
+  }
+}
+
 async function sendCustomerText() {
+  if (smsIsSendingText) return;
+
   const name = document.getElementById("smsCustomerName").value.trim();
   let phone = document.getElementById("smsPhone").value.trim();
-  const message = document.getElementById("smsMessage").value.trim();
+  const messageInput = document.getElementById("smsMessage");
+  const message = messageInput.value.trim();
   const status = document.getElementById("smsStatus");
 
   if (!phone || !message) {
@@ -6306,6 +6374,8 @@ async function sendCustomerText() {
     status.innerText = "Phone number and message are required.";
     return;
   }
+
+  setSmsSendingState(true);
 
   phone = formatPhoneNumber(phone);
   document.getElementById("smsPhone").value = phone;
@@ -6320,7 +6390,9 @@ async function sendCustomerText() {
   try {
     const response = await fetch("/api/send-sms", {
       method: "POST",
-      headers: adminHeaders(),
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         to: phone,
         message: message,
@@ -6333,7 +6405,7 @@ async function sendCustomerText() {
     if (data.success) {
       status.style.color = "#1d7f4f";
       status.innerText = "Sent.";
-      document.getElementById("smsMessage").value = "";
+      messageInput.value = "";
       autoGrowSmsMessageBox();
 
       smsIsNewMessageMode = false;
@@ -6352,6 +6424,8 @@ async function sendCustomerText() {
   } catch (err) {
     status.style.color = "#af2727";
     status.innerText = "Could not send text.";
+  } finally {
+    setSmsSendingState(false);
   }
 }
 
