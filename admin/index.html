@@ -6294,9 +6294,12 @@ async function sendCustomerText() {
   try {
     const response = await fetch("/api/send-sms", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: (typeof adminHeaders === "function")
+        ? adminHeaders()
+        : {
+            "Content-Type": "application/json",
+            "x-admin-token": localStorage.getItem("torosAdminToken") || ""
+          },
       body: JSON.stringify({
         to: phone,
         message: message,
@@ -6323,7 +6326,11 @@ async function sendCustomerText() {
       setTimeout(loadSmsHistory, 700);
     } else {
       status.style.color = "#af2727";
-      status.innerText = data.error || "Could not send text.";
+      if (response.status === 401 || data.error === "Unauthorized") {
+        status.innerText = "Session expired. Log out and log back in.";
+      } else {
+        status.innerText = data.error || "Could not send text.";
+      }
     }
   } catch (err) {
     status.style.color = "#af2727";
