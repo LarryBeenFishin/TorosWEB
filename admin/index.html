@@ -3086,6 +3086,52 @@ body.toros-admin-logged-in #openTextPanelBtn {
   transform:none !important;
 }
 
+
+/* ===== SINGLE CENTERED SEND ARROW FIX ===== */
+#smsSendButton {
+  color:transparent !important;
+  font-size:0 !important;
+  position:relative !important;
+  overflow:hidden !important;
+}
+
+#smsSendButton::before {
+  content:"➤" !important;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  transform:translate(-50%, -50%) rotate(-18deg) !important;
+  color:white !important;
+  font-size:22px !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+  display:block !important;
+}
+
+#smsSendButton::after {
+  content:none !important;
+  display:none !important;
+}
+
+#smsSendButton.sms-sending::before {
+  content:"…" !important;
+  transform:translate(-50%, -55%) !important;
+  font-size:28px !important;
+}
+
+@media (max-width:900px) {
+  #smsSendButton::before {
+    content:"➤" !important;
+    font-size:23px !important;
+    transform:translate(-50%, -50%) rotate(-18deg) !important;
+  }
+
+  #smsSendButton::after {
+    content:none !important;
+    display:none !important;
+  }
+}
+
 </style>
 </head>
 
