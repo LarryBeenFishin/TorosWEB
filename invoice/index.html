@@ -541,6 +541,7 @@
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
+<!-- GOOGLE SHEETS INVOICE BACKEND CONNECTED -->
 </head>
 
 <body>
@@ -691,6 +692,8 @@
             <button class="light" type="button" onclick="renderServiceHistory()">Refresh</button>
           </div>
           <div class="hint" style="font-size:12px;padding:8px 10px">Service history saves closed invoices to this customer profile locally for now. History invoices are view-only and cannot be edited.</div>
+          <div class="history-actions"><button class="light" type="button" onclick="loadGoogleSheetServiceHistory()">Load Google Sheets History</button></div>
+          <div id="googleSheetHistoryList" class="history-list"></div>
           <div id="serviceHistoryList" class="history-list"></div>
         </div>
 </section>
@@ -1014,6 +1017,106 @@
     return `${settings?.prefix||'TA'}-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}-${String(Date.now()).slice(-5)}`
   }
 
+  const INVOICE_BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec';
+  const INVOICE_BACKEND_PASSWORD = 'toros123';
+
+  function getInvoiceBackendUrl(){
+    return INVOICE_BACKEND_URL;
+  }
+
+  function makeBackendInvoicePayload(){
+    bindFields();
+    const totals=calc();
+
+    return {
+      id: invoice.id || '',
+      invoiceId: invoice.invoiceId || invoice.id || '',
+      docNumber: invoice.docNumber || '',
+      invoiceNumber: invoice.docNumber || '',
+      status: invoice.status || 'Estimate',
+      paymentStatus: invoice.paymentStatus || '',
+      customerName: invoice.customerName || '',
+      customerPhone: invoice.customerPhone || '',
+      customerEmail: invoice.customerEmail || '',
+      vehicle: invoice.vehicle || '',
+      vin: invoice.vin || '',
+      plate: invoice.plate || '',
+      mileage: invoice.mileage || '',
+      lines: invoice.lines || [],
+      payments: invoice.payments || [],
+      totals,
+      laborTotal: totals.labor || 0,
+      partsTotal: totals.parts || 0,
+      feesTotal: totals.fees || 0,
+      discountTotal: totals.discounts || 0,
+      shopSupplies: totals.shopSupplies || 0,
+      tax: totals.tax || 0,
+      total: totals.total || 0,
+      paid: totals.paid || 0,
+      balance: totals.balance || 0,
+      internalNotes: invoice.internalNotes || '',
+      createdAt: invoice.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      closedAt: invoice.closedAt || '',
+      readOnly: invoice.readOnly || false
+    };
+  }
+
+  async function sendInvoiceToBackend(action){
+    const payload=makeBackendInvoicePayload();
+    const res=await fetch(getInvoiceBackendUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action,
+        password:INVOICE_BACKEND_PASSWORD,
+        invoice:payload
+      })
+    });
+
+    const data=await res.json();
+
+    if(data.status !== 'success'){
+      throw new Error(data.message || 'Invoice backend error');
+    }
+
+    if(data.invoiceId){
+      invoice.invoiceId=data.invoiceId;
+      invoice.id=invoice.id || data.invoiceId;
+    }
+
+    return data;
+  }
+
+  async function saveInvoiceToGoogleSheets(){
+    const data=await sendInvoiceToBackend('saveInvoice');
+    toast('Invoice saved to Google Sheets');
+    return data;
+  }
+
+  async function closeInvoiceInGoogleSheets(){
+    const data=await sendInvoiceToBackend('closeInvoice');
+    toast('Invoice closed and saved to Google Sheets');
+    return data;
+  }
+
+  async function loadCustomerInvoicesFromGoogleSheets(phone){
+    const url=getInvoiceBackendUrl()
+      + '?action=getCustomerInvoices'
+      + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD)
+      + '&phone=' + encodeURIComponent(phone || '');
+
+    const res=await fetch(url,{cache:'no-store'});
+    const data=await res.json();
+
+    if(data.status !== 'success'){
+      throw new Error(data.message || 'Could not load customer invoices');
+    }
+
+    return data.invoices || [];
+  }
+
+  
   function defaultInvoice(){
     const today=new Date().toISOString().slice(0,10);
     return {
@@ -2138,6 +2241,49 @@
     openPopup('serviceHistoryViewModal');
   }
   
+  async function loadGoogleSheetServiceHistory(){
+    bindFields();
+    const box=document.getElementById('googleSheetHistoryList');
+    if(!box)return;
+
+    if(!invoice.customerPhone){
+      box.innerHTML='<div class="empty">Select a customer with a phone number first.</div>';
+      return;
+    }
+
+    box.innerHTML='<div class="empty">Loading Google Sheets invoice history...</div>';
+
+    try{
+      const invoices=await loadCustomerInvoicesFromGoogleSheets(invoice.customerPhone);
+      if(!invoices.length){
+        box.innerHTML='<div class="empty">No Google Sheets invoices found for this customer.</div>';
+        return;
+      }
+
+      box.innerHTML=invoices.map(item=>{
+        const lines=(item.lines||[]).slice(0,4).map(l=>{
+          const total=(Number(l.qty)||0)*(Number(l.price)||0);
+          return `${esc(l.type||'Line')}: ${esc(l.description||'')} · ${money(total)}`;
+        }).join('<br>');
+
+        return `<div class="history-card">
+          <strong>${esc(item.invoiceNumber || item.docNumber || item.invoiceId || 'Invoice')} · ${esc(item.status || '')}</strong>
+          <small>${esc(item.closedAt || item.updatedAt || item.createdAt || '')}</small>
+          <div class="history-meta">
+            <div><span>Total</span><b>${money(item.total||0)}</b></div>
+            <div><span>Paid</span><b>${money(item.paid||0)}</b></div>
+            <div><span>Balance</span><b>${money(item.balance||0)}</b></div>
+            <div><span>Mileage</span><b>${esc(formatMileage ? formatMileage(item.mileage) : item.mileage || '')}</b></div>
+          </div>
+          <small style="margin-top:8px">${lines || 'No lines'}</small>
+        </div>`;
+      }).join('');
+    }catch(err){
+      console.error(err);
+      box.innerHTML='<div class="empty">Could not load Google Sheets invoice history.</div>';
+    }
+  }
+  
   function renderServiceHistory(){
     const box=document.getElementById('serviceHistoryList');
     if(!box)return;
@@ -2642,7 +2788,7 @@
     toast('New invoice started');
   }
 
-  function closeInvoice(){
+  async function closeInvoice(){
     bindFields();
     const totals=calc();
 
@@ -2656,19 +2802,24 @@
       return;
     }
 
-    if(!confirm('Close this invoice? This will save a read-only copy to this customer history and start a new invoice.'))return;
+    if(!confirm('Close this invoice? This will save it to this customer history and start a new invoice.'))return;
 
     invoice.status='Closed';
     invoice.paymentStatus='Paid';
     invoice.closedAt=new Date().toISOString();
+    invoice.readOnly=true;
 
-    // Save/update the active document locally.
-    saveDocument();
+    try{
+      await closeInvoiceInGoogleSheets();
+    }catch(err){
+      console.error(err);
+      toast('Close failed: ' + (err.message || 'Google Sheets error'));
+      return;
+    }
 
-    // Save a finalized, read-only copy only to this specific customer's local profile.
+    // Keep a local read-only copy too, as a backup.
     const profile=getCurrentCustomerProfile();
     profile.serviceHistory=Array.isArray(profile.serviceHistory)?profile.serviceHistory:[];
-
     const snapshot=snapshotInvoice('service');
     snapshot.status='Closed';
     snapshot.paymentStatus='Paid';
@@ -2687,16 +2838,33 @@
     saveCurrentCustomerProfile(profile);
 
     startFreshInvoice();
-    toast('Invoice closed, saved to history, and new invoice started');
+    toast('Invoice closed, saved to customer history, and new invoice started');
   }
 
-  function saveDocument(){
+  async function saveDocument(){
     bindFields();
-    const docs=getDocs().filter(d=>d.id!==invoice.id);
-    docs.unshift(JSON.parse(JSON.stringify(invoice)));
+
+    const docs=getDocs();
+    const idx=docs.findIndex(d=>d.id===invoice.id);
+
+    if(idx>=0){
+      docs[idx]=JSON.parse(JSON.stringify(invoice));
+    }else{
+      docs.unshift(JSON.parse(JSON.stringify(invoice)));
+    }
+
     localStorage.setItem(LS_DOCS,JSON.stringify(docs.slice(0,100)));
-    toast('Saved locally');
-    renderSavedDocs();renderPrint();
+
+    try{
+      await saveInvoiceToGoogleSheets();
+    }catch(err){
+      console.error(err);
+      toast('Saved locally, but Google Sheets save failed');
+      return;
+    }
+
+    renderSavedDocs();
+    toast('Invoice saved');
   }
   function getDocs(){return JSON.parse(localStorage.getItem(LS_DOCS)||'[]')}
   function renderSavedDocs(){
