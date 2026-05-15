@@ -546,6 +546,7 @@
 <!-- SERVICE HISTORY DEDUPED LOCAL VIEW ONLY -->
 <!-- DELETE SERVICE HISTORY ALSO DELETES SHEET ROW -->
 <!-- DELETE USES DOCNUMBER FIRST -->
+<!-- DELETE HELPER GUARANTEED PRESENT -->
 </head>
 
 <body>
@@ -1125,7 +1126,7 @@
       body:JSON.stringify({
         action:'deleteInvoice',
         password:INVOICE_BACKEND_PASSWORD,
-        invoiceId
+        invoiceId:String(invoiceId)
       })
     });
 
