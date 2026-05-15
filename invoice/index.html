@@ -537,6 +537,36 @@
     .customer-picker-card strong{display:block;color:var(--navy);font-size:14px}
     .customer-picker-card small{display:block;color:var(--muted);font-size:12px;margin-top:3px;line-height:1.35}
 
+  
+    @media print{
+      body.print-history-only > *:not(#serviceHistoryViewModal){display:none!important}
+      body.print-history-only #serviceHistoryViewModal{
+        display:block!important;
+        position:static!important;
+        inset:auto!important;
+        background:#fff!important;
+        padding:0!important;
+      }
+      body.print-history-only #serviceHistoryViewModal .modal{
+        width:100%!important;
+        max-width:none!important;
+        max-height:none!important;
+        overflow:visible!important;
+        box-shadow:none!important;
+        border:0!important;
+        border-radius:0!important;
+      }
+      body.print-history-only #serviceHistoryViewModal .modal-top{
+        background:#fff!important;
+        color:#163051!important;
+        border-bottom:2px solid #163051!important;
+        border-radius:0!important;
+      }
+      body.print-history-only #serviceHistoryViewModal .close,
+      body.print-history-only #serviceHistoryViewModal .modal-foot{display:none!important}
+      body.print-history-only textarea{border:0!important;resize:none!important}
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -549,6 +579,7 @@
 <!-- DELETE HELPER GUARANTEED PRESENT -->
 <!-- DELETE SELF CONTAINED NO HELPER CALL -->
 <!-- DELETE RERENDERS SERVICE HISTORY IMMEDIATELY -->
+<!-- HISTORY PRINT AND DUPLICATE ADDED -->
 </head>
 
 <body>
@@ -961,6 +992,8 @@
         </div>
       </div>
       <div class="modal-foot">
+        <button class="light" onclick="printViewedHistoryInvoice()">Print</button>
+        <button class="blue" onclick="duplicateViewedHistoryInvoice()">Duplicate to New Invoice</button>
         <button class="green" onclick="closePopup('serviceHistoryViewModal')">Done</button>
       </div>
     </div>
@@ -987,6 +1020,7 @@
   let customers=[];
   let settings=loadSettings();
   let invoice=defaultInvoice();
+  let activeHistoryInvoice=null;
   let activeRevisionReviewId=null;
   let revisionReviewLines=[];
   let draggedRevisionLineId=null;
@@ -2276,13 +2310,74 @@
     const profile=getCurrentCustomerProfile();
     box.innerHTML=renderHistoryCards(profile.revisions||[],'revision');
   }
+  function printViewedHistoryInvoice(){
+    if(!activeHistoryInvoice){
+      toast('Open a history invoice first');
+      return;
+    }
+
+    document.body.classList.add('print-history-only');
+    window.print();
+    setTimeout(()=>document.body.classList.remove('print-history-only'),300);
+  }
+
+  function duplicateViewedHistoryInvoice(){
+    if(!activeHistoryInvoice){
+      toast('Open a history invoice first');
+      return;
+    }
+
+    if(!confirm('Duplicate this closed invoice into a new editable invoice?'))return;
+
+    const item=JSON.parse(JSON.stringify(activeHistoryInvoice));
+
+    invoice=defaultInvoice();
+    invoice.docNumber=(typeof nextDocNumber==='function') ? nextDocNumber() : invoice.docNumber;
+    invoice.status='Estimate';
+    invoice.paymentStatus='Unpaid';
+    invoice.readOnly=false;
+    invoice.closedAt='';
+    invoice.createdAt=new Date().toISOString();
+
+    invoice.customerName=item.customerName || invoice.customerName || '';
+    invoice.customerPhone=formatPhone ? formatPhone(item.customerPhone || item.phone || '') : (item.customerPhone || item.phone || '');
+    invoice.customerEmail=item.customerEmail || item.email || '';
+    invoice.vehicle=item.vehicle || '';
+    invoice.vin=item.vin || '';
+    invoice.plate=item.plate || '';
+    invoice.mileage=item.mileage || '';
+
+    invoice.lines=(item.lines||[]).map(l=>({
+      id:uid(),
+      type:l.type||'Labor',
+      description:l.description||'',
+      qty:Number(l.qty)||0,
+      cost:Number(l.cost)||0,
+      price:Number(l.price)||0,
+      taxable:l.type==='Part' ? true : !!l.taxable,
+      tech:''
+    }));
+
+    invoice.payments=[];
+    invoice.internalNotes='';
+    invoice.recommendations='';
+    invoice.concern='Duplicated from closed invoice '+(item.docNumber||item.invoiceNumber||'');
+
+    closePopup('serviceHistoryViewModal');
+    showTab('lines');
+    renderAll();
+    toast('Duplicated to a new editable invoice');
+  }
+
   function viewServiceHistoryInvoice(id){
     const profile=getCurrentCustomerProfile();
     const item=(profile.serviceHistory||[]).find(x=>x.id===id);
     if(!item)return;
 
+    activeHistoryInvoice=JSON.parse(JSON.stringify(item));
+
     const title=document.getElementById('serviceHistoryViewTitle');
-    if(title) title.textContent=`Closed Invoice · ${item.docNumber||'No document #'}`;
+    if(title) title.textContent=`Closed Invoice · ${item.docNumber||item.invoiceNumber||'No document #'}`;
 
     const customer=document.getElementById('serviceHistoryViewCustomer');
     if(customer){
