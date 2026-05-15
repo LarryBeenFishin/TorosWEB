@@ -581,6 +581,8 @@
 <!-- DELETE RERENDERS SERVICE HISTORY IMMEDIATELY -->
 <!-- HISTORY PRINT AND DUPLICATE ADDED -->
 <!-- REVISIONS SAVED TO GOOGLE SHEETS -->
+<!-- PRESETS SHEET HELPERS ADDED -->
+<!-- PRESETS SAVE DELETE GOOGLE SHEETS FINAL -->
 </head>
 
 <body>
@@ -1221,14 +1223,25 @@
   }
   function updateDiscountPreview(){updateDiscountLabel();}
   function getSavedDiscounts(){return JSON.parse(localStorage.getItem(LS_DISCOUNTS)||'[]')}
-  function saveDiscountTemplate(){
+  async function saveDiscountTemplate(){
     const desc=(document.getElementById('popupDescription')?.value||'Discount').trim()||'Discount';
     const mode=document.getElementById('discountMode')?.value||'percent';
     const value=Number(document.getElementById('discountValue')?.value||0);
     if(value<=0){toast('Enter a discount value first');return;}
+
     const discounts=getSavedDiscounts();
-    discounts.unshift({id:uid(),description:desc,mode,value});
+    const discount={id:uid(),description:desc,mode,value};
+    discounts.unshift(discount);
     localStorage.setItem(LS_DISCOUNTS,JSON.stringify(discounts.slice(0,50)));
+
+    try{
+      discount.presetId=await savePresetToGoogleSheets('Discount',discount);
+      localStorage.setItem(LS_DISCOUNTS,JSON.stringify(getSavedDiscounts().map(d=>d.id===discount.id?discount:d)));
+    }catch(err){
+      console.error(err);
+      toast('Saved locally, but preset sheet save failed');
+    }
+
     renderSavedDiscounts();
     toast('Discount saved');
   }
@@ -1241,8 +1254,20 @@
     updateDiscountLabel();
     updateDiscountPreview();
   }
-  function deleteSavedDiscount(id){
+  async function deleteSavedDiscount(id){
     if(!confirm('Delete this saved discount?'))return;
+
+    const discount=getSavedDiscounts().find(d=>d.id===id);
+
+    if(discount?.presetId){
+      try{
+        await deletePresetFromGoogleSheets(discount.presetId);
+      }catch(err){
+        console.error(err);
+        if(!confirm('Could not delete this discount from Google Sheets. Delete it from this browser only?'))return;
+      }
+    }
+
     localStorage.setItem(LS_DISCOUNTS,JSON.stringify(getSavedDiscounts().filter(d=>d.id!==id)));
     renderSavedDiscounts();
     toast('Discount deleted');
@@ -1298,14 +1323,25 @@
   }
 
   function getSavedFees(){return JSON.parse(localStorage.getItem(LS_FEES)||'[]')}
-  function saveFeeTemplate(){
+  async function saveFeeTemplate(){
     const desc=(document.getElementById('popupDescription')?.value||'Fee').trim()||'Fee';
     const qty=Number(document.getElementById('popupQty')?.value||1);
     const total=Number(document.getElementById('popupPrice')?.value||0);
     if(total<=0){toast('Enter a fee total first');return;}
+
     const fees=getSavedFees();
-    fees.unshift({id:uid(),description:desc,qty:qty>0?qty:1,total:cleanNumber(total)});
+    const fee={id:uid(),description:desc,qty:qty>0?qty:1,total:cleanNumber(total)};
+    fees.unshift(fee);
     localStorage.setItem(LS_FEES,JSON.stringify(fees.slice(0,50)));
+
+    try{
+      fee.presetId=await savePresetToGoogleSheets('Fee',fee);
+      localStorage.setItem(LS_FEES,JSON.stringify(getSavedFees().map(f=>f.id===fee.id?fee:f)));
+    }catch(err){
+      console.error(err);
+      toast('Saved locally, but preset sheet save failed');
+    }
+
     renderSavedFees();
     toast('Fee saved');
   }
@@ -1335,8 +1371,20 @@
     renderAll();
     toast('Fee added');
   }
-  function deleteSavedFee(id){
+  async function deleteSavedFee(id){
     if(!confirm('Delete this saved fee?'))return;
+
+    const fee=getSavedFees().find(f=>f.id===id);
+
+    if(fee?.presetId){
+      try{
+        await deletePresetFromGoogleSheets(fee.presetId);
+      }catch(err){
+        console.error(err);
+        if(!confirm('Could not delete this fee from Google Sheets. Delete it from this browser only?'))return;
+      }
+    }
+
     localStorage.setItem(LS_FEES,JSON.stringify(getSavedFees().filter(f=>f.id!==id)));
     renderSavedFees();
     toast('Fee deleted');
@@ -2987,6 +3035,99 @@
     localStorage.setItem(LS_DOCS,JSON.stringify(docs));
   }
 
+  async function savePresetToGoogleSheets(type, preset){
+    const payload=Object.assign({}, preset);
+    const presetId=payload.presetId || payload.id || ('PRE-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+    payload.presetId=presetId;
+    payload.id=presetId;
+
+    const res=await fetch(getInvoiceBackendUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'savePreset',
+        password:INVOICE_BACKEND_PASSWORD,
+        preset:{
+          presetId,
+          id:presetId,
+          type,
+          name:payload.name || payload.title || payload.description || type,
+          description:payload.description || payload.desc || '',
+          payload
+        }
+      })
+    });
+
+    const data=await res.json();
+
+    if(data.status !== 'success'){
+      throw new Error(data.message || 'Could not save preset');
+    }
+
+    return data.presetId || presetId;
+  }
+
+  async function deletePresetFromGoogleSheets(presetId){
+    if(!presetId)return {status:'not_found'};
+
+    const res=await fetch(getInvoiceBackendUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'deletePreset',
+        password:INVOICE_BACKEND_PASSWORD,
+        presetId:String(presetId)
+      })
+    });
+
+    const data=await res.json();
+
+    if(data.status !== 'success' && data.status !== 'not_found'){
+      throw new Error(data.message || 'Could not delete preset');
+    }
+
+    return data;
+  }
+
+  async function loadPresetsFromGoogleSheets(){
+    try{
+      const url=getInvoiceBackendUrl()
+        + '?action=getPresets'
+        + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD);
+
+      const res=await fetch(url,{cache:'no-store'});
+      const data=await res.json();
+
+      if(data.status !== 'success')return;
+
+      const presets=data.presets||[];
+      const canned=[];
+      const fees=[];
+      const discounts=[];
+
+      presets.forEach(record=>{
+        const payload=record.payload || {};
+        payload.presetId=payload.presetId || record.presetId || record.id;
+        payload.id=payload.id || payload.presetId;
+
+        if(record.type==='Canned Job') canned.push(payload);
+        if(record.type==='Fee') fees.push(payload);
+        if(record.type==='Discount') discounts.push(payload);
+      });
+
+      if(canned.length) localStorage.setItem(LS_CANNED,JSON.stringify(canned.map(p=>Object.assign({},p,{id:p.id||p.presetId||uid()}))));
+      if(fees.length) localStorage.setItem(LS_FEES,JSON.stringify(fees.map(p=>Object.assign({},p,{id:p.id||p.presetId||uid()}))));
+      if(discounts.length) localStorage.setItem(LS_DISCOUNTS,JSON.stringify(discounts.map(p=>Object.assign({},p,{id:p.id||p.presetId||uid()}))));
+
+      renderCannedJobs?.();
+      renderSavedFees?.();
+      renderSavedDiscounts?.();
+    }catch(err){
+      console.error(err);
+    }
+  }
+
+  
   function makeRevisionBackendPayload(revision){
     const lines=(revision.lines||[]).map(l=>({
       id:l.id||uid(),
@@ -3415,7 +3556,7 @@ const localHistory=document.getElementById('serviceHistoryList');
     if(!hours)return;
     hours.value = cost > 0 && rate > 0 ? (cost / rate).toFixed(2) : '';
   }
-  function saveCannedJob(){
+  async function saveCannedJob(){
     const job={
       id:editingCannedJobId||uid(),
       name:document.getElementById('cannedName').value.trim()||'Canned Job',
@@ -3437,19 +3578,30 @@ const localHistory=document.getElementById('serviceHistoryList');
     }
 
     let jobs=getCanned();
+
     if(editingCannedJobId){
+      const existing=jobs.find(j=>j.id===editingCannedJobId);
+      if(existing?.presetId) job.presetId=existing.presetId;
       jobs=jobs.map(j=>j.id===editingCannedJobId?job:j);
-      toast('Canned job updated');
     }else{
       jobs.unshift(job);
-      toast('Canned job saved');
     }
 
     localStorage.setItem(LS_CANNED,JSON.stringify(jobs));
+
+    try{
+      job.presetId=await savePresetToGoogleSheets('Canned Job',job);
+      localStorage.setItem(LS_CANNED,JSON.stringify(getCanned().map(j=>j.id===job.id?job:j)));
+    }catch(err){
+      console.error(err);
+      toast('Saved locally, but preset sheet save failed');
+    }
+
     editingCannedJobId=null;
     cannedBuilderLines=[];
     closePopup('cannedModal');
     renderCannedJobs();
+    toast('Canned job saved');
   }
   function editCannedJob(id){
     pendingCannedDeleteId=null;
@@ -3490,12 +3642,23 @@ const localHistory=document.getElementById('serviceHistoryList');
     renderAll();
     toast('Canned job transferred');
   }
-  function deleteCannedJob(id){
+  async function deleteCannedJob(id){
     if(pendingCannedDeleteId!==id){
       pendingCannedDeleteId=id;
       renderCannedJobs();
       toast('Click Confirm Delete to remove it');
       return;
+    }
+
+    const job=getCanned().find(j=>j.id===id);
+
+    if(job?.presetId){
+      try{
+        await deletePresetFromGoogleSheets(job.presetId);
+      }catch(err){
+        console.error(err);
+        if(!confirm('Could not delete this canned job from Google Sheets. Delete it from this browser only?'))return;
+      }
     }
 
     localStorage.setItem(LS_CANNED,JSON.stringify(getCanned().filter(j=>j.id!==id)));
@@ -3523,6 +3686,7 @@ const localHistory=document.getElementById('serviceHistoryList');
 
   loadCustomers();
   renderAll();
+  loadPresetsFromGoogleSheets();
   initInvoiceFromAdminUrl();
 </script>
 </body>
