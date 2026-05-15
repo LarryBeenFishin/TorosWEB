@@ -548,6 +548,7 @@
 <!-- DELETE USES DOCNUMBER FIRST -->
 <!-- DELETE HELPER GUARANTEED PRESENT -->
 <!-- DELETE SELF CONTAINED NO HELPER CALL -->
+<!-- DELETE RERENDERS SERVICE HISTORY IMMEDIATELY -->
 </head>
 
 <body>
@@ -1979,10 +1980,22 @@
 
     profile[listName]=list.filter(x=>x.id!==id);
     saveCurrentCustomerProfile(profile);
+
+    // Force the visible history list to update immediately.
+    if(kind==='revision'){
+      renderRevisionHistory();
+    }else{
+      renderServiceHistory();
+      const pane=document.getElementById('tab-history');
+      if(pane) pane.classList.add('active');
+      document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='history'));
+    }
+
     renderCustomerProfileTabs();
 
     if(kind==='service'){
-      toast('Invoice deleted from history');
+      renderServiceHistory();
+      toast('Invoice deleted from history and Google Sheets');
     }else{
       toast('Revision deleted');
     }
