@@ -541,6 +541,7 @@
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
 <!-- CLEAN CUSTOMER PICKER + GOOGLE SHEETS BACKEND -->
+<!-- AUTO GOOGLE SHEETS HISTORY + BLANK AFTER CLOSE -->
 </head>
 
 <body>
@@ -1462,6 +1463,7 @@
     invoice.plate=c.plate||'';
     invoice.mileage=formatMileage ? formatMileage(c.mileage||'') : (c.mileage||'');
     renderAll();
+    scheduleGoogleSheetHistoryLoad();
     toast('Customer loaded');
   }
 
@@ -1487,6 +1489,7 @@
     const input=document.getElementById('customerPickerSearch');
     if(input) input.value='';
     renderAll();
+    const googleHistory=document.getElementById('googleSheetHistoryList'); if(googleHistory) googleHistory.innerHTML='';
     toast('Customer cleared');
   }
 
@@ -1639,6 +1642,7 @@
     if(data.concern && !invoice.concern) invoice.concern=data.concern;
 
     renderAll();
+    scheduleGoogleSheetHistoryLoad();
     toast('Customer info loaded into invoice');
   }
 
@@ -1738,7 +1742,8 @@
     invoice.vin=document.getElementById('modalVin').value;
     invoice.plate=document.getElementById('modalPlate').value;
     invoice.mileage=formatMileage(document.getElementById('modalMileage').value);
-    closePopup('customerPopup');renderAll();toast('Customer updated');
+    closePopup('customerPopup');renderAll();
+    scheduleGoogleSheetHistoryLoad();toast('Customer updated');
   }
 
   function bindFields(){
@@ -2241,13 +2246,28 @@
     openPopup('serviceHistoryViewModal');
   }
   
+  function scheduleGoogleSheetHistoryLoad(){
+    const box=document.getElementById('googleSheetHistoryList');
+    if(!box)return;
+
+    if(!invoice.customerPhone){
+      box.innerHTML='';
+      return;
+    }
+
+    clearTimeout(window.googleSheetHistoryTimer);
+    window.googleSheetHistoryTimer=setTimeout(()=>{
+      loadGoogleSheetServiceHistory();
+    },250);
+  }
+
   async function loadGoogleSheetServiceHistory(){
     bindFields();
     const box=document.getElementById('googleSheetHistoryList');
     if(!box)return;
 
     if(!invoice.customerPhone){
-      box.innerHTML='<div class="empty">Select a customer with a phone number first.</div>';
+      box.innerHTML='<div class="empty">Select a customer with a phone number first. History will load automatically.</div>';
       return;
     }
 
@@ -2361,6 +2381,7 @@
     document.querySelectorAll('.work-section').forEach(s=>s.classList.toggle('active',s.id==='tab-'+name));
     if(name==='revisions') renderRevisionHistory();
     if(name==='history') renderServiceHistory();
+      if(name==='history') scheduleGoogleSheetHistoryLoad();
   }
 
   function setStatus(s){invoice.status=s;if(s==='Paid')invoice.paymentStatus='Paid';renderAll()}
@@ -2778,6 +2799,26 @@
   function startFreshInvoice(){
     invoice=defaultInvoice();
     invoice.docNumber=makeDocNumber();
+
+    // Make sure a closed invoice starts a truly blank invoice, even if the page
+    // originally opened from an appointment/customer URL.
+    ['customerName','customerPhone','customerEmail','vehicle','vin','plate','mileage','advisor','concern'].forEach(k=>invoice[k]='');
+
+    const pickerSearch=document.getElementById('customerPickerSearch');
+    if(pickerSearch) pickerSearch.value='';
+
+    const modalSearch=document.getElementById('modalCustomerSearch');
+    if(modalSearch) modalSearch.value='';
+
+    const googleHistory=document.getElementById('googleSheetHistoryList');
+    if(googleHistory) googleHistory.innerHTML='';
+
+    // Remove appointment/customer query string after closing so the browser URL
+    // doesn't keep representing the old customer.
+    if(window.history && window.location.search){
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     showTab('lines');
     renderAll();
   }
