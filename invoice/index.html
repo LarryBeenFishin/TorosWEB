@@ -543,6 +543,7 @@
 <!-- CLEAN CUSTOMER PICKER + GOOGLE SHEETS BACKEND -->
 <!-- REBUILT STABLE GOOGLE SHEETS CLOSE RESET -->
 <!-- FIXED NEW RESET MISSING MAKE DOC NUMBER -->
+<!-- SERVICE HISTORY DEDUPED LOCAL VIEW ONLY -->
 </head>
 
 <body>
@@ -692,10 +693,8 @@
             <button class="blue" type="button" onclick="saveToServiceHistory()">Save Current Invoice to History</button>
             <button class="light" type="button" onclick="renderServiceHistory()">Refresh</button>
           </div>
-          <div class="hint" style="font-size:12px;padding:8px 10px">Service history saves closed invoices to this customer profile locally for now. History invoices are view-only and cannot be edited.</div>
-          <div class="history-actions"><button class="light" type="button" onclick="loadGoogleSheetServiceHistory()">Load Google Sheets History</button></div>
-          <div id="googleSheetHistoryList" class="history-list"></div>
-          <div id="serviceHistoryList" class="history-list"></div>
+          <div class="hint" style="font-size:12px;padding:8px 10px">Service history shows closed invoices for this customer. History invoices are view-only and cannot be edited.</div>
+<div id="serviceHistoryList" class="history-list"></div>
         </div>
 </section>
 
@@ -2249,63 +2248,11 @@
   
   
   function scheduleGoogleSheetHistoryLoad(){
-    const box=document.getElementById('googleSheetHistoryList');
-    if(!box)return;
-
-    clearTimeout(window.googleSheetHistoryTimer);
-
-    if(!invoice.customerPhone){
-      box.innerHTML='';
-      return;
-    }
-
-    window.googleSheetHistoryTimer=setTimeout(()=>{
-      loadGoogleSheetServiceHistory();
-    },150);
+    // Disabled to avoid duplicate service history display.
+    // Service History now uses the local/customer-profile history cards with View Invoice and Delete.
   }
 
-  async function loadGoogleSheetServiceHistory(){
-    bindFields();
-    const box=document.getElementById('googleSheetHistoryList');
-    if(!box)return;
-
-    if(!invoice.customerPhone){
-      box.innerHTML='<div class="empty">Select a customer with a phone number first. History will load automatically.</div>';
-      return;
-    }
-
-    box.innerHTML='<div class="empty">Loading Google Sheets invoice history...</div>';
-
-    try{
-      const invoices=await loadCustomerInvoicesFromGoogleSheets(invoice.customerPhone);
-      if(!invoices.length){
-        box.innerHTML='<div class="empty">No Google Sheets invoices found for this customer.</div>';
-        return;
-      }
-
-      box.innerHTML=invoices.map(item=>{
-        const lines=(item.lines||[]).slice(0,4).map(l=>{
-          const total=(Number(l.qty)||0)*(Number(l.price)||0);
-          return `${esc(l.type||'Line')}: ${esc(l.description||'')} · ${money(total)}`;
-        }).join('<br>');
-
-        return `<div class="history-card">
-          <strong>${esc(item.invoiceNumber || item.docNumber || item.invoiceId || 'Invoice')} · ${esc(item.status || '')}</strong>
-          <small>${esc(item.closedAt || item.updatedAt || item.createdAt || '')}</small>
-          <div class="history-meta">
-            <div><span>Total</span><b>${money(item.total||0)}</b></div>
-            <div><span>Paid</span><b>${money(item.paid||0)}</b></div>
-            <div><span>Balance</span><b>${money(item.balance||0)}</b></div>
-            <div><span>Mileage</span><b>${esc(formatMileage ? formatMileage(item.mileage) : item.mileage || '')}</b></div>
-          </div>
-          <small style="margin-top:8px">${lines || 'No lines'}</small>
-        </div>`;
-      }).join('');
-    }catch(err){
-      console.error(err);
-      box.innerHTML='<div class="empty">Could not load Google Sheets invoice history.</div>';
-    }
-  }
+  
 
   
   function renderServiceHistory(){
@@ -2828,11 +2775,7 @@
 
     const modalSearch=document.getElementById('modalCustomerSearch');
     if(modalSearch) modalSearch.value='';
-
-    const googleHistory=document.getElementById('googleSheetHistoryList');
-    if(googleHistory) googleHistory.innerHTML='';
-
-    const localHistory=document.getElementById('serviceHistoryList');
+const localHistory=document.getElementById('serviceHistoryList');
     if(localHistory) localHistory.innerHTML='';
 
     if(window.history && window.location.search){
