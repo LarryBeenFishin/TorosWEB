@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <!-- INVOICE PAGE SHOULD NOT BE INDEXED -->
   <meta name="robots" content="noindex, nofollow, noarchive">
   <meta name="googlebot" content="noindex, nofollow, noarchive">
   <meta name="theme-color" content="#163051">
@@ -541,7 +540,7 @@
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
-<!-- GOOGLE SHEETS INVOICE BACKEND CONNECTED -->
+<!-- CLEAN CUSTOMER PICKER + GOOGLE SHEETS BACKEND -->
 </head>
 
 <body>
@@ -1064,6 +1063,7 @@
 
   async function sendInvoiceToBackend(action){
     const payload=makeBackendInvoicePayload();
+
     const res=await fetch(getInvoiceBackendUrl(), {
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -2817,7 +2817,6 @@
       return;
     }
 
-    // Keep a local read-only copy too, as a backup.
     const profile=getCurrentCustomerProfile();
     profile.serviceHistory=Array.isArray(profile.serviceHistory)?profile.serviceHistory:[];
     const snapshot=snapshotInvoice('service');
