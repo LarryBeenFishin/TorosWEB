@@ -545,6 +545,7 @@
 <!-- FIXED NEW RESET MISSING MAKE DOC NUMBER -->
 <!-- SERVICE HISTORY DEDUPED LOCAL VIEW ONLY -->
 <!-- DELETE SERVICE HISTORY ALSO DELETES SHEET ROW -->
+<!-- DELETE USES DOCNUMBER FIRST -->
 </head>
 
 <body>
@@ -1130,11 +1131,11 @@
 
     const data=await res.json();
 
-    if(data.status !== 'success' && data.status !== 'not_found'){
-      throw new Error(data.message || 'Could not delete invoice from Google Sheets');
+    if(data.status === 'success' || data.status === 'not_found'){
+      return data;
     }
 
-    return data;
+    throw new Error(data.message || 'Could not delete invoice from Google Sheets');
   }
 
   
@@ -1947,15 +1948,35 @@
     if(!confirm(`Delete this ${label}? This cannot be undone.`))return;
 
     if(kind==='service'){
-      const sheetInvoiceId=item.invoiceId || item.id || item.docNumber || item.invoiceNumber || '';
+      const candidates=[
+        item.docNumber,
+        item.invoiceNumber,
+        item.invoiceId,
+        item.id
+      ].filter(Boolean);
 
-      try{
-        if(sheetInvoiceId){
-          await deleteInvoiceFromGoogleSheets(sheetInvoiceId);
+      let deletedFromSheet=false;
+      let sheetError='';
+
+      for(const candidate of candidates){
+        try{
+          const result=await deleteInvoiceFromGoogleSheets(candidate);
+          if(result.status==='success'){
+            deletedFromSheet=true;
+            break;
+          }
+        }catch(err){
+          console.error(err);
+          sheetError=err.message || 'Google Sheets delete failed';
         }
-      }catch(err){
-        console.error(err);
-        if(!confirm('Could not delete this invoice from Google Sheets. Delete it from this browser history only?'))return;
+      }
+
+      if(!deletedFromSheet){
+        const message=sheetError
+          ? `Could not delete this invoice from Google Sheets: ${sheetError}. Delete it from this browser history only?`
+          : 'Could not find this invoice in Google Sheets. Delete it from this browser history only?';
+
+        if(!confirm(message))return;
       }
     }
 
@@ -1964,7 +1985,7 @@
     renderCustomerProfileTabs();
 
     if(kind==='service'){
-      toast('Invoice deleted from history and Google Sheets');
+      toast('Invoice deleted from history');
     }else{
       toast('Revision deleted');
     }
