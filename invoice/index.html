@@ -626,6 +626,7 @@
 <!-- ALL INVOICES HISTORY TAB ADDED -->
 <!-- ALL INVOICES PANE PLACEMENT FIXED -->
 <!-- ALL INVOICES WORK SECTION FIXED -->
+<!-- ALL INVOICES CENTER PANEL FINAL FIX -->
 </head>
 
 <body>
@@ -779,6 +780,33 @@
           <div class="hint" style="font-size:12px;padding:8px 10px">Service history shows closed invoices for this customer. History invoices are view-only and cannot be edited.</div>
 <div id="serviceHistoryList" class="history-list"></div>
         </div>
+
+        <div class="work-section" id="tab-allinvoices">
+          <div class="panel-subhead">
+            <div>
+              <h3>All Invoices</h3>
+              <p>Search every estimate, revision, repair order, and closed invoice saved to Google Sheets.</p>
+            </div>
+            <button class="blue" type="button" onclick="loadAllInvoicesFromSheet(true)">Refresh</button>
+          </div>
+
+          <div class="mini-row">
+            <input id="allInvoiceSearch" placeholder="Search invoice #, customer, phone, vehicle, status..." oninput="renderAllInvoiceHistory()">
+            <select id="allInvoiceStatusFilter" onchange="renderAllInvoiceHistory()">
+              <option value="">All Statuses</option>
+              <option value="Estimate">Estimate</option>
+              <option value="Repair Order">Repair Order</option>
+              <option value="Invoice">Invoice</option>
+              <option value="Closed">Closed</option>
+              <option value="Revision">Revision</option>
+            </select>
+          </div>
+
+          <div id="allInvoiceHistoryList" class="history-list">
+            <div class="empty">Loading invoices from Google Sheets...</div>
+          </div>
+        </div>
+
 </section>
 
       <aside class="panel totals-payment-panel">
@@ -790,31 +818,7 @@
             <button class="light" type="button" onclick="addPayment()">+ Add Payment</button>
           </div>
 
-          <div class="work-section" id="tab-allinvoices">
-            <div class="panel-subhead">
-              <div>
-                <h3>All Invoices</h3>
-                <p>Search every estimate, revision, repair order, and closed invoice saved to Google Sheets.</p>
-              </div>
-              <button class="blue" type="button" onclick="loadAllInvoicesFromSheet(true)">Refresh</button>
-            </div>
-
-            <div class="mini-row">
-              <input id="allInvoiceSearch" placeholder="Search invoice #, customer, phone, vehicle, status..." oninput="renderAllInvoiceHistory()">
-              <select id="allInvoiceStatusFilter" onchange="renderAllInvoiceHistory()">
-                <option value="">All Statuses</option>
-                <option value="Estimate">Estimate</option>
-                <option value="Repair Order">Repair Order</option>
-                <option value="Invoice">Invoice</option>
-                <option value="Closed">Closed</option>
-                <option value="Revision">Revision</option>
-              </select>
-            </div>
-
-            <div id="allInvoiceHistoryList" class="history-list">
-              <div class="empty">Loading invoices from Google Sheets...</div>
-            </div>
-          </div>
+          
 
           <div class="split-payments" id="paymentsList"></div><div class="hint" style="font-size:11px;padding:6px 8px;margin-top:8px">Payment totals update after leaving the amount field or pressing Enter.</div>
           <div class="side-actions">
@@ -3625,7 +3629,7 @@ const localHistory=document.getElementById('serviceHistoryList');
     }
 
     document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='lines'));
-    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-lines'));
+    document.querySelectorAll('.work-section').forEach(p=>p.classList.toggle('active',p.id==='tab-lines'));
 
     renderAll();
     if(typeof updateCustomerPanelState==='function') updateCustomerPanelState();
