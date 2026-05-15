@@ -542,6 +542,7 @@
 <!-- patched-header-new-close-final -->
 <!-- CLEAN CUSTOMER PICKER + GOOGLE SHEETS BACKEND -->
 <!-- REBUILT STABLE GOOGLE SHEETS CLOSE RESET -->
+<!-- FIXED NEW RESET MISSING MAKE DOC NUMBER -->
 </head>
 
 <body>
@@ -2802,7 +2803,6 @@
 
   function startFreshInvoice(){
     const fresh=defaultInvoice();
-    fresh.docNumber=makeDocNumber();
     fresh.customerName='';
     fresh.customerPhone='';
     fresh.customerEmail='';
