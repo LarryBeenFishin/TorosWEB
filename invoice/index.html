@@ -567,6 +567,46 @@
       body.print-history-only textarea{border:0!important;resize:none!important}
     }
 
+  
+    .all-invoice-card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-bottom:10px;
+    }
+    .all-invoice-card-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .all-invoice-card strong{color:var(--navy)}
+    .all-invoice-card small{color:var(--muted);line-height:1.35}
+    .all-invoice-pill{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      padding:4px 8px;
+      font-size:11px;
+      font-weight:900;
+      background:#eef3fa;
+      color:var(--navy);
+    }
+    @media print{
+      body.print-history-only > *:not(#serviceHistoryViewModal){display:none!important}
+      body.print-history-only #serviceHistoryViewModal{display:block!important;position:static!important;background:#fff!important;padding:0!important}
+      body.print-history-only #serviceHistoryViewModal .modal{width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;box-shadow:none!important;border:0!important;border-radius:0!important}
+      body.print-history-only #serviceHistoryViewModal .modal-top{background:#fff!important;color:#163051!important;border-bottom:2px solid #163051!important;border-radius:0!important}
+      body.print-history-only #serviceHistoryViewModal .close,
+      body.print-history-only #serviceHistoryViewModal .modal-foot{display:none!important}
+      body.print-history-only textarea{border:0!important;resize:none!important}
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -583,6 +623,7 @@
 <!-- REVISIONS SAVED TO GOOGLE SHEETS -->
 <!-- PRESETS SHEET HELPERS ADDED -->
 <!-- PRESETS SAVE DELETE GOOGLE SHEETS FINAL -->
+<!-- ALL INVOICES HISTORY TAB ADDED -->
 </head>
 
 <body>
@@ -666,6 +707,7 @@
           <button class="tab" data-tab="notes" onclick="showTab('notes')">Notes</button>
           <button class="tab" data-tab="revisions" onclick="showTab('revisions')">Revisions</button>
           <button class="tab" data-tab="history" onclick="showTab('history')">Service History</button>
+          <button class="tab" data-tab="allinvoices" onclick="showTab('allinvoices')">All Invoices</button>
         </div>
 
         <div class="work-section active" id="tab-lines">
@@ -761,6 +803,33 @@
 
   <section class="print-shell" id="printableInvoice"></section>
   <div class="toast" id="toast"></div>
+
+  
+        <div class="tab-pane" id="tab-allinvoices">
+          <div class="panel-subhead">
+            <div>
+              <h3>All Invoices</h3>
+              <p>Search every estimate, revision, repair order, and closed invoice saved to Google Sheets.</p>
+            </div>
+            <button class="blue" type="button" onclick="loadAllInvoicesFromSheet(true)">Refresh</button>
+          </div>
+
+          <div class="mini-row">
+            <input id="allInvoiceSearch" placeholder="Search invoice #, customer, phone, vehicle, status..." oninput="renderAllInvoiceHistory()">
+            <select id="allInvoiceStatusFilter" onchange="renderAllInvoiceHistory()">
+              <option value="">All Statuses</option>
+              <option value="Estimate">Estimate</option>
+              <option value="Repair Order">Repair Order</option>
+              <option value="Invoice">Invoice</option>
+              <option value="Closed">Closed</option>
+              <option value="Revision">Revision</option>
+            </select>
+          </div>
+
+          <div id="allInvoiceHistoryList" class="history-list">
+            <div class="empty">Click Refresh or open this tab to load invoices.</div>
+          </div>
+        </div>
 
   <div class="modal-overlay" id="servicePopup">
     <div class="modal">
@@ -1024,6 +1093,7 @@
   let settings=loadSettings();
   let invoice=defaultInvoice();
   let activeHistoryInvoice=null;
+  let allInvoiceHistory=[];
   let activeRevisionReviewId=null;
   let revisionReviewLines=[];
   let draggedRevisionLineId=null;
@@ -1793,6 +1863,14 @@
     return null;
   }
 
+  async function initInvoiceViewFromUrl(){
+    const params=new URLSearchParams(window.location.search);
+    const view=params.get('view') || '';
+    if(view==='history' || view==='invoices' || view==='allinvoices'){
+      showTab('allinvoices');
+    }
+  }
+
   async function initInvoiceFromAdminUrl(){
     const params=getUrlParams();
     const hasIntegrationParams=Object.keys(params).some(k=>[
@@ -2480,28 +2558,224 @@
     toast('Duplicated to a new editable invoice');
   }
 
-  function viewServiceHistoryInvoice(id){
-    const profile=getCurrentCustomerProfile();
-    const item=(profile.serviceHistory||[]).find(x=>x.id===id);
+  function printViewedHistoryInvoice(){
+    if(!activeHistoryInvoice){
+      toast('Open a history invoice first');
+      return;
+    }
+    document.body.classList.add('print-history-only');
+    window.print();
+    setTimeout(()=>document.body.classList.remove('print-history-only'),300);
+  }
+
+  function duplicateViewedHistoryInvoice(){
+    if(!activeHistoryInvoice){
+      toast('Open a history invoice first');
+      return;
+    }
+
+    if(!confirm('Duplicate this document into a new editable invoice?'))return;
+
+    const item=JSON.parse(JSON.stringify(activeHistoryInvoice));
+
+    invoice=defaultInvoice();
+    invoice.docNumber=(typeof nextDocNumber==='function') ? nextDocNumber() : invoice.docNumber;
+    invoice.status='Estimate';
+    invoice.paymentStatus='Unpaid';
+    invoice.readOnly=false;
+    invoice.closedAt='';
+    invoice.createdAt=new Date().toISOString();
+
+    invoice.customerName=item.customerName || '';
+    invoice.customerPhone=formatPhone ? formatPhone(item.customerPhone || item.phone || '') : (item.customerPhone || item.phone || '');
+    invoice.customerEmail=item.customerEmail || item.email || '';
+    invoice.vehicle=item.vehicle || '';
+    invoice.vin=item.vin || '';
+    invoice.plate=item.plate || '';
+    invoice.mileage=item.mileage || '';
+
+    invoice.lines=(item.lines||[]).map(l=>({
+      id:uid(),
+      type:l.type||'Labor',
+      description:l.description||'',
+      qty:Number(l.qty)||0,
+      cost:Number(l.cost)||0,
+      price:Number(l.price)||0,
+      taxable:l.type==='Part' ? true : !!l.taxable,
+      tech:''
+    }));
+
+    invoice.payments=[];
+    invoice.internalNotes='';
+    invoice.recommendations='';
+    invoice.concern='Duplicated from '+(item.docNumber||item.invoiceNumber||'history document');
+
+    closePopup('serviceHistoryViewModal');
+    showTab('lines');
+    renderAll();
+    toast('Duplicated to a new editable invoice');
+  }
+
+  async function loadAllInvoicesFromSheet(force){
+    const box=document.getElementById('allInvoiceHistoryList');
+    if(!box)return;
+
+    if(allInvoiceHistory.length && !force){
+      renderAllInvoiceHistory();
+      return;
+    }
+
+    box.innerHTML='<div class="empty">Loading invoices from Google Sheets...</div>';
+
+    try{
+      const url=getInvoiceBackendUrl()
+        + '?action=getInvoices'
+        + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD);
+
+      const res=await fetch(url,{cache:'no-store'});
+      const data=await res.json();
+
+      if(data.status !== 'success'){
+        throw new Error(data.message || 'Could not load invoices');
+      }
+
+      allInvoiceHistory=data.invoices || [];
+      renderAllInvoiceHistory();
+    }catch(err){
+      console.error(err);
+      box.innerHTML='<div class="empty">Could not load invoices from Google Sheets.</div>';
+    }
+  }
+
+  function normalizeInvoiceForHistory(item){
+    const customerName=item.customerName || item.name || '';
+    const phone=item.customerPhone || item.phone || '';
+    const vehicle=item.vehicle || '';
+    const doc=item.invoiceNumber || item.docNumber || item.invoiceId || item.id || '';
+    const status=item.status || '';
+    const paymentStatus=item.paymentStatus || '';
+    const total=Number(item.total||0);
+    const paid=Number(item.paid||0);
+    const balance=Number(item.balance||0);
+    const date=item.closedAt || item.updatedAt || item.createdAt || item.savedAt || '';
+    return {customerName,phone,vehicle,doc,status,paymentStatus,total,paid,balance,date};
+  }
+
+  function renderAllInvoiceHistory(){
+    const box=document.getElementById('allInvoiceHistoryList');
+    if(!box)return;
+
+    const q=(document.getElementById('allInvoiceSearch')?.value||'').toLowerCase().trim();
+    const statusFilter=document.getElementById('allInvoiceStatusFilter')?.value||'';
+
+    let list=[...allInvoiceHistory];
+
+    if(statusFilter){
+      list=list.filter(item=>String(item.status||'')===statusFilter);
+    }
+
+    if(q){
+      list=list.filter(item=>{
+        const n=normalizeInvoiceForHistory(item);
+        const hay=[
+          n.doc,n.customerName,n.phone,
+          digitsOnly ? digitsOnly(n.phone) : String(n.phone||'').replace(/\D/g,''),
+          n.vehicle,item.vin,item.plate,n.status,n.paymentStatus
+        ].join(' ').toLowerCase();
+
+        const qDigits=digitsOnly ? digitsOnly(q) : q.replace(/\D/g,'');
+        return hay.includes(q) || (qDigits && hay.includes(qDigits));
+      });
+    }
+
+    if(!list.length){
+      box.innerHTML='<div class="empty">No invoices found.</div>';
+      return;
+    }
+
+    box.innerHTML=list.map(item=>{
+      const n=normalizeInvoiceForHistory(item);
+      const originalIndex=allInvoiceHistory.indexOf(item);
+      const dateText=n.date ? String(n.date) : '';
+      const lines=(item.lines||[]).slice(0,3).map(l=>{
+        const lineTotal=(Number(l.qty)||0)*(Number(l.price)||0);
+        return `${esc(l.type||'Line')}: ${esc(l.description||'')} · ${money(lineTotal)}`;
+      }).join('<br>');
+
+      return `<div class="all-invoice-card">
+        <div class="all-invoice-card-top">
+          <div>
+            <strong>${esc(n.doc || 'No document #')}</strong>
+            <small>${esc(n.customerName || 'No customer')} · ${esc(formatPhone ? formatPhone(n.phone) : n.phone || 'No phone')}</small>
+            <small>${esc(n.vehicle || 'No vehicle')} ${item.mileage ? '· '+esc(formatMileage ? formatMileage(item.mileage) : item.mileage) : ''}</small>
+          </div>
+          <div class="all-invoice-pill">${esc(n.status || 'No Status')}${n.paymentStatus ? ' · '+esc(n.paymentStatus) : ''}</div>
+        </div>
+
+        <div class="history-meta">
+          <div><span>Total</span><b>${money(n.total)}</b></div>
+          <div><span>Paid</span><b>${money(n.paid)}</b></div>
+          <div><span>Balance</span><b>${money(n.balance)}</b></div>
+          <div><span>Date</span><b>${esc(dateText)}</b></div>
+        </div>
+
+        <small>${lines || 'No lines'}</small>
+
+        <div class="mini-row">
+          <button class="blue" type="button" onclick="viewAllInvoiceHistory(${originalIndex})">View</button>
+          <button class="light" type="button" onclick="duplicateAllInvoiceHistory(${originalIndex})">Duplicate</button>
+          <button class="light" type="button" onclick="printAllInvoiceHistory(${originalIndex})">Print</button>
+          <button class="light" type="button" onclick="deleteAllInvoiceHistory(${originalIndex})">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function viewAllInvoiceHistory(index){
+    const item=allInvoiceHistory[index];
     if(!item)return;
 
-    activeHistoryInvoice=JSON.parse(JSON.stringify(item));
+    activeHistoryInvoice=JSON.parse(JSON.stringify({
+      id:item.invoiceId || item.id || item.invoiceNumber || item.docNumber || uid(),
+      docNumber:item.invoiceNumber || item.docNumber || item.invoiceId || '',
+      invoiceNumber:item.invoiceNumber || item.docNumber || item.invoiceId || '',
+      status:item.status || '',
+      paymentStatus:item.paymentStatus || '',
+      customerName:item.customerName || item.name || '',
+      customerPhone:item.customerPhone || item.phone || '',
+      customerEmail:item.customerEmail || item.email || '',
+      vehicle:item.vehicle || '',
+      vin:item.vin || '',
+      plate:item.plate || '',
+      mileage:item.mileage || '',
+      total:Number(item.total||0),
+      paid:Number(item.paid||0),
+      balance:Number(item.balance||0),
+      closedAt:item.closedAt || '',
+      savedAt:item.updatedAt || item.createdAt || '',
+      lines:item.lines || [],
+      internalNotes:item.internalNotes || ''
+    }));
 
+    renderHistoryInvoiceModal(activeHistoryInvoice);
+  }
+
+  function renderHistoryInvoiceModal(item){
     const title=document.getElementById('serviceHistoryViewTitle');
-    if(title) title.textContent=`Closed Invoice · ${item.docNumber||item.invoiceNumber||'No document #'}`;
+    if(title) title.textContent=`${item.status||'Invoice'} · ${item.docNumber||item.invoiceNumber||'No document #'}`;
 
     const customer=document.getElementById('serviceHistoryViewCustomer');
     if(customer){
-      customer.innerHTML=`<strong>${esc(profile.customerName||item.customerName||'Customer')}</strong> · ${esc(profile.vehicle||item.vehicle||'Vehicle')}<br>${esc(formatPhone(profile.customerPhone||item.customerPhone||''))} · ${esc(profile.customerEmail||item.customerEmail||'')}`;
+      customer.innerHTML=`<strong>${esc(item.customerName||'Customer')}</strong> · ${esc(item.vehicle||'Vehicle')}<br>${esc(formatPhone ? formatPhone(item.customerPhone||'') : item.customerPhone||'')} · ${esc(item.customerEmail||'')}`;
     }
 
     const summary=document.getElementById('serviceHistoryViewSummary');
     if(summary){
       summary.innerHTML=`
-        <div class="history-view-card"><span>Status</span><strong>${esc(item.status||'Closed')}</strong></div>
+        <div class="history-view-card"><span>Status</span><strong>${esc(item.status||'')}</strong></div>
         <div class="history-view-card"><span>Total</span><strong>${money(item.total||0)}</strong></div>
         <div class="history-view-card"><span>Paid</span><strong>${money(item.paid||0)}</strong></div>
-        <div class="history-view-card"><span>Closed</span><strong>${item.closedAt?new Date(item.closedAt).toLocaleDateString():new Date(item.savedAt||Date.now()).toLocaleDateString()}</strong></div>
+        <div class="history-view-card"><span>Balance</span><strong>${money(item.balance||0)}</strong></div>
       `;
     }
 
@@ -2530,6 +2804,85 @@
     if(notes) notes.value=item.internalNotes||'';
 
     openPopup('serviceHistoryViewModal');
+  }
+
+  function duplicateAllInvoiceHistory(index){
+    const item=allInvoiceHistory[index];
+    if(!item)return;
+    activeHistoryInvoice=JSON.parse(JSON.stringify({
+      docNumber:item.invoiceNumber || item.docNumber || item.invoiceId || '',
+      customerName:item.customerName || item.name || '',
+      customerPhone:item.customerPhone || item.phone || '',
+      customerEmail:item.customerEmail || item.email || '',
+      vehicle:item.vehicle || '',
+      vin:item.vin || '',
+      plate:item.plate || '',
+      mileage:item.mileage || '',
+      lines:item.lines || []
+    }));
+    duplicateViewedHistoryInvoice();
+  }
+
+  function printAllInvoiceHistory(index){
+    viewAllInvoiceHistory(index);
+    setTimeout(()=>printViewedHistoryInvoice(),100);
+  }
+
+  async function deleteAllInvoiceHistory(index){
+    const item=allInvoiceHistory[index];
+    if(!item)return;
+
+    const doc=item.invoiceNumber || item.docNumber || item.invoiceId || item.id || '';
+    if(!confirm(`Delete ${doc || 'this invoice'} from Google Sheets? This cannot be undone.`))return;
+
+    const candidates=[item.invoiceNumber,item.docNumber,item.invoiceId,item.id].filter(Boolean);
+    let deleted=false;
+    let errMsg='';
+
+    for(const candidate of candidates){
+      try{
+        const res=await fetch(getInvoiceBackendUrl(), {
+          method:'POST',
+          headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({
+            action:'deleteInvoice',
+            password:INVOICE_BACKEND_PASSWORD,
+            invoiceId:String(candidate)
+          })
+        });
+
+        const data=await res.json();
+        if(data.status==='success'){
+          deleted=true;
+          break;
+        }
+        if(data.status !== 'not_found'){
+          errMsg=data.message || 'Delete failed';
+        }
+      }catch(err){
+        console.error(err);
+        errMsg=err.message || 'Delete failed';
+      }
+    }
+
+    if(!deleted){
+      toast(errMsg || 'Invoice not found in Google Sheets');
+      return;
+    }
+
+    allInvoiceHistory.splice(index,1);
+    renderAllInvoiceHistory();
+    toast('Invoice deleted from Google Sheets');
+  }
+
+  
+  function viewServiceHistoryInvoice(id){
+    const profile=getCurrentCustomerProfile();
+    const item=(profile.serviceHistory||[]).find(x=>x.id===id);
+    if(!item)return;
+
+    activeHistoryInvoice=JSON.parse(JSON.stringify(item));
+    renderHistoryInvoiceModal(activeHistoryInvoice);
   }
   
   
@@ -2621,6 +2974,8 @@
     if(name==='history') renderServiceHistory();
   
     if(name==='history' && typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
+  
+    if(name==='allinvoices') loadAllInvoicesFromSheet(false);
   }
 
   function setStatus(s){invoice.status=s;if(s==='Paid')invoice.paymentStatus='Paid';renderAll()}
@@ -3688,6 +4043,7 @@ const localHistory=document.getElementById('serviceHistoryList');
   renderAll();
   loadPresetsFromGoogleSheets();
   initInvoiceFromAdminUrl();
+  initInvoiceViewFromUrl();
 </script>
 </body>
 </html>
