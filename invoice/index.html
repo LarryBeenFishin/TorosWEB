@@ -580,6 +580,7 @@
 <!-- DELETE SELF CONTAINED NO HELPER CALL -->
 <!-- DELETE RERENDERS SERVICE HISTORY IMMEDIATELY -->
 <!-- HISTORY PRINT AND DUPLICATE ADDED -->
+<!-- REVISIONS SAVED TO GOOGLE SHEETS -->
 </head>
 
 <body>
@@ -1937,13 +1938,41 @@
       internalNotes:invoice.internalNotes||''
     };
   }
-  function saveRevision(){
+  async function saveRevision(){
+    bindFields();
+
+    if(!invoice.customerName && !invoice.customerPhone){
+      toast('Select a customer before saving a revision');
+      return;
+    }
+
     const profile=getCurrentCustomerProfile();
     profile.revisions=Array.isArray(profile.revisions)?profile.revisions:[];
-    profile.revisions.unshift(snapshotInvoice('revision'));
+
+    const revision=snapshotInvoice('revision');
+    revision.status='Revision';
+    revision.paymentStatus='Quote';
+    revision.docNumber=(invoice.docNumber||nextDocNumber())+'-REV';
+    revision.customerName=invoice.customerName||'';
+    revision.customerPhone=invoice.customerPhone||'';
+    revision.customerEmail=invoice.customerEmail||'';
+    revision.vehicle=invoice.vehicle||'';
+    revision.vin=invoice.vin||'';
+    revision.plate=invoice.plate||'';
+    revision.mileage=invoice.mileage||'';
+    revision.internalNotes=invoice.internalNotes||'';
+
+    try{
+      await saveRevisionToGoogleSheets(revision);
+    }catch(err){
+      console.error(err);
+      toast('Revision saved locally, but Google Sheets save failed');
+    }
+
+    profile.revisions.unshift(revision);
     saveCurrentCustomerProfile(profile);
     renderRevisionHistory();
-    toast('Revision saved to customer profile');
+    toast('Revision saved');
   }
   function saveToServiceHistory(){
     const profile=getCurrentCustomerProfile();
@@ -1963,6 +1992,15 @@
 
     const label=kind==='revision'?'revision':'invoice history item';
     if(!confirm(`Delete this ${label}? This cannot be undone.`))return;
+
+    if(kind==='revision'){
+      try{
+        await deleteRevisionFromGoogleSheets(item);
+      }catch(err){
+        console.error(err);
+        if(!confirm('Could not delete this revision from Google Sheets. Delete it from this browser history only?'))return;
+      }
+    }
 
     if(kind==='service'){
       const candidates=[
@@ -2015,23 +2053,13 @@
     profile[listName]=list.filter(x=>x.id!==id);
     saveCurrentCustomerProfile(profile);
 
-    // Force the visible history list to update immediately.
     if(kind==='revision'){
       renderRevisionHistory();
-    }else{
-      renderServiceHistory();
-      const pane=document.getElementById('tab-history');
-      if(pane) pane.classList.add('active');
-      document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='history'));
-    }
-
-    renderCustomerProfileTabs();
-
-    if(kind==='service'){
-      renderServiceHistory();
-      toast('Invoice deleted from history and Google Sheets');
-    }else{
       toast('Revision deleted');
+    }else{
+      renderServiceHistory();
+      renderCustomerProfileTabs();
+      toast('Invoice deleted from history and Google Sheets');
     }
   }
   function renderHistoryCards(list,kind){
@@ -2084,6 +2112,23 @@
       <div class="revision-total-card grand"><span>Total</span><strong>${money(t.total)}</strong></div>
     `;
   }
+  function queueRevisionSheetSave(revision){
+    clearTimeout(window.revisionSheetSaveTimer);
+    window.revisionSheetSaveTimer=setTimeout(async ()=>{
+      try{
+        await saveRevisionToGoogleSheets(revision);
+        const profile=getCurrentCustomerProfile();
+        const current=(profile.revisions||[]).find(r=>r.id===revision.id);
+        if(current && revision.invoiceId && !current.invoiceId){
+          current.invoiceId=revision.invoiceId;
+          saveCurrentCustomerProfile(profile);
+        }
+      }catch(err){
+        console.error(err);
+      }
+    },500);
+  }
+
   function autosaveActiveRevision(){
     if(!activeRevisionReviewId)return;
     const profile=getCurrentCustomerProfile();
@@ -2206,8 +2251,13 @@
     renderRevisionReviewTotals();
   }
 
-  function createBlankRevision(){
+  async function createBlankRevision(){
     bindFields();
+
+    if(!invoice.customerName && !invoice.customerPhone){
+      toast('Select a customer before creating a revision');
+      return;
+    }
 
     const profile=getCurrentCustomerProfile();
     profile.revisions=Array.isArray(profile.revisions)?profile.revisions:[];
@@ -2217,9 +2267,15 @@
       type:'revision',
       savedAt:new Date().toISOString(),
       updatedAt:new Date().toISOString(),
-      docNumber:(invoice.docNumber||'Revision')+'-REV',
+      docNumber:(invoice.docNumber||nextDocNumber())+'-REV',
       status:'Revision',
-      paymentStatus:'Unpaid',
+      paymentStatus:'Quote',
+      customerName:invoice.customerName||'',
+      customerPhone:invoice.customerPhone||'',
+      customerEmail:invoice.customerEmail||'',
+      vehicle:invoice.vehicle||'',
+      vin:invoice.vin||'',
+      plate:invoice.plate||'',
       mileage:invoice.mileage||'',
       total:0,
       balance:0,
@@ -2227,6 +2283,13 @@
       lines:[],
       internalNotes:''
     };
+
+    try{
+      await saveRevisionToGoogleSheets(revision);
+    }catch(err){
+      console.error(err);
+      toast('Revision created locally, but Google Sheets save failed');
+    }
 
     profile.revisions.unshift(revision);
     saveCurrentCustomerProfile(profile);
@@ -2924,6 +2987,112 @@
     localStorage.setItem(LS_DOCS,JSON.stringify(docs));
   }
 
+  function makeRevisionBackendPayload(revision){
+    const lines=(revision.lines||[]).map(l=>({
+      id:l.id||uid(),
+      type:l.type||'Labor',
+      description:l.description||'',
+      qty:Number(l.qty)||0,
+      cost:Number(l.cost)||0,
+      price:Number(l.price)||0,
+      taxable:l.type==='Part'
+    }));
+
+    let labor=0,parts=0,fees=0,discount=0,taxableParts=0;
+    lines.forEach(l=>{
+      const total=(Number(l.qty)||0)*(Number(l.price)||0);
+      if(l.type==='Labor') labor+=total;
+      else if(l.type==='Part'){parts+=total;if(l.taxable!==false) taxableParts+=total;}
+      else if(l.type==='Fee') fees+=total;
+      else if(l.type==='Discount') discount+=Math.abs(total);
+    });
+
+    const tax=taxableParts*(Number(settings.taxRate)||0)/100;
+    const total=Math.max(0,labor+parts+fees-discount+tax);
+
+    return {
+      id:revision.invoiceId || revision.id || '',
+      invoiceId:revision.invoiceId || revision.id || '',
+      docNumber:revision.docNumber || ('REV-'+Date.now()),
+      invoiceNumber:revision.docNumber || ('REV-'+Date.now()),
+      status:'Revision',
+      paymentStatus:'Quote',
+      customerName:invoice.customerName || revision.customerName || '',
+      customerPhone:invoice.customerPhone || revision.customerPhone || '',
+      customerEmail:invoice.customerEmail || revision.customerEmail || '',
+      vehicle:invoice.vehicle || revision.vehicle || '',
+      vin:invoice.vin || revision.vin || '',
+      plate:invoice.plate || revision.plate || '',
+      mileage:invoice.mileage || revision.mileage || '',
+      lines,
+      payments:[],
+      totals:{labor,parts,fees,discounts:discount,shopSupplies:0,tax,total,paid:0,balance:total},
+      laborTotal:labor,
+      partsTotal:parts,
+      feesTotal:fees,
+      discountTotal:discount,
+      shopSupplies:0,
+      tax,
+      total,
+      paid:0,
+      balance:total,
+      internalNotes:revision.internalNotes || '',
+      createdAt:revision.savedAt || revision.createdAt || new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
+      closedAt:'',
+      readOnly:false
+    };
+  }
+
+  async function saveRevisionToGoogleSheets(revision){
+    const payload=makeRevisionBackendPayload(revision);
+    const res=await fetch(getInvoiceBackendUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'saveInvoice',
+        password:INVOICE_BACKEND_PASSWORD,
+        invoice:payload
+      })
+    });
+
+    const data=await res.json();
+
+    if(data.status !== 'success'){
+      throw new Error(data.message || 'Could not save revision to Google Sheets');
+    }
+
+    if(data.invoiceId){
+      revision.invoiceId=data.invoiceId;
+    }
+
+    return data;
+  }
+
+  async function deleteRevisionFromGoogleSheets(revision){
+    const candidate=revision.invoiceId || revision.docNumber || revision.id;
+    if(!candidate)return {status:'not_found'};
+
+    const res=await fetch(getInvoiceBackendUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'deleteInvoice',
+        password:INVOICE_BACKEND_PASSWORD,
+        invoiceId:String(candidate)
+      })
+    });
+
+    const data=await res.json();
+
+    if(data.status !== 'success' && data.status !== 'not_found'){
+      throw new Error(data.message || 'Could not delete revision from Google Sheets');
+    }
+
+    return data;
+  }
+
+  
   function startFreshInvoice(){
     const fresh=defaultInvoice();
     fresh.customerName='';
