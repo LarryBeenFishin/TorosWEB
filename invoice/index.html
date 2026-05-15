@@ -544,6 +544,7 @@
 <!-- REBUILT STABLE GOOGLE SHEETS CLOSE RESET -->
 <!-- FIXED NEW RESET MISSING MAKE DOC NUMBER -->
 <!-- SERVICE HISTORY DEDUPED LOCAL VIEW ONLY -->
+<!-- DELETE SERVICE HISTORY ALSO DELETES SHEET ROW -->
 </head>
 
 <body>
@@ -1113,6 +1114,30 @@
     if(data.status !== 'success'){
       throw new Error(data.message || 'Could not load customer invoices');
     }
+
+  async function deleteInvoiceFromGoogleSheets(invoiceId){
+    if(!invoiceId) throw new Error('Missing invoice ID');
+
+    const res=await fetch(getInvoiceBackendUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'deleteInvoice',
+        password:INVOICE_BACKEND_PASSWORD,
+        invoiceId
+      })
+    });
+
+    const data=await res.json();
+
+    if(data.status !== 'success' && data.status !== 'not_found'){
+      throw new Error(data.message || 'Could not delete invoice from Google Sheets');
+    }
+
+    return data;
+  }
+
+  
 
     return data.invoices || [];
   }
@@ -1910,14 +1935,39 @@
     renderServiceHistory();
     toast('Service history saved to customer profile');
   }
-  function deleteCustomerProfileEntry(kind,id){
+  async function deleteCustomerProfileEntry(kind,id){
     const profile=getCurrentCustomerProfile();
     const listName=kind==='revision'?'revisions':'serviceHistory';
-    profile[listName]=(profile[listName]||[]).filter(x=>x.id!==id);
+    const list=Array.isArray(profile[listName])?profile[listName]:[];
+    const item=list.find(x=>x.id===id);
+
+    if(!item)return;
+
+    const label=kind==='revision'?'revision':'invoice history item';
+    if(!confirm(`Delete this ${label}? This cannot be undone.`))return;
+
+    if(kind==='service'){
+      const sheetInvoiceId=item.invoiceId || item.id || item.docNumber || item.invoiceNumber || '';
+
+      try{
+        if(sheetInvoiceId){
+          await deleteInvoiceFromGoogleSheets(sheetInvoiceId);
+        }
+      }catch(err){
+        console.error(err);
+        if(!confirm('Could not delete this invoice from Google Sheets. Delete it from this browser history only?'))return;
+      }
+    }
+
+    profile[listName]=list.filter(x=>x.id!==id);
     saveCurrentCustomerProfile(profile);
-    if(kind==='revision') renderRevisionHistory();
-    else renderServiceHistory();
-    toast(kind==='revision'?'Revision deleted':'Service history deleted');
+    renderCustomerProfileTabs();
+
+    if(kind==='service'){
+      toast('Invoice deleted from history and Google Sheets');
+    }else{
+      toast('Revision deleted');
+    }
   }
   function renderHistoryCards(list,kind){
     if(!list || !list.length){
@@ -2831,6 +2881,8 @@ const localHistory=document.getElementById('serviceHistoryList');
     const profile=getCurrentCustomerProfile();
     profile.serviceHistory=Array.isArray(profile.serviceHistory)?profile.serviceHistory:[];
     const snapshot=snapshotInvoice('service');
+    snapshot.invoiceId=invoice.invoiceId || invoice.id || invoice.docNumber || '';
+    snapshot.invoiceNumber=invoice.docNumber || invoice.invoiceNumber || '';
     snapshot.status='Closed';
     snapshot.paymentStatus='Paid';
     snapshot.closedAt=invoice.closedAt;
