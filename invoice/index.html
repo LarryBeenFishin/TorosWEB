@@ -498,6 +498,44 @@
       margin-left:8px;
     }
 
+  
+    .customer-empty-state{
+      border:1px dashed #c9d8ea;
+      background:#f8fbff;
+      border-radius:14px;
+      padding:14px;
+      display:none;
+      gap:8px;
+      flex-direction:column;
+      color:#64748b;
+      font-size:13px;
+      line-height:1.35;
+    }
+    .customer-empty-state strong{color:var(--navy);font-size:15px}
+    .customer-picker-results{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      overflow:auto;
+      max-height:420px;
+      min-height:120px;
+    }
+    .customer-picker-card{
+      width:100%;
+      text-align:left;
+      border:0;
+      border-bottom:1px solid #edf2f7;
+      background:#fff;
+      color:var(--ink);
+      padding:12px;
+      cursor:pointer;
+      border-radius:0;
+    }
+    .customer-picker-card:hover{background:#f3f8ff}
+    .customer-picker-card:last-child{border-bottom:0}
+    .customer-picker-card strong{display:block;color:var(--navy);font-size:14px}
+    .customer-picker-card small{display:block;color:var(--muted);font-size:12px;margin-top:3px;line-height:1.35}
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -518,7 +556,7 @@
     </header>
 
     <nav class="ribbon">
-      <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Customer</button><div class="drop-menu"><div class="drop-title">Customer Tools</div><button onclick="focusField('customerSearch')">Search Customer</button><button onclick="document.getElementById('customerPanel')?.scrollIntoView({behavior:'smooth',block:'nearest'});">View Customer / Vehicle Info</button><button onclick="openPopup('customerPopup')">Edit Customer / Vehicle</button><button onclick="clearCustomer()">Clear Customer</button></div></div>
+      <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Customer</button><div class="drop-menu"><div class="drop-title">Customer Tools</div><button onclick="openCustomerPicker()">Search Customer</button><button onclick="document.getElementById('customerVehicleDisplay')?.scrollIntoView({behavior:'smooth',block:'nearest'});">View Customer / Vehicle Info</button><button onclick="openPopup('customerPopup')">Edit Customer / Vehicle</button><button onclick="clearCustomer()">Clear Customer</button></div></div>
       <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Symptom</button><div class="drop-menu"><div class="drop-title">Add to order</div><button onclick="openServicePopup('Symptom')">Add Symptom Popup</button><button onclick="quickConcern('Customer states vehicle has a noise while driving.')">Noise While Driving</button><button onclick="quickConcern('Customer states warning light is on.')">Warning Light On</button><button onclick="quickConcern('Customer states vehicle is leaking fluid.')">Fluid Leak</button></div></div>
       <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Jobs</button><div class="drop-menu"><div class="drop-title">Job Tools</div><button onclick="openServicePopup('Job')">Add Job Popup</button><button onclick="openCannedBuilder()">Create Canned Job</button><button onclick="showTab('jobs')">View Canned Jobs</button></div></div>
       <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Parts</button><div class="drop-menu"><div class="drop-title">Parts</div><button onclick="openServicePopup('Part')">Add Part Popup</button><button onclick="addLine('Part')">Quick Add Empty Part</button><button onclick="openServicePopup('Fluids')">Add Fluid Popup</button></div></div>
@@ -535,9 +573,20 @@
 
     <section class="main">
       <aside class="panel">
-        <div class="panel-head"><h2>Customer / Vehicle</h2><button class="light" onclick="openPopup('customerPopup')">Edit</button></div>
+        <div class="panel-head"><h2>Customer / Vehicle</h2></div>
         <div class="panel-body stack">
-          <div id="customerResults" class="search-results"><div class="empty">Loading customers...</div></div>
+          <div class="mini-row">
+            <button class="blue" type="button" onclick="openCustomerPicker()">Search Customer</button>
+            <button class="light" type="button" onclick="openPopup('customerPopup')">Edit Info</button>
+          </div>
+          <div class="customer-empty-state" id="customerEmptyState">
+            <strong>No customer selected</strong>
+            <span>Search your customer database or enter customer info manually.</span>
+            <div class="mini-row">
+              <button class="blue" type="button" onclick="openCustomerPicker()">Search Customer</button>
+              <button class="light" type="button" onclick="openPopup('customerPopup')">Add Manually</button>
+            </div>
+          </div>
           <div class="info-card" id="customerVehicleDisplay">
             <div class="info-row"><div class="info-label">Customer</div><div class="info-value muted" id="displayCustomerName">No customer selected</div></div>
             <div class="info-row"><div class="info-label">Vehicle</div><div class="info-value muted" id="displayVehicle">No vehicle entered</div></div>
@@ -713,6 +762,27 @@
       <div class="modal-foot"><button class="light" onclick="closePopup('servicePopup')">Cancel</button><button class="green" onclick="addPopupToInvoice()">Add To Invoice</button></div>
     </div>
   </div>
+
+  
+  <div class="modal-overlay" id="customerPickerPopup">
+    <div class="modal">
+      <div class="modal-top"><h2>Search Customer Database</h2><button class="close" onclick="closePopup('customerPickerPopup')">×</button></div>
+      <div class="modal-body stack">
+        <div>
+          <label>Search</label>
+          <input id="customerPickerSearch" placeholder="Name, phone, email, vehicle, plate, VIN..." oninput="renderCustomerPickerResults()" autocomplete="off">
+        </div>
+        <div id="customerPickerResults" class="customer-picker-results">
+          <div class="empty" style="margin:10px">Loading customers...</div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="light" onclick="closePopup('customerPickerPopup')">Cancel</button>
+        <button class="green" onclick="closePopup('customerPickerPopup');openPopup('customerPopup')">Add Manually</button>
+      </div>
+    </div>
+  </div>
+
 
   <div class="modal-overlay" id="customerPopup">
     <div class="modal">
@@ -1216,48 +1286,103 @@
   function focusField(id){document.querySelectorAll('.dropdown.open').forEach(d=>d.classList.remove('open'));document.getElementById(id)?.focus()}
 
   async function loadCustomers(){
-    const box=document.getElementById('customerResults');
+    const box=document.getElementById('customerPickerResults');
     try{
       const res=await fetch('/api/get-customers',{headers:adminAuthHeaders(),cache:'no-store'});
       const data=await res.json();
       customers=data.customers||[];
-      renderCustomerMatches();
+      renderCustomerPickerResults();
       prefillFromQuery();
     }catch(e){
-      box.innerHTML='<div class="empty">Customer list could not load. You can still type customer info manually.</div>';
+      if(box) box.innerHTML='<div class="empty" style="margin:10px">Customer list could not load. You can still enter customer info manually.</div>';
     }
   }
 
-  function renderCustomerMatches(){
-    const q=(document.getElementById('customerSearch')?.value||'').toLowerCase().trim();
-    const box=document.getElementById('customerResults');
-    const matches=(q?customers.filter(c=>[c.name,c.phone,c.email,c.vehicle,c.lastService].join(' ').toLowerCase().includes(q)):customers.slice(0,7)).slice(0,12);
-    if(!matches.length){box.innerHTML='<div class="empty">No matches. Type customer info manually or search another name.</div>';return}
-    box.innerHTML=matches.map(c=>`<div class="result-card" onclick="selectCustomer(${customers.indexOf(c)})"><strong>${esc(c.name||'Customer')}</strong><small>${esc(c.phone||'No phone')} · ${esc(c.vehicle||'No vehicle')}</small><small>${esc(c.email||'')}</small></div>`).join('');
+  function customerSearchText(c){
+    return [c.name,c.phone,c.email,c.vehicle,c.lastService,c.vin,c.plate,c.mileage].join(' ').toLowerCase();
+  }
+
+  function openCustomerPicker(){
+    openPopup('customerPickerPopup');
+    setTimeout(()=>{
+      const input=document.getElementById('customerPickerSearch');
+      if(input) input.focus();
+      renderCustomerPickerResults();
+    },50);
+  }
+
+  function renderCustomerPickerResults(){
+    const input=document.getElementById('customerPickerSearch');
+    const q=(input?.value||'').toLowerCase().trim();
+    const qDigits=digitsOnly ? digitsOnly(q) : q.replace(/\D/g,'');
+    const box=document.getElementById('customerPickerResults');
+    if(!box)return;
+
+    const matches=(q
+      ? customers.filter(c=>{
+          const hay=customerSearchText(c);
+          const phoneDigits=digitsOnly ? digitsOnly(c.phone) : String(c.phone||'').replace(/\D/g,'');
+          return hay.includes(q) || (qDigits && phoneDigits.includes(qDigits));
+        })
+      : customers.slice(0,8)
+    ).slice(0,20);
+
+    if(!customers.length){
+      box.innerHTML='<div class="empty" style="margin:10px">No customers loaded yet.</div>';
+      return;
+    }
+
+    if(!matches.length){
+      box.innerHTML='<div class="empty" style="margin:10px">No matching customers found. Try another search or add manually.</div>';
+      return;
+    }
+
+    box.innerHTML=matches.map(c=>{
+      const index=customers.indexOf(c);
+      return `<button class="customer-picker-card" type="button" onclick="selectCustomer(${index});closePopup('customerPickerPopup')">
+        <strong>${esc(c.name||'Customer')}</strong>
+        <small>${esc(formatPhone ? formatPhone(c.phone||'') : c.phone||'No phone')} · ${esc(c.vehicle||'No vehicle')}</small>
+        <small>${esc(c.email||'No email')}${c.plate?' · Plate: '+esc(c.plate):''}${c.vin?' · VIN: '+esc(c.vin):''}</small>
+      </button>`;
+    }).join('');
   }
 
   function selectCustomer(index){
     const c=customers[index]; if(!c)return;
-    invoice.customerName=c.name||'';invoice.customerPhone=formatPhone(c.phone||'');invoice.customerEmail=c.email||'';invoice.vehicle=c.vehicle||'';
-    document.getElementById('customerSearch').value=c.name||'';
-    renderAll();toast('Customer loaded');
+    invoice.customerName=c.name||'';
+    invoice.customerPhone=formatPhone(c.phone||'');
+    invoice.customerEmail=c.email||'';
+    invoice.vehicle=c.vehicle||'';
+    invoice.vin=c.vin||'';
+    invoice.plate=c.plate||'';
+    invoice.mileage=formatMileage ? formatMileage(c.mileage||'') : (c.mileage||'');
+    renderAll();
+    toast('Customer loaded');
   }
 
   function prefillFromQuery(){
     const p=new URLSearchParams(location.search);
-    const q=(p.get('customer')||p.get('phone')||'').toLowerCase();
+    const q=(p.get('customer')||p.get('phone')||p.get('customerPhone')||'').toLowerCase();
     if(!q)return;
-    document.getElementById('customerSearch').value=q;
-    renderCustomerMatches();
-    const m=customers.find(c=>[c.name,c.phone,c.email].join(' ').toLowerCase().includes(q));
+    const input=document.getElementById('customerPickerSearch');
+    if(input) input.value=q;
+    renderCustomerPickerResults();
+    const qDigits=digitsOnly ? digitsOnly(q) : q.replace(/\D/g,'');
+    const m=customers.find(c=>{
+      const hay=[c.name,c.phone,c.email].join(' ').toLowerCase();
+      const phoneDigits=digitsOnly ? digitsOnly(c.phone) : String(c.phone||'').replace(/\D/g,'');
+      return hay.includes(q) || (qDigits && phoneDigits.includes(qDigits));
+    });
     if(m)selectCustomer(customers.indexOf(m));
   }
 
   function clearCustomer(){
     bindFields();
     ['customerName','customerPhone','customerEmail','vehicle','vin','plate','mileage','advisor'].forEach(k=>invoice[k]='');
-    document.getElementById('customerSearch').value='';
-    renderAll();toast('Customer cleared');
+    const input=document.getElementById('customerPickerSearch');
+    if(input) input.value='';
+    renderAll();
+    toast('Customer cleared');
   }
 
   function normalizeCustomerRecord(c){
@@ -1529,6 +1654,14 @@
     invoice.updatedAt=new Date().toISOString();
   }
 
+  function updateCustomerPanelState(){
+    const hasCustomer=!!(invoice.customerName || invoice.customerPhone || invoice.vehicle);
+    const empty=document.getElementById('customerEmptyState');
+    const card=document.getElementById('customerVehicleDisplay');
+    if(empty) empty.style.display=hasCustomer?'none':'flex';
+    if(card) card.style.display=hasCustomer?'block':'none';
+  }
+
   function updateCustomerVehicleDisplay(){
     const map = [
       ['displayCustomerName', invoice.customerName, 'No customer selected'],
@@ -1556,7 +1689,7 @@
     ['customerName','customerPhone','customerEmail','vehicle','vin','plate','mileage','docNumber','openedDate','promiseDate','advisor','concern','authStatus','authorizedBy','techNotes','recommendations','internalNotes','paymentMethod'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.value=invoice[id]||'';
     });
-    updateCustomerVehicleDisplay();
+    updateCustomerVehicleDisplay();updateCustomerPanelState();
     document.getElementById('quickStatusSelect').value=invoice.status;
     ensurePayments();
     if(!invoice.payments.length && Number(invoice.amountPaid||0)>0){invoice.payments=[{id:uid(),method:invoice.paymentMethod&&invoice.paymentMethod!=='None'?invoice.paymentMethod:'Cash',amount:cleanNumber(invoice.amountPaid)}];}
