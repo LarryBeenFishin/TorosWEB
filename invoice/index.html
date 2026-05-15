@@ -541,8 +541,7 @@
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
 <!-- CLEAN CUSTOMER PICKER + GOOGLE SHEETS BACKEND -->
-<!-- AUTO GOOGLE SHEETS HISTORY + BLANK AFTER CLOSE -->
-<!-- FIXED CLOSE BLANK AND AUTO HISTORY REFRESH -->
+<!-- REBUILT STABLE GOOGLE SHEETS CLOSE RESET -->
 </head>
 
 <body>
@@ -1464,7 +1463,7 @@
     invoice.plate=c.plate||'';
     invoice.mileage=formatMileage ? formatMileage(c.mileage||'') : (c.mileage||'');
     renderAll();
-    scheduleGoogleSheetHistoryLoad();
+    if(typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
     toast('Customer loaded');
   }
 
@@ -1490,7 +1489,6 @@
     const input=document.getElementById('customerPickerSearch');
     if(input) input.value='';
     renderAll();
-    const googleHistory=document.getElementById('googleSheetHistoryList'); if(googleHistory) googleHistory.innerHTML='';
     toast('Customer cleared');
   }
 
@@ -1643,7 +1641,7 @@
     if(data.concern && !invoice.concern) invoice.concern=data.concern;
 
     renderAll();
-    scheduleGoogleSheetHistoryLoad();
+    if(typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
     toast('Customer info loaded into invoice');
   }
 
@@ -1744,7 +1742,7 @@
     invoice.plate=document.getElementById('modalPlate').value;
     invoice.mileage=formatMileage(document.getElementById('modalMileage').value);
     closePopup('customerPopup');renderAll();
-    scheduleGoogleSheetHistoryLoad();toast('Customer updated');
+    if(typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();toast('Customer updated');
   }
 
   function bindFields(){
@@ -2247,19 +2245,22 @@
     openPopup('serviceHistoryViewModal');
   }
   
+  
+  
   function scheduleGoogleSheetHistoryLoad(){
     const box=document.getElementById('googleSheetHistoryList');
     if(!box)return;
+
+    clearTimeout(window.googleSheetHistoryTimer);
 
     if(!invoice.customerPhone){
       box.innerHTML='';
       return;
     }
 
-    clearTimeout(window.googleSheetHistoryTimer);
     window.googleSheetHistoryTimer=setTimeout(()=>{
       loadGoogleSheetServiceHistory();
-    },250);
+    },150);
   }
 
   async function loadGoogleSheetServiceHistory(){
@@ -2304,6 +2305,7 @@
       box.innerHTML='<div class="empty">Could not load Google Sheets invoice history.</div>';
     }
   }
+
   
   function renderServiceHistory(){
     const box=document.getElementById('serviceHistoryList');
@@ -2379,8 +2381,11 @@
   
   function showTab(name){
     document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
-    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-'+name));
-    if(name==='history') scheduleGoogleSheetHistoryLoad();
+    document.querySelectorAll('.work-section').forEach(s=>s.classList.toggle('active',s.id==='tab-'+name));
+    if(name==='revisions') renderRevisionHistory();
+    if(name==='history') renderServiceHistory();
+  
+    if(name==='history' && typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
   }
 
   function setStatus(s){invoice.status=s;if(s==='Paid')invoice.paymentStatus='Paid';renderAll()}
@@ -2798,8 +2803,6 @@
   function startFreshInvoice(){
     const fresh=defaultInvoice();
     fresh.docNumber=makeDocNumber();
-
-    // Force a truly blank new order after closing.
     fresh.customerName='';
     fresh.customerPhone='';
     fresh.customerEmail='';
@@ -2807,7 +2810,6 @@
     fresh.vin='';
     fresh.plate='';
     fresh.mileage='';
-    fresh.openedDate=new Date().toISOString().slice(0,10);
     fresh.promiseDate='';
     fresh.advisor='';
     fresh.concern='';
@@ -2837,9 +2839,11 @@
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    showTab('lines');
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='lines'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id==='tab-lines'));
+
     renderAll();
-    updateCustomerPanelState?.();
+    if(typeof updateCustomerPanelState==='function') updateCustomerPanelState();
   }
 
   function newInvoice(){
@@ -2864,50 +2868,43 @@
 
     if(!confirm('Close this invoice? This will save it to this customer history and start a new blank invoice.'))return;
 
+    const closedInvoice=JSON.parse(JSON.stringify(invoice));
     invoice.status='Closed';
     invoice.paymentStatus='Paid';
     invoice.closedAt=new Date().toISOString();
     invoice.readOnly=true;
-
-    const closedCustomerPhone=invoice.customerPhone || '';
-    const closedInvoiceSnapshot=JSON.parse(JSON.stringify(invoice));
 
     try{
       await closeInvoiceInGoogleSheets();
     }catch(err){
       console.error(err);
       toast('Close failed: ' + (err.message || 'Google Sheets error'));
+      invoice=closedInvoice;
+      renderAll();
       return;
     }
 
-    // Keep a local read-only backup copy too.
+    // Local backup copy only.
     const profile=getCurrentCustomerProfile();
     profile.serviceHistory=Array.isArray(profile.serviceHistory)?profile.serviceHistory:[];
     const snapshot=snapshotInvoice('service');
     snapshot.status='Closed';
     snapshot.paymentStatus='Paid';
-    snapshot.closedAt=closedInvoiceSnapshot.closedAt;
-    snapshot.internalNotes=closedInvoiceSnapshot.internalNotes||'';
-    snapshot.customerName=closedInvoiceSnapshot.customerName||'';
-    snapshot.customerPhone=closedInvoiceSnapshot.customerPhone||'';
-    snapshot.customerEmail=closedInvoiceSnapshot.customerEmail||'';
-    snapshot.vehicle=closedInvoiceSnapshot.vehicle||'';
-    snapshot.vin=closedInvoiceSnapshot.vin||'';
-    snapshot.plate=closedInvoiceSnapshot.plate||'';
+    snapshot.closedAt=invoice.closedAt;
+    snapshot.internalNotes=invoice.internalNotes||'';
+    snapshot.customerName=invoice.customerName||'';
+    snapshot.customerPhone=invoice.customerPhone||'';
+    snapshot.customerEmail=invoice.customerEmail||'';
+    snapshot.vehicle=invoice.vehicle||'';
+    snapshot.vin=invoice.vin||'';
+    snapshot.plate=invoice.plate||'';
     snapshot.readOnly=true;
-
     profile.serviceHistory=profile.serviceHistory.filter(x=>!(x.docNumber===snapshot.docNumber && x.closedAt===snapshot.closedAt));
     profile.serviceHistory.unshift(snapshot);
     saveCurrentCustomerProfile(profile);
 
     startFreshInvoice();
-
-    // Also clear any history pane attached to the previous customer so it does not look like
-    // the new blank invoice still belongs to that customer.
-    const googleHistory=document.getElementById('googleSheetHistoryList');
-    if(googleHistory) googleHistory.innerHTML='';
-
-    toast('Invoice closed, saved to customer history, and new blank invoice started');
+    toast('Invoice closed, saved, and new blank invoice started');
   }
 
   async function saveDocument(){
@@ -2933,6 +2930,7 @@
     }
 
     renderSavedDocs();
+    if(typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
     toast('Invoice saved');
   }
   function getDocs(){return JSON.parse(localStorage.getItem(LS_DOCS)||'[]')}
