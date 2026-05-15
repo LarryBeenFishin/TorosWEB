@@ -624,6 +624,7 @@
 <!-- PRESETS SHEET HELPERS ADDED -->
 <!-- PRESETS SAVE DELETE GOOGLE SHEETS FINAL -->
 <!-- ALL INVOICES HISTORY TAB ADDED -->
+<!-- ALL INVOICES PANE PLACEMENT FIXED -->
 </head>
 
 <body>
@@ -787,6 +788,33 @@
             <h3>Payments</h3>
             <button class="light" type="button" onclick="addPayment()">+ Add Payment</button>
           </div>
+
+          <div class="tab-pane" id="tab-allinvoices">
+            <div class="panel-subhead">
+              <div>
+                <h3>All Invoices</h3>
+                <p>Search every estimate, revision, repair order, and closed invoice saved to Google Sheets.</p>
+              </div>
+              <button class="blue" type="button" onclick="loadAllInvoicesFromSheet(true)">Refresh</button>
+            </div>
+
+            <div class="mini-row">
+              <input id="allInvoiceSearch" placeholder="Search invoice #, customer, phone, vehicle, status..." oninput="renderAllInvoiceHistory()">
+              <select id="allInvoiceStatusFilter" onchange="renderAllInvoiceHistory()">
+                <option value="">All Statuses</option>
+                <option value="Estimate">Estimate</option>
+                <option value="Repair Order">Repair Order</option>
+                <option value="Invoice">Invoice</option>
+                <option value="Closed">Closed</option>
+                <option value="Revision">Revision</option>
+              </select>
+            </div>
+
+            <div id="allInvoiceHistoryList" class="history-list">
+              <div class="empty">Loading invoices from Google Sheets...</div>
+            </div>
+          </div>
+
           <div class="split-payments" id="paymentsList"></div><div class="hint" style="font-size:11px;padding:6px 8px;margin-top:8px">Payment totals update after leaving the amount field or pressing Enter.</div>
           <div class="side-actions">
             <button class="blue paid-toggle unpaid" id="paidToggleBtn" onclick="togglePaidStatus()">Mark Paid</button>
@@ -803,35 +831,7 @@
 
   <section class="print-shell" id="printableInvoice"></section>
   <div class="toast" id="toast"></div>
-
-  
-        <div class="tab-pane" id="tab-allinvoices">
-          <div class="panel-subhead">
-            <div>
-              <h3>All Invoices</h3>
-              <p>Search every estimate, revision, repair order, and closed invoice saved to Google Sheets.</p>
-            </div>
-            <button class="blue" type="button" onclick="loadAllInvoicesFromSheet(true)">Refresh</button>
-          </div>
-
-          <div class="mini-row">
-            <input id="allInvoiceSearch" placeholder="Search invoice #, customer, phone, vehicle, status..." oninput="renderAllInvoiceHistory()">
-            <select id="allInvoiceStatusFilter" onchange="renderAllInvoiceHistory()">
-              <option value="">All Statuses</option>
-              <option value="Estimate">Estimate</option>
-              <option value="Repair Order">Repair Order</option>
-              <option value="Invoice">Invoice</option>
-              <option value="Closed">Closed</option>
-              <option value="Revision">Revision</option>
-            </select>
-          </div>
-
-          <div id="allInvoiceHistoryList" class="history-list">
-            <div class="empty">Click Refresh or open this tab to load invoices.</div>
-          </div>
-        </div>
-
-  <div class="modal-overlay" id="servicePopup">
+<div class="modal-overlay" id="servicePopup">
     <div class="modal">
       <div class="modal-top"><h2 id="servicePopupTitle">Add Item</h2><button class="close" onclick="closePopup('servicePopup')">×</button></div>
       <div class="modal-body stack">
