@@ -1,12 +1,8 @@
-const CACHE_NAME = "toros-admin-v6-current-text-fix";
+const CACHE_NAME = "toros-admin-v7-network-first-invoice";
 
 const STATIC_ASSETS = [
   "/logo.png",
-  "/manifest.json",
-  "/admin",
-  "/admin/customers",
-  "/admin/inspection",
-  "/admin/inspection-history"
+  "/manifest.json"
 ];
 
 self.addEventListener("install", event => {
@@ -45,16 +41,17 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // HTML pages: network-first with offline fallback
+  // Admin/tool HTML pages: network-first so updates show immediately
   if (
     url.pathname === "/" ||
     url.pathname.startsWith("/admin") ||
-    url.pathname.startsWith("/inspection")
+    url.pathname.startsWith("/inspection") ||
+    url.pathname.startsWith("/invoice")
   ) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: "no-store" })
         .then(response => {
-          // Cache the fresh HTML for offline use
+          // Save fresh copy only as an offline fallback
           const copy = response.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(request, copy).catch(() => {});
@@ -66,7 +63,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Static assets (images, logo, manifest): cache-first
+  // Static assets: cache-first
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
@@ -128,13 +125,12 @@ self.addEventListener("notificationclick", event => {
       type: "window",
       includeUncontrolled: true
     }).then(clientList => {
-      // Focus existing window if open
       for (const client of clientList) {
         if (client.url.includes(url) && "focus" in client) {
           return client.focus();
         }
       }
-      // Otherwise open new window
+
       if (clients.openWindow) {
         return clients.openWindow(url);
       }
