@@ -547,6 +547,7 @@
 <!-- DELETE SERVICE HISTORY ALSO DELETES SHEET ROW -->
 <!-- DELETE USES DOCNUMBER FIRST -->
 <!-- DELETE HELPER GUARANTEED PRESENT -->
+<!-- DELETE SELF CONTAINED NO HELPER CALL -->
 </head>
 
 <body>
@@ -1117,27 +1118,7 @@
       throw new Error(data.message || 'Could not load customer invoices');
     }
 
-  async function deleteInvoiceFromGoogleSheets(invoiceId){
-    if(!invoiceId) throw new Error('Missing invoice ID');
-
-    const res=await fetch(getInvoiceBackendUrl(), {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({
-        action:'deleteInvoice',
-        password:INVOICE_BACKEND_PASSWORD,
-        invoiceId:String(invoiceId)
-      })
-    });
-
-    const data=await res.json();
-
-    if(data.status === 'success' || data.status === 'not_found'){
-      return data;
-    }
-
-    throw new Error(data.message || 'Could not delete invoice from Google Sheets');
-  }
+  
 
   
 
@@ -1961,10 +1942,25 @@
 
       for(const candidate of candidates){
         try{
-          const result=await deleteInvoiceFromGoogleSheets(candidate);
-          if(result.status==='success'){
+          const res=await fetch(getInvoiceBackendUrl(), {
+            method:'POST',
+            headers:{'Content-Type':'text/plain;charset=utf-8'},
+            body:JSON.stringify({
+              action:'deleteInvoice',
+              password:INVOICE_BACKEND_PASSWORD,
+              invoiceId:String(candidate)
+            })
+          });
+
+          const data=await res.json();
+
+          if(data.status==='success'){
             deletedFromSheet=true;
             break;
+          }
+
+          if(data.status !== 'not_found'){
+            sheetError=data.message || 'Google Sheets delete failed';
           }
         }catch(err){
           console.error(err);
