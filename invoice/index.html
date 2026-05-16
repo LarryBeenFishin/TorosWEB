@@ -607,6 +607,37 @@
       body.print-history-only textarea{border:0!important;resize:none!important}
     }
 
+  
+    .vehicle-picker-box{
+      border:1px dashed #c9d8ea;
+      background:#f8fbff;
+      border-radius:12px;
+      padding:10px;
+      display:none;
+      gap:8px;
+      flex-direction:column;
+    }
+    .vehicle-picker-box.open{display:flex}
+    .vehicle-pill-row{display:flex;gap:6px;flex-wrap:wrap}
+    .vehicle-pill{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--navy);
+      border-radius:999px;
+      padding:6px 9px;
+      font-size:12px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .customer-save-note{
+      font-size:12px;
+      color:var(--muted);
+      background:#f8fbff;
+      border:1px dashed #c9d8ea;
+      border-radius:10px;
+      padding:8px 10px;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -627,6 +658,8 @@
 <!-- ALL INVOICES PANE PLACEMENT FIXED -->
 <!-- ALL INVOICES WORK SECTION FIXED -->
 <!-- ALL INVOICES CENTER PANEL FINAL FIX -->
+<!-- CUSTOMER PROFILES MULTI VEHICLE ADDED -->
+<!-- CUSTOMER LOADS FROM BACKEND MULTI VEHICLE FIX -->
 </head>
 
 <body>
@@ -911,6 +944,14 @@
           <input id="modalCustomerSearch" placeholder="Search name, phone, email, vehicle, plate, VIN..." oninput="searchModalCustomers(this.value)" autocomplete="off">
           <div id="modalCustomerResults" class="customer-modal-results"></div>
         </div>
+
+        <div id="modalVehiclePickerBox" class="vehicle-picker-box">
+          <strong>Vehicles on this customer profile</strong>
+          <div id="modalVehiclePills" class="vehicle-pill-row"></div>
+          <small>Pick a saved vehicle or type a new one below to add it to this customer.</small>
+        </div>
+
+        <div class="customer-save-note">If this customer is new, saving creates a customer profile. If the phone already exists, the vehicle typed below is added to that customer’s vehicle list.</div>
 
         <div class="grid2">
           <div><label>Customer Name</label><input id="modalCustomerName"></div>
@@ -1560,10 +1601,29 @@
 
   async function loadCustomers(){
     const box=document.getElementById('customerPickerResults');
+
+    try{
+      const backendUrl=getInvoiceBackendUrl()
+        + '?action=getCustomers'
+        + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD);
+
+      const res=await fetch(backendUrl,{cache:'no-store'});
+      const data=await res.json();
+
+      if(data.status==='success'){
+        customers=(data.customers||[]).map(c=>Object.assign({},c,{vehicles:normalizeVehicleList(c)}));
+        renderCustomerPickerResults();
+        prefillFromQuery();
+        return;
+      }
+    }catch(err){
+      console.error('Apps Script customer load failed',err);
+    }
+
     try{
       const res=await fetch('/api/get-customers',{headers:adminAuthHeaders(),cache:'no-store'});
       const data=await res.json();
-      customers=data.customers||[];
+      customers=(data.customers||[]).map(c=>Object.assign({},c,{vehicles:normalizeVehicleList(c)}));
       renderCustomerPickerResults();
       prefillFromQuery();
     }catch(e){
@@ -1614,7 +1674,7 @@
       const index=customers.indexOf(c);
       return `<button class="customer-picker-card" type="button" onclick="selectCustomer(${index});closePopup('customerPickerPopup')">
         <strong>${esc(c.name||'Customer')}</strong>
-        <small>${esc(formatPhone ? formatPhone(c.phone||'') : c.phone||'No phone')} · ${esc(c.vehicle||'No vehicle')}</small>
+        <small>${esc(formatPhone ? formatPhone(c.phone||'') : c.phone||'No phone')} · ${esc((normalizeVehicleList(c).length>1)?(normalizeVehicleList(c).length+' vehicles'):(c.vehicle||'No vehicle'))}</small>
         <small>${esc(c.email||'No email')}${c.plate?' · Plate: '+esc(c.plate):''}${c.vin?' · VIN: '+esc(c.vin):''}</small>
       </button>`;
     }).join('');
@@ -1625,13 +1685,30 @@
     invoice.customerName=c.name||'';
     invoice.customerPhone=formatPhone(c.phone||'');
     invoice.customerEmail=c.email||'';
-    invoice.vehicle=c.vehicle||'';
-    invoice.vin=c.vin||'';
-    invoice.plate=c.plate||'';
-    invoice.mileage=formatMileage ? formatMileage(c.mileage||'') : (c.mileage||'');
+
+    const vehicles=normalizeVehicleList(c);
+    const primaryVehicle=vehicles[0] || c;
+
+    invoice.vehicle=primaryVehicle.vehicle||c.vehicle||'';
+    invoice.vin=primaryVehicle.vin||c.vin||'';
+    invoice.plate=primaryVehicle.plate||c.plate||'';
+    invoice.mileage=formatMileage ? formatMileage(primaryVehicle.mileage||c.mileage||'') : (primaryVehicle.mileage||c.mileage||'');
+
+    invoice.selectedCustomerProfile=Object.assign({},c,{vehicles});
+
     renderAll();
     if(typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
-    toast('Customer loaded');
+
+    if(vehicles.length>1){
+      openPopup('customerPopup');
+      document.getElementById('modalCustomerName').value=invoice.customerName;
+      document.getElementById('modalCustomerPhone').value=invoice.customerPhone;
+      document.getElementById('modalCustomerEmail').value=invoice.customerEmail;
+      renderModalVehiclePicker(invoice.selectedCustomerProfile);
+      toast('Customer loaded. Choose a vehicle.');
+    }else{
+      toast('Customer loaded');
+    }
   }
 
   function prefillFromQuery(){
@@ -1659,6 +1736,150 @@
     toast('Customer cleared');
   }
 
+  function normalizeVehicleList(customer){
+    const vehicles=[];
+
+    function addVehicle(v){
+      if(!v)return;
+      const record={
+        id:v.id || uid(),
+        vehicle:v.vehicle || v.Vehicle || '',
+        vin:v.vin || v.VIN || '',
+        plate:v.plate || v.Plate || v.licensePlate || '',
+        mileage:v.mileage || v.Mileage || ''
+      };
+
+      if(!record.vehicle && !record.vin && !record.plate)return;
+
+      const key=[record.vin,record.plate,record.vehicle].map(x=>String(x||'').trim().toLowerCase()).join('|');
+      if(vehicles.some(existing=>[existing.vin,existing.plate,existing.vehicle].map(x=>String(x||'').trim().toLowerCase()).join('|')===key))return;
+
+      vehicles.push(record);
+    }
+
+    if(Array.isArray(customer?.vehicles)){
+      customer.vehicles.forEach(addVehicle);
+    }
+
+    if(typeof customer?.vehicles === 'string'){
+      try{
+        const parsed=JSON.parse(customer.vehicles);
+        if(Array.isArray(parsed)) parsed.forEach(addVehicle);
+      }catch(e){}
+    }
+
+    addVehicle({
+      vehicle:customer?.vehicle || '',
+      vin:customer?.vin || customer?.VIN || '',
+      plate:customer?.plate || customer?.licensePlate || '',
+      mileage:customer?.mileage || ''
+    });
+
+    return vehicles;
+  }
+
+  function findCustomerByPhoneOrEmail(phone,email){
+    const phoneDigits=digitsOnly ? digitsOnly(phone) : String(phone||'').replace(/\D/g,'');
+    const emailClean=String(email||'').trim().toLowerCase();
+
+    return (customers||[]).find(c=>{
+      const cPhone=digitsOnly ? digitsOnly(c.phone) : String(c.phone||'').replace(/\D/g,'');
+      const cEmail=String(c.email||'').trim().toLowerCase();
+
+      if(phoneDigits && cPhone && phoneDigits.slice(-10)===cPhone.slice(-10))return true;
+      if(emailClean && cEmail && emailClean===cEmail)return true;
+      return false;
+    });
+  }
+
+  function renderModalVehiclePicker(customer){
+    const box=document.getElementById('modalVehiclePickerBox');
+    const pills=document.getElementById('modalVehiclePills');
+    if(!box || !pills)return;
+
+    const vehicles=normalizeVehicleList(customer);
+
+    if(!vehicles.length){
+      box.classList.remove('open');
+      pills.innerHTML='';
+      window.modalVehicleOptions=[];
+      return;
+    }
+
+    box.classList.add('open');
+    window.modalVehicleOptions=vehicles;
+
+    pills.innerHTML=vehicles.map((vehicle,index)=>`
+      <button class="vehicle-pill" type="button" onclick="applyModalVehicle(${index})">
+        ${esc(vehicle.vehicle||'Vehicle')}${vehicle.plate?' · '+esc(vehicle.plate):''}
+      </button>
+    `).join('');
+  }
+
+  function applyModalVehicle(index){
+    const vehicle=(window.modalVehicleOptions||[])[index];
+    if(!vehicle)return;
+
+    document.getElementById('modalVehicle').value=vehicle.vehicle||'';
+    document.getElementById('modalVin').value=vehicle.vin||'';
+    document.getElementById('modalPlate').value=vehicle.plate||'';
+    document.getElementById('modalMileage').value=formatMileage ? formatMileage(vehicle.mileage||'') : (vehicle.mileage||'');
+
+    toast('Vehicle selected');
+  }
+
+  async function saveCustomerProfileToSheet(customer){
+    const res=await fetch(getInvoiceBackendUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'saveCustomerProfile',
+        password:INVOICE_BACKEND_PASSWORD,
+        customer:Object.assign({},customer,{vehicleId:customer.vehicleId||uid()})
+      })
+    });
+
+    const data=await res.json();
+
+    if(data.status !== 'success'){
+      throw new Error(data.message || 'Could not save customer profile');
+    }
+
+    return data.customer;
+  }
+
+  function mergeCustomerIntoLocalList(savedCustomer){
+    if(!savedCustomer)return;
+
+    const savedPhone=digitsOnly ? digitsOnly(savedCustomer.phone) : String(savedCustomer.phone||'').replace(/\D/g,'');
+    const savedEmail=String(savedCustomer.email||'').trim().toLowerCase();
+
+    let found=false;
+
+    customers=(customers||[]).map(customer=>{
+      const phoneDigits=digitsOnly ? digitsOnly(customer.phone) : String(customer.phone||'').replace(/\D/g,'');
+      const emailClean=String(customer.email||'').trim().toLowerCase();
+
+      const match=(savedPhone && phoneDigits && savedPhone.slice(-10)===phoneDigits.slice(-10)) || (savedEmail && emailClean && savedEmail===emailClean);
+
+      if(match){
+        found=true;
+        return Object.assign({}, customer, savedCustomer, {
+          vehicles:normalizeVehicleList(savedCustomer)
+        });
+      }
+
+      return customer;
+    });
+
+    if(!found){
+      customers.unshift(Object.assign({}, savedCustomer, {vehicles:normalizeVehicleList(savedCustomer)}));
+    }
+
+    renderCustomerPickerResults();
+  }
+
+  
   function normalizeCustomerRecord(c){
     const name=c.name || c.customerName || c.Customer || c.customer || c.fullName || c.FullName || '';
     const phone=c.phone || c.customerPhone || c.Phone || c.mobile || c.Mobile || c.cell || '';
@@ -1667,7 +1888,8 @@
     const vin=c.vin || c.VIN || c.vehicleVin || '';
     const plate=c.plate || c.Plate || c.licensePlate || c.LicensePlate || '';
     const mileage=c.mileage || c.Mileage || c.odometer || c.Odometer || '';
-    return {raw:c,name,phone,email,vehicle,vin,plate,mileage};
+    const vehicles=normalizeVehicleList(Object.assign({},c,{name,phone,email,vehicle,vin,plate,mileage}));
+    return {raw:c,name,phone,email,vehicle,vin,plate,mileage,vehicles};
   }
 
   async function refreshCustomerListForModal(){
@@ -1749,13 +1971,18 @@
       if(el) el.value=val || '';
     };
 
+    const vehicles=normalizeVehicleList(c);
+    const primaryVehicle=vehicles[0] || c;
+
     set('modalCustomerName', c.name);
     set('modalCustomerPhone', formatPhone ? formatPhone(c.phone) : c.phone);
     set('modalCustomerEmail', c.email);
-    set('modalVehicle', c.vehicle);
-    set('modalVin', c.vin);
-    set('modalPlate', c.plate);
-    set('modalMileage', formatMileage ? formatMileage(c.mileage) : c.mileage);
+    set('modalVehicle', primaryVehicle.vehicle || c.vehicle);
+    set('modalVin', primaryVehicle.vin || c.vin);
+    set('modalPlate', primaryVehicle.plate || c.plate);
+    set('modalMileage', formatMileage ? formatMileage(primaryVehicle.mileage || c.mileage) : (primaryVehicle.mileage || c.mileage));
+
+    renderModalVehiclePicker(Object.assign({},c,{vehicles}));
 
     const search=document.getElementById('modalCustomerSearch');
     const results=document.getElementById('modalCustomerResults');
@@ -1765,7 +1992,7 @@
       results.innerHTML='';
     }
 
-    toast('Customer loaded');
+    toast(vehicles.length>1 ? 'Customer loaded. Choose a vehicle.' : 'Customer loaded');
   }
 
   function getUrlParams(){
@@ -1908,16 +2135,76 @@
     });
   }
 
-  function saveCustomerPopup(){
-    invoice.customerName=document.getElementById('modalCustomerName').value;
-    invoice.customerPhone=formatPhone(document.getElementById('modalCustomerPhone').value);
-    invoice.customerEmail=document.getElementById('modalCustomerEmail').value;
-    invoice.vehicle=document.getElementById('modalVehicle').value;
-    invoice.vin=document.getElementById('modalVin').value;
-    invoice.plate=document.getElementById('modalPlate').value;
-    invoice.mileage=formatMileage(document.getElementById('modalMileage').value);
-    closePopup('customerPopup');renderAll();
-    if(typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();toast('Customer updated');
+  async function saveCustomerPopup(){
+    const customer={
+      name:document.getElementById('modalCustomerName').value.trim(),
+      phone:formatPhone(document.getElementById('modalCustomerPhone').value),
+      email:document.getElementById('modalCustomerEmail').value.trim(),
+      vehicle:document.getElementById('modalVehicle').value.trim(),
+      vin:document.getElementById('modalVin').value.trim(),
+      plate:document.getElementById('modalPlate').value.trim(),
+      mileage:formatMileage(document.getElementById('modalMileage').value),
+      source:'Invoice'
+    };
+
+    if(!customer.name && !customer.phone){
+      toast('Enter a customer name or phone');
+      return;
+    }
+
+    if(!customer.phone){
+      toast('Phone is required to save customer profile');
+      return;
+    }
+
+    invoice.customerName=customer.name;
+    invoice.customerPhone=customer.phone;
+    invoice.customerEmail=customer.email;
+    invoice.vehicle=customer.vehicle;
+    invoice.vin=customer.vin;
+    invoice.plate=customer.plate;
+    invoice.mileage=customer.mileage;
+
+    try{
+      const savedCustomer=await saveCustomerProfileToSheet(customer);
+      const normalizedSaved=Object.assign({},savedCustomer,{vehicles:normalizeVehicleList(savedCustomer)});
+      mergeCustomerIntoLocalList(normalizedSaved);
+      invoice.selectedCustomerProfile=normalizedSaved;
+
+      // Reload the customer list from the sheet right away so multiple vehicles are available
+      // without needing a hard refresh.
+      await loadCustomers();
+
+      const updated=findCustomerByPhoneOrEmail(customer.phone,customer.email) || normalizedSaved;
+      invoice.selectedCustomerProfile=Object.assign({},updated,{vehicles:normalizeVehicleList(updated)});
+      renderModalVehiclePicker(invoice.selectedCustomerProfile);
+
+      toast('Customer profile and vehicle saved');
+    }catch(err){
+      console.error(err);
+
+      const existing=findCustomerByPhoneOrEmail(customer.phone,customer.email);
+      if(existing){
+        const existingVehicles=normalizeVehicleList(existing);
+        existingVehicles.push({
+          id:uid(),
+          vehicle:customer.vehicle,
+          vin:customer.vin,
+          plate:customer.plate,
+          mileage:customer.mileage
+        });
+        existing.vehicles=normalizeVehicleList(Object.assign({},existing,{vehicles:existingVehicles}));
+        Object.assign(existing,customer);
+      }else{
+        customers.unshift(Object.assign({},customer,{vehicles:normalizeVehicleList(customer)}));
+      }
+
+      renderCustomerPickerResults();
+      toast('Saved locally, but customer sheet save failed');
+    }
+
+    renderAll();
+    closePopup('customerPopup');
   }
 
   function bindFields(){
@@ -2023,6 +2310,7 @@
         vin:invoice.vin||'',
         plate:invoice.plate||'',
         mileage:invoice.mileage||'',
+        vehicles:[],
         revisions:[],
         serviceHistory:[]
       };
@@ -2035,6 +2323,13 @@
     profiles[key].vin=invoice.vin||profiles[key].vin||'';
     profiles[key].plate=invoice.plate||profiles[key].plate||'';
     profiles[key].mileage=invoice.mileage||profiles[key].mileage||'';
+    profiles[key].vehicles=normalizeVehicleList(Object.assign({},profiles[key],{
+      vehicles:profiles[key].vehicles||[],
+      vehicle:invoice.vehicle||profiles[key].vehicle,
+      vin:invoice.vin||profiles[key].vin,
+      plate:invoice.plate||profiles[key].plate,
+      mileage:invoice.mileage||profiles[key].mileage
+    }));
 
     saveCustomerProfiles(profiles);
     return profiles[key];
