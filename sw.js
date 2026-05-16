@@ -1,4 +1,4 @@
-const CACHE_NAME = "toros-admin-v7-network-first-invoice";
+const CACHE_NAME = "toros-admin-v8-no-cache-invoice";
 
 const STATIC_ASSETS = [
   "/logo.png",
@@ -35,23 +35,27 @@ self.addEventListener("fetch", event => {
 
   if (request.method !== "GET") return;
 
-  // Never cache API calls — always go to network
+  // Never cache API calls
   if (url.pathname.startsWith("/api/")) {
-    event.respondWith(fetch(request));
+    event.respondWith(fetch(request, { cache: "no-store" }));
     return;
   }
 
-  // Admin/tool HTML pages: network-first so updates show immediately
+  // Never cache invoice pages
+  if (url.pathname.startsWith("/invoice")) {
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
+
+  // Admin and inspection pages: network first, fallback to cache
   if (
     url.pathname === "/" ||
     url.pathname.startsWith("/admin") ||
-    url.pathname.startsWith("/inspection") ||
-    url.pathname.startsWith("/invoice")
+    url.pathname.startsWith("/inspection")
   ) {
     event.respondWith(
       fetch(request, { cache: "no-store" })
         .then(response => {
-          // Save fresh copy only as an offline fallback
           const copy = response.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(request, copy).catch(() => {});
@@ -63,7 +67,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Static assets: cache-first
+  // Static assets: cache first
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
