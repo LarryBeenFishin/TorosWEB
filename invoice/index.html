@@ -874,6 +874,27 @@
       }
     }
 
+  
+    .customer-top-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+    .customer-top-actions button{
+      width:100%;
+    }
+    .customer-card-actions{
+      display:none;
+      margin-top:-2px;
+    }
+    .customer-card-actions button{
+      width:100%;
+    }
+    .customer-card-actions:has(+ .customer-empty-state[style*="none"]),
+    .customer-card-actions.show{
+      display:block;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -924,6 +945,8 @@
 <!-- OPEN_ESTIMATE_LOADS_CUSTOMER_VEHICLE_FINAL -->
 <!-- OPEN_SAVED_ESTIMATE_FULL_RESTORE_NO_NEW_RO_FINAL -->
 <!-- OPEN_SAVED_ESTIMATE_BIND_FIX_FINAL -->
+<!-- CUSTOMER_BUTTON_LAYOUT_FINAL -->
+<!-- CUSTOMER_EMPTY_STATE_BUTTONS_REMOVED -->
 </head>
 
 <body>
@@ -966,17 +989,16 @@
       <aside class="panel">
         <div class="panel-head"><h2>Customer / Vehicle</h2></div>
         <div class="panel-body stack">
-          <div class="mini-row">
+          <div class="mini-row customer-top-actions">
             <button class="blue" type="button" onclick="openCustomerPicker()">Search Customer</button>
+            <button class="light" type="button" onclick="openNewCustomerPopup()">New Customer</button>
+          </div>
+          <div class="customer-card-actions" id="customerCardActions">
             <button class="light" type="button" onclick="openPopup('customerPopup')">Edit Info</button>
           </div>
           <div class="customer-empty-state" id="customerEmptyState">
             <strong>No customer selected</strong>
             <span>Search your customer database or enter customer info manually.</span>
-            <div class="mini-row">
-              <button class="blue" type="button" onclick="openCustomerPicker()">Search Customer</button>
-              <button class="light" type="button" onclick="openPopup('customerPopup')">Add Manually</button>
-            </div>
           </div>
           <div class="info-card" id="customerVehicleDisplay">
             <div class="info-row"><div class="info-label">Customer</div><div class="info-value muted" id="displayCustomerName">No customer selected</div></div>
@@ -2164,6 +2186,24 @@
     return [c.name,c.phone,c.email,vehicleText,c.lastService].join(' ').toLowerCase();
   }
 
+  function openNewCustomerPopup(){
+    window.selectedModalVehicleId='';
+    window.selectedModalVehicleIndex=-1;
+
+    ['modalCustomerSearch','modalCustomerName','modalCustomerPhone','modalCustomerEmail','modalVehicle','modalVin','modalPlate','modalMileage'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.value='';
+    });
+
+    const picker=document.getElementById('modalVehiclePicker');
+    if(picker) picker.innerHTML='';
+
+    openPopup('customerPopup');
+
+    const nameInput=document.getElementById('modalCustomerName');
+    if(nameInput) setTimeout(()=>nameInput.focus(),50);
+  }
+
   function openCustomerPicker(){
     openPopup('customerPickerPopup');
     setTimeout(()=>{
@@ -2934,8 +2974,14 @@
     const hasCustomer=!!(invoice.customerName || invoice.customerPhone || invoice.vehicle);
     const empty=document.getElementById('customerEmptyState');
     const card=document.getElementById('customerVehicleDisplay');
+    const actions=document.getElementById('customerCardActions');
+
     if(empty) empty.style.display=hasCustomer?'none':'flex';
     if(card) card.style.display=hasCustomer?'block':'none';
+    if(actions){
+      actions.style.display=hasCustomer?'block':'none';
+      actions.classList.toggle('show',hasCustomer);
+    }
   }
 
   function updateCustomerVehicleDisplay(){
