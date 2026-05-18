@@ -660,6 +660,7 @@
 <!-- ALL INVOICES CENTER PANEL FINAL FIX -->
 <!-- CUSTOMER PROFILES MULTI VEHICLE ADDED -->
 <!-- CUSTOMER LOADS FROM BACKEND MULTI VEHICLE FIX -->
+<!-- VEHICLE SAVE BACKEND PRESERVE OLD VEHICLE -->
 </head>
 
 <body>
@@ -2179,7 +2180,7 @@
       invoice.selectedCustomerProfile=Object.assign({},updated,{vehicles:normalizeVehicleList(updated)});
       renderModalVehiclePicker(invoice.selectedCustomerProfile);
 
-      toast('Customer profile and vehicle saved');
+      toast('Customer profile saved and vehicle added');
     }catch(err){
       console.error(err);
 
