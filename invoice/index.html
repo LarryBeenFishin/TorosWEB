@@ -686,6 +686,11 @@
       margin-bottom:10px;
     }
 
+  
+    .bad-text{
+      color:#b42318;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -721,6 +726,7 @@
 <!-- REVISION_TO_ORDER_DELETE_AND_LINES_AUTOSAVE -->
 <!-- STATUS DROPDOWN PAID CLOSED REMOVED -->
 <!-- RO NUMBER COUNTER FINAL -->
+<!-- PROFIT LOSS DISCOUNT FIX -->
 </head>
 
 <body>
@@ -3779,21 +3785,29 @@
 
   function getProfitLines(mode){
     const lines = mode==='revision' ? (revisionReviewLines||[]) : (invoice.lines||[]);
+
     return lines.map(l=>{
       const qty=Number(l.qty)||0;
       const price=Number(l.price)||0;
-      const revenue=qty*price;
-      const unitCost=(l.type==='Part') ? Number(l.cost||0) : 0;
-      const cost=qty*unitCost;
-      const profit=revenue-cost;
+      const type=l.type||'Line';
+      const isDiscount=String(type).toLowerCase()==='discount';
+
+      // Discounts reduce revenue and gross profit. They should never count as positive revenue.
+      const lineRevenue=isDiscount ? -Math.abs(qty*price) : qty*price;
+
+      const unitCost=(type==='Part') ? Number(l.cost||0) : 0;
+      const cost=isDiscount ? 0 : qty*unitCost;
+      const profit=lineRevenue-cost;
+
       return {
-        type:l.type||'Line',
+        type,
         description:l.description||'',
         qty,
         unitCost,
         cost,
-        revenue,
-        profit
+        revenue:lineRevenue,
+        profit,
+        isDiscount
       };
     });
   }
@@ -3832,8 +3846,8 @@
             <div><strong>${esc(l.type)}:</strong> ${esc(l.description)}</div>
             <div>${l.qty}</div>
             <div>${l.type==='Part'?money(l.cost):'—'}</div>
-            <div>${money(l.revenue)}</div>
-            <div><strong>${money(l.profit)}</strong></div>
+            <div class="${l.revenue<0?'bad-text':''}">${money(l.revenue)}</div>
+            <div class="${l.profit<0?'bad-text':''}"><strong>${money(l.profit)}</strong></div>
           </div>
         `).join('');
       }
