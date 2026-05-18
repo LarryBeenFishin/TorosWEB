@@ -677,6 +677,7 @@
 <!-- VEHICLES TAB FINAL -->
 <!-- VEHICLE ADD DELETE UI FINAL -->
 <!-- VEHICLE ID SAFE FINAL -->
+<!-- VEHICLE DELETE CLEARS QUICK DISPLAY FINAL -->
 </head>
 
 <body>
@@ -1864,17 +1865,27 @@
     toast('Vehicle selected');
   }
 
-  function startNewVehicleForCustomer(){
+  function clearVehicleFieldsFromModalAndInvoice(){
     window.selectedModalVehicleId='';
     window.selectedModalVehicleIndex=-1;
-    invoice.vehicleId='';
 
     ['modalVehicle','modalVin','modalPlate','modalMileage'].forEach(id=>{
       const el=document.getElementById(id);
-      if(el)el.value='';
+      if(el) el.value='';
     });
 
+    invoice.vehicleId='';
+    invoice.vehicle='';
+    invoice.vin='';
+    invoice.plate='';
+    invoice.mileage='';
+
     document.querySelectorAll('.vehicle-pill').forEach(btn=>btn.classList.remove('active'));
+    renderAll();
+  }
+
+  function startNewVehicleForCustomer(){
+    clearVehicleFieldsFromModalAndInvoice();
 
     const vehicleInput=document.getElementById('modalVehicle');
     if(vehicleInput) vehicleInput.focus();
@@ -1935,16 +1946,19 @@
 
     window.selectedModalVehicleId='';
     window.selectedModalVehicleIndex=-1;
-    invoice.vehicleId='';
 
     if(updated){
       renderModalVehiclePicker(updated);
       const vehiclesNow=normalizeVehicleList(updated);
-      if(vehiclesNow[0]) applyModalVehicle(0);
-      else startNewVehicleForCustomer();
+
+      if(vehiclesNow.length){
+        applyModalVehicle(0);
+      }else{
+        clearVehicleFieldsFromModalAndInvoice();
+      }
     }else{
       renderModalVehiclePicker({vehicles:[]});
-      startNewVehicleForCustomer();
+      clearVehicleFieldsFromModalAndInvoice();
     }
 
     toast('Vehicle deleted');
