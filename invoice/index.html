@@ -791,6 +791,16 @@
       }
     }
 
+  
+    .topbar + .ticket-row{
+      margin-top:8px;
+    }
+
+  
+    .jobs-action-save-now{
+      margin-left:0;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -835,6 +845,8 @@
 <!-- ACTIVE DRAFT RESTORE HARDENED FINAL -->
 <!-- DRAFT CONVERT TO ESTIMATE FINAL -->
 <!-- DRAFT CONVERT CLEAN FIXED FINAL -->
+<!-- RIBBON BAR REMOVED FINAL -->
+<!-- SAVE NOW MOVED TO REVISIONS ROW FINAL -->
 </head>
 
 <body>
@@ -851,18 +863,7 @@
       </div>
     </header>
 
-    <nav class="ribbon">
-      <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Customer</button><div class="drop-menu"><div class="drop-title">Customer Tools</div><button onclick="openCustomerPicker()">Search Customer</button><button onclick="document.getElementById('customerVehicleDisplay')?.scrollIntoView({behavior:'smooth',block:'nearest'});">View Customer / Vehicle Info</button><button onclick="openPopup('customerPopup')">Edit Customer / Vehicle</button><button onclick="clearCustomer()">Clear Customer</button></div></div>
-      <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Symptom</button><div class="drop-menu"><div class="drop-title">Add to order</div><button onclick="openServicePopup('Symptom')">Add Symptom Popup</button><button onclick="quickConcern('Customer states vehicle has a noise while driving.')">Noise While Driving</button><button onclick="quickConcern('Customer states warning light is on.')">Warning Light On</button><button onclick="quickConcern('Customer states vehicle is leaking fluid.')">Fluid Leak</button></div></div>
-      <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Jobs</button><div class="drop-menu"><div class="drop-title">Job Tools</div><button onclick="openServicePopup('Job')">Add Job Popup</button><button onclick="openCannedBuilder()">Create Canned Job</button><button onclick="showTab('jobs')">View Canned Jobs</button></div></div>
-      <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Parts</button><div class="drop-menu"><div class="drop-title">Parts</div><button onclick="openServicePopup('Part')">Add Part Popup</button><button onclick="addLine('Part')">Quick Add Empty Part</button><button onclick="openServicePopup('Fluids')">Add Fluid Popup</button></div></div>
-      <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Labor</button><div class="drop-menu"><div class="drop-title">Labor</div><button onclick="openServicePopup('Labor')">Add Labor Popup</button><button onclick="addLine('Labor')">Quick Add Empty Labor</button><button onclick="openServicePopup('Diagnostic')">Add Diagnostic Popup</button></div></div>
-      <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Maint.</button><div class="drop-menu"><div class="drop-title">Maintenance</div><button onclick="openServicePopup('Maintenance')">Add Maintenance Service</button><button onclick="addMaintenance('Oil Change Service',0.5,69.99)">Oil Change</button><button onclick="addMaintenance('Brake Inspection',0.5,0)">Brake Inspection</button><button onclick="addMaintenance('Battery Test / Replacement',0.4,0)">Battery Service</button></div></div>
-      <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Options</button><div class="drop-menu right"><div class="drop-title">Invoice Options</div><button onclick="openServicePopup('Discount')">Add Discount</button><button onclick="copyAuthorizationText()">Copy Approval Text</button><button onclick="saveDocument()">Save Document</button><div class="drop-sep"></div><button onclick="openSettings()">Settings Popup</button></div></div>
-      <div class="ribbon-spacer"></div><span class="status-pill estimate" id="docBadge">Draft / Not Saved</span>
-    </nav>
-
-    <section class="ticket-row draft-ticket-row">
+<section class="ticket-row draft-ticket-row">
       <div class="field-card yellow ro-card">
         <label>Estimate / RO #</label>
         <input id="docNumber" placeholder="Not assigned yet" readonly>
@@ -946,7 +947,7 @@
               <button class="light" onclick="openServicePopup('Fee')">+ Fee</button>
               <button class="light" onclick="openServicePopup('Discount')">+ Discount</button>
             </div>
-            <div class="mini-row"><button class="light" type="button" onclick="openProfitLoss('order')">Profit / Loss</button><button class="green" type="button" onclick="saveRevision()">Save to Revisions</button></div>
+            <div class="mini-row"><button class="light" type="button" onclick="openProfitLoss('order')">Profit / Loss</button><button class="green" type="button" onclick="saveRevision()">Send to Revisions</button><button class="green jobs-action-save-now" id="saveNowBtn" onclick="saveAndParkInvoice()">Save Now</button></div>
             
           </div>
           <div class="line-wrap">
@@ -993,7 +994,7 @@
             <button class="blue" type="button" onclick="createBlankRevision()">Create Revision</button>
             <button class="light" type="button" onclick="renderRevisionHistory()">Refresh</button>
           </div>
-          <div class="hint" style="font-size:12px;padding:8px 10px">Revisions save snapshots of this invoice for the current customer. Use the Save to Revisions button from Jobs / Lines when a customer approves, declines, or changes work.</div>
+          <div class="hint" style="font-size:12px;padding:8px 10px">Revisions save snapshots of this invoice for the current customer. Use the Send to Revisions button from Jobs / Lines when a customer approves, declines, or changes work.</div>
           <div id="revisionHistoryList" class="history-list"></div>
         </div>
 
@@ -1035,7 +1036,7 @@
 </section>
 
       <aside class="panel totals-payment-panel">
-        <div class="panel-head"><h2>Totals / Payment</h2><button class="green" id="saveNowBtn" onclick="saveAndParkInvoice()">Save Now</button></div>
+        <div class="panel-head"><h2>Totals / Payment</h2></div>
         <div class="panel-body stack">
           <div class="totals-box" id="totalsBox"></div>
           <div class="payment-mini-title">
