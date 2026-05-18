@@ -895,6 +895,45 @@
       display:block;
     }
 
+  
+    #modalCustomerSearch,
+    label[for="modalCustomerSearch"],
+    #modalCustomerSearchResults{
+      display:none !important;
+    }
+
+    .customer-top-actions{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:8px;
+      width:100%;
+    }
+    .customer-top-actions button{
+      width:100%;
+      min-width:0;
+      padding-left:8px;
+      padding-right:8px;
+      font-size:12px;
+    }
+
+    /* Widen the customer sidebar slightly so Search / New Customer fit */
+    .main{
+      grid-template-columns:320px minmax(0,1fr) 300px !important;
+    }
+    @media(max-width:1100px){
+      .main{
+        grid-template-columns:280px minmax(0,1fr) 270px !important;
+      }
+      .customer-top-actions{
+        grid-template-columns:1fr;
+      }
+    }
+    @media(max-width:900px){
+      .main{
+        grid-template-columns:1fr !important;
+      }
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -947,6 +986,7 @@
 <!-- OPEN_SAVED_ESTIMATE_BIND_FIX_FINAL -->
 <!-- CUSTOMER_BUTTON_LAYOUT_FINAL -->
 <!-- CUSTOMER_EMPTY_STATE_BUTTONS_REMOVED -->
+<!-- NEW_CUSTOMER_NO_SEARCH_WIDER_PANEL_FINAL -->
 </head>
 
 <body>
@@ -1233,9 +1273,7 @@
       <div class="modal-top"><h2>Customer / Vehicle</h2><button class="close" onclick="closePopup('customerPopup')">×</button></div>
       <div class="modal-body stack">
         <div class="customer-modal-search">
-          <label>Search Customer List</label>
-          <input id="modalCustomerSearch" placeholder="Search name, phone, email, vehicle, plate, VIN..." oninput="searchModalCustomers(this.value)" autocomplete="off">
-          <div id="modalCustomerResults" class="customer-modal-results"></div>
+<div id="modalCustomerResults" class="customer-modal-results"></div>
         </div>
 
         <div id="modalVehiclePickerBox" class="vehicle-picker-box">
@@ -2189,8 +2227,9 @@
   function openNewCustomerPopup(){
     window.selectedModalVehicleId='';
     window.selectedModalVehicleIndex=-1;
+    window.modalVehicleOptions=[];
 
-    ['modalCustomerSearch','modalCustomerName','modalCustomerPhone','modalCustomerEmail','modalVehicle','modalVin','modalPlate','modalMileage'].forEach(id=>{
+    ['modalCustomerName','modalCustomerPhone','modalCustomerEmail','modalVehicle','modalVin','modalPlate','modalMileage'].forEach(id=>{
       const el=document.getElementById(id);
       if(el) el.value='';
     });
