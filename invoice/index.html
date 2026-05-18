@@ -676,6 +676,7 @@
 <!-- VEHICLE SAVE BACKEND PRESERVE OLD VEHICLE -->
 <!-- VEHICLES TAB FINAL -->
 <!-- VEHICLE ADD DELETE UI FINAL -->
+<!-- VEHICLE ID SAFE FINAL -->
 </head>
 
 <body>
@@ -1216,6 +1217,7 @@
       customerName: invoice.customerName || '',
       customerPhone: invoice.customerPhone || '',
       customerEmail: invoice.customerEmail || '',
+      vehicleId: invoice.vehicleId || '',
       vehicle: invoice.vehicle || '',
       vin: invoice.vin || '',
       plate: invoice.plate || '',
@@ -1305,7 +1307,7 @@
     return {
       id:'INV-'+Date.now(),status:'Estimate',paymentStatus:'Unpaid',paymentMethod:'None',amountPaid:0,payments:[],
       openedDate:today,promiseDate:'',advisor:'',customerName:'',customerPhone:'',customerEmail:'',
-      vehicle:'',vin:'',plate:'',mileage:'',docNumber:nextDocNumber(),concern:'',authStatus:'Not Authorized',
+      vehicleId:'',vehicle:'',vin:'',plate:'',mileage:'',docNumber:nextDocNumber(),concern:'',authStatus:'Not Authorized',
       authorizedBy:'',techNotes:'',recommendations:'',internalNotes:'',
       lines:[{id:uid(),type:'Labor',description:'Diagnostic / inspection labor',qty:1,cost:0,price:settings.laborRate,taxable:false,tech:''}],
       updatedAt:new Date().toISOString()
@@ -1709,6 +1711,7 @@
     const vehicles=normalizeVehicleList(c);
     const primaryVehicle=vehicles[0] || c;
 
+    invoice.vehicleId=primaryVehicle.vehicleId||primaryVehicle.id||'';
     invoice.vehicle=primaryVehicle.vehicle||c.vehicle||'';
     invoice.vin=primaryVehicle.vin||c.vin||'';
     invoice.plate=primaryVehicle.plate||c.plate||'';
@@ -1849,14 +1852,22 @@
     document.getElementById('modalPlate').value=vehicle.plate||'';
     document.getElementById('modalMileage').value=formatMileage ? formatMileage(vehicle.mileage||'') : (vehicle.mileage||'');
 
+    invoice.vehicleId=window.selectedModalVehicleId;
+    invoice.vehicle=vehicle.vehicle||'';
+    invoice.vin=vehicle.vin||'';
+    invoice.plate=vehicle.plate||'';
+    invoice.mileage=formatMileage ? formatMileage(vehicle.mileage||'') : (vehicle.mileage||'');
+
     document.querySelectorAll('.vehicle-pill').forEach((btn,i)=>btn.classList.toggle('active',i===index));
 
+    renderAll();
     toast('Vehicle selected');
   }
 
   function startNewVehicleForCustomer(){
     window.selectedModalVehicleId='';
     window.selectedModalVehicleIndex=-1;
+    invoice.vehicleId='';
 
     ['modalVehicle','modalVin','modalPlate','modalMileage'].forEach(id=>{
       const el=document.getElementById(id);
@@ -1898,12 +1909,10 @@
   async function deleteSelectedVehicleFromCustomer(){
     const vehicles=window.modalVehicleOptions||[];
     const selectedId=String(window.selectedModalVehicleId||'');
-    let vehicle=vehicles.find(v=>String(v.vehicleId||v.id||'')===selectedId);
+    const vehicle=vehicles.find(v=>String(v.vehicleId||v.id||'')===selectedId);
 
-    if(!vehicle && vehicles.length===1) vehicle=vehicles[0];
-
-    if(!vehicle){
-      toast('Select a vehicle to delete');
+    if(!vehicle || !selectedId){
+      toast('Select a saved vehicle to delete');
       return;
     }
 
@@ -1914,10 +1923,10 @@
       await deleteVehicleFromGoogleSheets(vehicle);
     }catch(err){
       console.error(err);
-      if(!confirm('Could not delete this vehicle from Google Sheets. Remove it from this browser only?'))return;
+      toast(err.message || 'Could not delete vehicle from Google Sheets');
+      return;
     }
 
-    // Refresh customers from backend, then reopen picker for this customer.
     await loadCustomers();
 
     const phone=document.getElementById('modalCustomerPhone')?.value || invoice.customerPhone || '';
@@ -1926,6 +1935,7 @@
 
     window.selectedModalVehicleId='';
     window.selectedModalVehicleIndex=-1;
+    invoice.vehicleId='';
 
     if(updated){
       renderModalVehiclePicker(updated);
@@ -2090,6 +2100,7 @@
     set('modalCustomerName', c.name);
     set('modalCustomerPhone', formatPhone ? formatPhone(c.phone) : c.phone);
     set('modalCustomerEmail', c.email);
+    window.selectedModalVehicleId=primaryVehicle.vehicleId || primaryVehicle.id || '';
     set('modalVehicle', primaryVehicle.vehicle || c.vehicle);
     set('modalVin', primaryVehicle.vin || c.vin);
     set('modalPlate', primaryVehicle.plate || c.plate);
@@ -2285,6 +2296,7 @@
       const normalizedSaved=Object.assign({},savedCustomer,{vehicles:normalizeVehicleList(savedCustomer)});
       mergeCustomerIntoLocalList(normalizedSaved);
       invoice.selectedCustomerProfile=normalizedSaved;
+      invoice.vehicleId=(savedCustomer.savedVehicle && (savedCustomer.savedVehicle.vehicleId || savedCustomer.savedVehicle.id)) || window.selectedModalVehicleId || invoice.vehicleId || '';
 
       // Reload the customer list from the sheet right away so multiple vehicles are available
       // without needing a hard refresh.
@@ -2946,6 +2958,7 @@
     invoice.customerName=item.customerName || invoice.customerName || '';
     invoice.customerPhone=formatPhone ? formatPhone(item.customerPhone || item.phone || '') : (item.customerPhone || item.phone || '');
     invoice.customerEmail=item.customerEmail || item.email || '';
+    invoice.vehicleId=item.vehicleId || '';
     invoice.vehicle=item.vehicle || '';
     invoice.vin=item.vin || '';
     invoice.plate=item.plate || '';
@@ -3004,6 +3017,7 @@
     invoice.customerName=item.customerName || '';
     invoice.customerPhone=formatPhone ? formatPhone(item.customerPhone || item.phone || '') : (item.customerPhone || item.phone || '');
     invoice.customerEmail=item.customerEmail || item.email || '';
+    invoice.vehicleId=item.vehicleId || '';
     invoice.vehicle=item.vehicle || '';
     invoice.vin=item.vin || '';
     invoice.plate=item.plate || '';
@@ -4009,6 +4023,7 @@
     fresh.customerName='';
     fresh.customerPhone='';
     fresh.customerEmail='';
+    fresh.vehicleId='';
     fresh.vehicle='';
     fresh.vin='';
     fresh.plate='';
