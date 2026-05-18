@@ -718,6 +718,7 @@
 <!-- REVISIONS SEPARATE SHEET FINAL -->
 <!-- REVISION VEHICLE DISPLAY FINAL -->
 <!-- OPEN SAVED WORK FINAL -->
+<!-- REVISION_TO_ORDER_DELETE_AND_LINES_AUTOSAVE -->
 </head>
 
 <body>
@@ -902,7 +903,7 @@
 </section>
 
       <aside class="panel totals-payment-panel">
-        <div class="panel-head"><h2>Totals / Payment</h2><button class="green" onclick="saveAndParkInvoice()">Save Estimate</button></div>
+        <div class="panel-head"><h2>Totals / Payment</h2><div class="mini-row"><small id="invoiceAutosaveNote" style="color:var(--muted);font-weight:800"></small><button class="green" onclick="saveAndParkInvoice()">Save Estimate</button></div></div>
         <div class="panel-body stack">
           <div class="totals-box" id="totalsBox"></div>
           <div class="payment-mini-title">
@@ -2879,9 +2880,12 @@
     draggedRevisionLineId=null;
     clearRevisionDragClasses();
   }
-  function sendRevisionToOrder(){
+  async function sendRevisionToOrder(){
     if(!activeRevisionReviewId)return;
     autosaveActiveRevision();
+
+    const profile=getCurrentCustomerProfile();
+    const revision=(profile.revisions||[]).find(r=>String(r.id||r.revisionId||r.invoiceId)===String(activeRevisionReviewId));
 
     invoice.lines=revisionReviewLines.map(l=>({
       id:uid(),
@@ -2895,10 +2899,26 @@
     }));
 
     invoice.internalNotes=document.getElementById('revisionReviewNotes')?.value || invoice.internalNotes || '';
+
+    if(revision){
+      try{
+        await deleteRevisionFromGoogleSheets(revision);
+      }catch(err){
+        console.error(err);
+        toast('Revision sent to order, but could not delete from Revisions sheet');
+      }
+
+      profile.revisions=(profile.revisions||[]).filter(r=>String(r.id||r.revisionId||r.invoiceId)!==String(activeRevisionReviewId));
+      saveCurrentCustomerProfile(profile);
+      renderRevisionHistory();
+    }
+
+    activeRevisionReviewId=null;
     closePopup('revisionReviewModal');
     showTab('lines');
     renderAll();
-    toast('Revision sent to current order');
+    queueInvoiceAutoSave('revisionSentToOrder');
+    toast('Revision sent to order and removed from revisions');
   }
   
   function renderRevisionReviewLines(){
@@ -3395,6 +3415,37 @@
     return false;
   }
 
+  let invoiceAutoSaveTimer=null;
+  let invoiceAutoSaveBusy=false;
+
+  function shouldAutoSaveInvoice(){
+    const status=String(invoice.status||'').toLowerCase();
+    if(invoice.readOnly || status==='closed' || status==='cancelled')return false;
+    return !!(invoice.invoiceId || invoice.customerName || invoice.customerPhone || invoice.vehicle || (invoice.lines||[]).length);
+  }
+
+  function queueInvoiceAutoSave(reason){
+    if(!shouldAutoSaveInvoice())return;
+
+    clearTimeout(invoiceAutoSaveTimer);
+    invoiceAutoSaveTimer=setTimeout(async ()=>{
+      if(invoiceAutoSaveBusy || !shouldAutoSaveInvoice())return;
+      invoiceAutoSaveBusy=true;
+      try{
+        await sendInvoiceToBackend('saveInvoice');
+        const note=document.getElementById('invoiceAutosaveNote');
+        if(note) note.textContent='Auto-saved '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+      }catch(err){
+        console.error(err);
+        const note=document.getElementById('invoiceAutosaveNote');
+        if(note) note.textContent='Auto-save failed';
+      }finally{
+        invoiceAutoSaveBusy=false;
+      }
+    },900);
+  }
+
+  
   async function saveAndParkInvoice(){
     try{
       bindFields();
@@ -3774,8 +3825,14 @@
     bindFields();
     invoice.lines.push({id:uid(),type,description:type==='Labor'?'Labor operation':type==='Part'?'Part / material':type==='Discount'?'Discount':'Fee',qty:1,cost:0,price:type==='Labor'?settings.laborRate:0,taxable:type==='Part',tech:''});
     renderLines();renderTotals();
+    queueInvoiceAutoSave('addLine');
   }
-  function removeLine(id){invoice.lines=invoice.lines.filter(l=>l.id!==id);renderLines();renderTotals()}
+  function removeLine(id){
+    invoice.lines=invoice.lines.filter(l=>l.id!==id);
+    renderLines();
+    renderTotals();
+    queueInvoiceAutoSave('removeLine');
+  }
   function partSellPriceFromCost(cost){
     const markup=Number(settings.partsMarkupPercent ?? 50);
     return cleanNumber(Number(cost||0) * (1 + markup / 100));
@@ -3864,6 +3921,7 @@
       l.qty=Number(value||0);
       refreshLineTotalCell(id);
       renderTotals();
+      queueInvoiceAutoSave('lineQty');
       return;
     }
 
@@ -3871,6 +3929,7 @@
       l.price=cleanNumber(value||0);
       refreshLineTotalCell(id);
       renderTotals();
+      queueInvoiceAutoSave('linePrice');
       return;
     }
 
@@ -3881,18 +3940,21 @@
       refreshLinePriceCell(id);
       refreshLineTotalCell(id);
       renderTotals();
+      queueInvoiceAutoSave('lineCost');
       return;
     }
 
     if(field==='description'){
       l.description=value;
       renderTotals();
+      queueInvoiceAutoSave('lineDescription');
       return;
     }
 
     if(field==='taxable'){
       l.taxable=!!value;
       renderTotals();
+      queueInvoiceAutoSave('lineTaxable');
       return;
     }
 
@@ -3902,11 +3964,13 @@
       if(value==='Labor'&&!l.price)l.price=settings.laborRate;
       renderLines();
       renderTotals();
+      queueInvoiceAutoSave('lineType');
       return;
     }
 
     l[field]=value;
     renderTotals();
+    queueInvoiceAutoSave('lineUpdate');
   }
 
   function moveItemInArray(arr, fromId, toId){
@@ -3965,6 +4029,7 @@
       renderLines();
       renderTotals();
       renderPrint();
+      queueInvoiceAutoSave('reorderLines');
     }
     draggedInvoiceLineId=null;
     clearDragClasses();
