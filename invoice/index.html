@@ -686,17 +686,6 @@
       margin-bottom:10px;
     }
 
-  
-    .autosave-status{
-      min-height:18px;
-      padding:0 12px 6px;
-      margin-top:-4px;
-      color:var(--muted);
-      font-size:11px;
-      font-weight:800;
-      text-align:right;
-    }
-
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -730,7 +719,8 @@
 <!-- REVISION VEHICLE DISPLAY FINAL -->
 <!-- OPEN SAVED WORK FINAL -->
 <!-- REVISION_TO_ORDER_DELETE_AND_LINES_AUTOSAVE -->
-<!-- SAVE NOW AUTOSAVE STATUS CLEANUP -->
+<!-- STATUS DROPDOWN PAID CLOSED REMOVED -->
+<!-- RO NUMBER COUNTER FINAL -->
 </head>
 
 <body>
@@ -760,7 +750,7 @@
 
     <section class="ticket-row">
       <div class="field-card yellow"><label>Estimate / RO #</label><input id="docNumber" oninput="updateInvoice()"></div>
-      <div class="field-card"><label>Status</label><select id="quickStatusSelect" onchange="setStatus(this.value)"><option>Estimate</option><option>Repair Order</option><option>Invoice</option><option>Paid</option><option>Closed</option></select></div>
+      <div class="field-card"><label>Status</label><select id="quickStatusSelect" onchange="setStatus(this.value)"><option>Estimate</option><option>Repair Order</option><option>Invoice</option></select></div>
     </section>
 
     <section class="main">
@@ -902,7 +892,6 @@
               <option value="Estimate">Estimate</option>
               <option value="Repair Order">Repair Order</option>
               <option value="Invoice">Invoice</option>
-              <option value="Closed">Closed</option>
               <option value="Revision">Revision</option>
             </select>
           </div>
@@ -915,11 +904,7 @@
 </section>
 
       <aside class="panel totals-payment-panel">
-        <div class="panel-head">
-          <h2>Totals / Payment</h2>
-          <button class="green" onclick="saveAndParkInvoice()">Save Now</button>
-        </div>
-        <div id="invoiceAutosaveNote" class="autosave-status"></div>
+        <div class="panel-head"><h2>Totals / Payment</h2><div class="mini-row"><small id="invoiceAutosaveNote" style="color:var(--muted);font-weight:800"></small><button class="green" onclick="saveAndParkInvoice()">Save Estimate</button></div></div>
         <div class="panel-body stack">
           <div class="totals-box" id="totalsBox"></div>
           <div class="payment-mini-title">
@@ -1251,8 +1236,8 @@
   }
 
   function nextDocNumber(){
-    const d=new Date();
-    return `${settings?.prefix||'TA'}-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}-${String(Date.now()).slice(-5)}`
+    const localNext=Number(localStorage.getItem('toros_next_ro_number') || '1000');
+    return 'RO-' + (localNext < 1000 ? 1000 : localNext);
   }
 
   const INVOICE_BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwj6Og0BbLsS6kRmMTfIXMFD3g8IbPbH3L7QpTbjpSx9PFeHItbVNZWwi6X4VxlzM1Btw/exec';
@@ -1313,6 +1298,7 @@
   }
 
   async function sendInvoiceToBackend(action){
+    await assignRoNumberIfNeeded();
     const payload=makeBackendInvoicePayload();
 
     const res=await fetch(getInvoiceBackendUrl(), {
@@ -1374,6 +1360,41 @@
   
 
     return data.invoices || [];
+  }
+
+  
+  async function getNextRoNumberFromBackend(){
+    try{
+      const url=getInvoiceBackendUrl()
+        + '?action=getNextRoNumber'
+        + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD)
+        + '&ts=' + Date.now();
+
+      const res=await fetch(url,{cache:'no-store'});
+      const data=await res.json();
+
+      if(data.status === 'success' && data.docNumber){
+        const numberPart=Number(String(data.docNumber).replace(/\D/g,''));
+        if(numberPart) localStorage.setItem('toros_next_ro_number', String(numberPart + 1));
+        return data.docNumber;
+      }
+    }catch(err){
+      console.error(err);
+    }
+
+    const fallback=Number(localStorage.getItem('toros_next_ro_number') || '1000');
+    const safeNumber=fallback < 1000 ? 1000 : fallback;
+    localStorage.setItem('toros_next_ro_number', String(safeNumber + 1));
+    return 'RO-' + safeNumber;
+  }
+
+  async function assignRoNumberIfNeeded(){
+    if(invoice.docNumber && !/^TA-\d+/.test(String(invoice.docNumber))) return invoice.docNumber;
+    invoice.docNumber=await getNextRoNumberFromBackend();
+    const docInput=document.getElementById('docNumber');
+    if(docInput) docInput.value=invoice.docNumber;
+    renderAll();
+    return invoice.docNumber;
   }
 
   
@@ -3465,6 +3486,7 @@
   async function saveAndParkInvoice(){
     try{
       bindFields();
+      await assignRoNumberIfNeeded();
       invoice.readOnly=false;
       invoice.closedAt='';
       if(!invoice.status || invoice.status==='Paid') invoice.status='Estimate';
@@ -4507,10 +4529,24 @@ const localHistory=document.getElementById('serviceHistoryList');
     if(typeof updateCustomerPanelState==='function') updateCustomerPanelState();
   }
 
-  function newInvoice(){
-    if(!confirm('Start a new invoice? Unsaved changes on this invoice will be cleared.'))return;
-    startFreshInvoice();
-    toast('New invoice started');
+  async function newInvoice(){
+    if(hasUnsavedWork && hasUnsavedWork()){
+      const saveFirst=confirm('Save the current invoice before starting a new one? Press OK to save, or Cancel to start new without saving.');
+      if(saveFirst){
+        try{ await saveInvoiceToGoogleSheets(); }
+        catch(err){
+          console.error(err);
+          if(!confirm('Could not save current invoice. Start a new invoice anyway?'))return;
+        }
+      }
+    }
+
+    invoice=defaultInvoice();
+    invoice.docNumber='';
+    renderAll();
+    await assignRoNumberIfNeeded();
+    showTab('lines');
+    toast('New estimate started with '+invoice.docNumber);
   }
 
   async function closeInvoice(){
