@@ -675,6 +675,17 @@
       font-weight:800;
     }
 
+  
+    .open-work-note{
+      background:#f8fbff;
+      border:1px dashed #c9d8ea;
+      color:var(--muted);
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:12px;
+      margin-bottom:10px;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -706,6 +717,7 @@
 <!-- STRICT CUSTOMER VEHICLE SOURCE FINAL -->
 <!-- REVISIONS SEPARATE SHEET FINAL -->
 <!-- REVISION VEHICLE DISPLAY FINAL -->
+<!-- OPEN SAVED WORK FINAL -->
 </head>
 
 <body>
@@ -873,6 +885,7 @@
             <input id="allInvoiceSearch" placeholder="Search invoice #, customer, phone, vehicle, status..." oninput="renderAllInvoiceHistory()">
             <select id="allInvoiceStatusFilter" onchange="renderAllInvoiceHistory()">
               <option value="">All Statuses</option>
+                <option value="Open Work">Open Work</option>
               <option value="Estimate">Estimate</option>
               <option value="Repair Order">Repair Order</option>
               <option value="Invoice">Invoice</option>
@@ -889,7 +902,7 @@
 </section>
 
       <aside class="panel totals-payment-panel">
-        <div class="panel-head"><h2>Totals / Payment</h2><button class="green" onclick="saveDocument()">Save</button></div>
+        <div class="panel-head"><h2>Totals / Payment</h2><button class="green" onclick="saveAndParkInvoice()">Save Estimate</button></div>
         <div class="panel-body stack">
           <div class="totals-box" id="totalsBox"></div>
           <div class="payment-mini-title">
@@ -1243,6 +1256,9 @@
       invoiceNumber: invoice.docNumber || '',
       status: invoice.status || 'Estimate',
       paymentStatus: invoice.paymentStatus || '',
+      paymentMethod: invoice.paymentMethod || '',
+      amountPaid: invoice.amountPaid || 0,
+      customerId: invoice.selectedCustomerProfile?.customerId || invoice.customerId || '',
       customerName: invoice.customerName || '',
       customerPhone: invoice.customerPhone || '',
       customerEmail: invoice.customerEmail || '',
@@ -1251,6 +1267,14 @@
       vin: invoice.vin || '',
       plate: invoice.plate || '',
       mileage: invoice.mileage || '',
+      openedDate: invoice.openedDate || '',
+      promiseDate: invoice.promiseDate || '',
+      advisor: invoice.advisor || '',
+      concern: invoice.concern || '',
+      authStatus: invoice.authStatus || '',
+      authorizedBy: invoice.authorizedBy || '',
+      techNotes: invoice.techNotes || '',
+      recommendations: invoice.recommendations || '',
       lines: invoice.lines || [],
       payments: invoice.payments || [],
       totals,
@@ -1292,9 +1316,14 @@
 
     if(data.invoiceId){
       invoice.invoiceId=data.invoiceId;
-      invoice.id=invoice.id || data.invoiceId;
+      invoice.id=data.invoiceId;
     }
 
+    if(data.invoiceNumber){
+      invoice.docNumber=data.invoiceNumber;
+    }
+
+    invoice.updatedAt=new Date().toISOString();
     return data;
   }
 
@@ -3315,6 +3344,102 @@
     return {customerName,phone,vehicle,doc,status,paymentStatus,total,paid,balance,date};
   }
 
+  function invoiceFromSheetItem(item){
+    item=item||{};
+    const clonedLines=JSON.parse(JSON.stringify(item.lines||[]));
+    const clonedPayments=JSON.parse(JSON.stringify(item.payments||[]));
+
+    return Object.assign(defaultInvoice(), {
+      id:item.invoiceId || item.id || item.invoiceNumber || item.docNumber || ('INV-'+Date.now()),
+      invoiceId:item.invoiceId || item.id || '',
+      docNumber:item.invoiceNumber || item.docNumber || '',
+      status:item.status || 'Estimate',
+      paymentStatus:item.paymentStatus || (Number(item.balance||0)<=0 && Number(item.total||0)>0 ? 'Paid':'Unpaid'),
+      paymentMethod:item.paymentMethod || 'None',
+      amountPaid:Number(item.paid||item.amountPaid||0),
+      payments:clonedPayments,
+      customerId:item.customerId || '',
+      customerName:item.customerName || item.name || '',
+      customerPhone:formatPhone ? formatPhone(item.customerPhone || item.phone || '') : (item.customerPhone || item.phone || ''),
+      customerEmail:item.customerEmail || item.email || '',
+      vehicleId:item.vehicleId || '',
+      vehicleId:item.vehicleId || '',
+      vehicleId:item.vehicleId || '',
+      vehicle:item.vehicle || '',
+      vin:item.vin || '',
+      plate:item.plate || '',
+      mileage:formatMileage ? formatMileage(item.mileage||'') : (item.mileage||''),
+      openedDate:item.openedDate || item.createdAt || new Date().toISOString().slice(0,10),
+      promiseDate:item.promiseDate || '',
+      advisor:item.advisor || '',
+      concern:item.concern || '',
+      authStatus:item.authStatus || 'Not Authorized',
+      authorizedBy:item.authorizedBy || '',
+      techNotes:item.techNotes || '',
+      recommendations:item.recommendations || '',
+      internalNotes:item.internalNotes || '',
+      lines:clonedLines.length ? clonedLines.map(l=>Object.assign({id:uid(),type:'Labor',description:'',qty:1,cost:0,price:0,taxable:false,tech:''},l,{id:l.id||uid()})) : [],
+      createdAt:item.createdAt || new Date().toISOString(),
+      updatedAt:item.updatedAt || new Date().toISOString(),
+      closedAt:item.closedAt || '',
+      readOnly:String(item.status||'').toLowerCase()==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE'
+    });
+  }
+
+  function hasUnsavedWork(){
+    bindFields();
+    if(!invoice)return false;
+    if(invoice.customerName || invoice.customerPhone || invoice.vehicle || invoice.lines?.length>1)return true;
+    const onlyLine=invoice.lines?.[0];
+    if(onlyLine && String(onlyLine.description||'')!=='Diagnostic / inspection labor')return true;
+    return false;
+  }
+
+  async function saveAndParkInvoice(){
+    try{
+      bindFields();
+      invoice.readOnly=false;
+      invoice.closedAt='';
+      if(!invoice.status || invoice.status==='Paid') invoice.status='Estimate';
+      await saveInvoiceToGoogleSheets();
+      await loadAllInvoicesFromSheet(true);
+      toast(`${invoice.status || 'Invoice'} saved. You can reopen it from All Invoices.`);
+    }catch(err){
+      console.error(err);
+      toast(err.message || 'Could not save invoice');
+    }
+  }
+
+  async function openSavedInvoiceFromHistory(index){
+    const item=allInvoiceHistory[index];
+    if(!item)return;
+
+    const status=String(item.status||'').toLowerCase();
+    if(status==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE'){
+      viewAllInvoiceHistory(index);
+      toast('Closed invoices are view-only. Duplicate it if you need a new editable copy.');
+      return;
+    }
+
+    if(hasUnsavedWork()){
+      const saveFirst=confirm('Save the current invoice before opening this one? Press OK to save and switch, or Cancel to switch without saving.');
+      if(saveFirst){
+        try{ await saveInvoiceToGoogleSheets(); }
+        catch(err){
+          console.error(err);
+          if(!confirm('Could not save current invoice. Switch anyway?'))return;
+        }
+      }
+    }
+
+    invoice=invoiceFromSheetItem(item);
+    closePopup('serviceHistoryViewModal');
+    showTab('lines');
+    renderAll();
+    toast(`${invoice.status || 'Invoice'} opened for editing`);
+  }
+
+  
   function renderAllInvoiceHistory(){
     const box=document.getElementById('allInvoiceHistoryList');
     if(!box)return;
@@ -3325,7 +3450,11 @@
     let list=[...allInvoiceHistory];
 
     if(statusFilter){
-      list=list.filter(item=>String(item.status||'')===statusFilter);
+      if(statusFilter==='Open Work'){
+        list=list.filter(item=>!['closed','cancelled','revision'].includes(String(item.status||'').toLowerCase()));
+      }else{
+        list=list.filter(item=>String(item.status||'')===statusFilter);
+      }
     }
 
     if(q){
@@ -3347,10 +3476,12 @@
       return;
     }
 
-    box.innerHTML=list.map(item=>{
+    box.innerHTML=`<div class="open-work-note">Use <b>Open</b> to continue an estimate, repair order, or unpaid invoice. Closed invoices stay view-only.</div>`+list.map(item=>{
       const n=normalizeInvoiceForHistory(item);
       const originalIndex=allInvoiceHistory.indexOf(item);
       const dateText=n.date ? String(n.date) : '';
+      const statusLower=String(n.status||'').toLowerCase();
+      const isClosed=statusLower==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE';
       const lines=(item.lines||[]).slice(0,3).map(l=>{
         const lineTotal=(Number(l.qty)||0)*(Number(l.price)||0);
         return `${esc(l.type||'Line')}: ${esc(l.description||'')} · ${money(lineTotal)}`;
@@ -3376,6 +3507,7 @@
         <small>${lines || 'No lines'}</small>
 
         <div class="mini-row">
+          ${isClosed?'':`<button class="green" type="button" onclick="openSavedInvoiceFromHistory(${originalIndex})">Open</button>`}
           <button class="blue" type="button" onclick="viewAllInvoiceHistory(${originalIndex})">View</button>
           <button class="light" type="button" onclick="duplicateAllInvoiceHistory(${originalIndex})">Duplicate</button>
           <button class="light" type="button" onclick="printAllInvoiceHistory(${originalIndex})">Print</button>
