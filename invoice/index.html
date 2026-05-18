@@ -922,6 +922,7 @@
 <!-- SAVE NOW MOVED TO REVISIONS ROW FINAL -->
 <!-- DRAFT_LAYOUT_REPAIR_FINAL -->
 <!-- OPEN_ESTIMATE_LOADS_CUSTOMER_VEHICLE_FINAL -->
+<!-- OPEN_SAVED_ESTIMATE_FULL_RESTORE_NO_NEW_RO_FINAL -->
 </head>
 
 <body>
@@ -3833,26 +3834,86 @@
     return {customerName,phone,vehicle,doc,status,paymentStatus,total,paid,balance,date};
   }
 
+  function firstValue(){
+    for(const value of arguments){
+      if(value !== undefined && value !== null && String(value).trim() !== '') return value;
+    }
+    return '';
+  }
+
+  function savedInvoiceDocNumber(item){
+    return firstValue(
+      item?.invoiceNumber,
+      item?.docNumber,
+      item?.roNumber,
+      item?.repairOrderNumber,
+      item?.estimateNumber,
+      item?.InvoiceNumber,
+      item?.['Invoice Number'],
+      item?.['RO Number'],
+      item?.invoiceId,
+      item?.id
+    );
+  }
+
+  function savedInvoiceCustomerName(item){
+    return firstValue(item?.customerName, item?.name, item?.CustomerName, item?.['Customer Name']);
+  }
+
+  function savedInvoicePhone(item){
+    return firstValue(item?.customerPhone, item?.phone, item?.Phone, item?.['Phone']);
+  }
+
+  function savedInvoiceEmail(item){
+    return firstValue(item?.customerEmail, item?.email, item?.Email, item?.['Email']);
+  }
+
+  function savedInvoiceVehicle(item){
+    return firstValue(item?.vehicle, item?.Vehicle, item?.['Vehicle']);
+  }
+
+  function savedInvoiceVin(item){
+    return firstValue(item?.vin, item?.VIN, item?.['VIN']);
+  }
+
+  function savedInvoicePlate(item){
+    return firstValue(item?.plate, item?.Plate, item?.['Plate']);
+  }
+
+  function savedInvoiceMileage(item){
+    return firstValue(item?.mileage, item?.Mileage, item?.['Mileage']);
+  }
+
+  function savedInvoiceVehicleId(item){
+    return firstValue(item?.vehicleId, item?.VehicleId, item?.['Vehicle ID']);
+  }
+
+  function savedInvoiceCustomerId(item){
+    return firstValue(item?.customerId, item?.CustomerId, item?.['Customer ID']);
+  }
+
+  
   function buildCustomerProfileFromInvoiceItem(item, editableInvoice){
     item=item||{};
     editableInvoice=editableInvoice||{};
 
-    const customerId=item.customerId || editableInvoice.customerId || '';
-    const customerName=item.customerName || item.name || editableInvoice.customerName || '';
-    const phone=formatPhone ? formatPhone(item.customerPhone || item.phone || editableInvoice.customerPhone || '') : (item.customerPhone || item.phone || editableInvoice.customerPhone || '');
-    const email=item.customerEmail || item.email || editableInvoice.customerEmail || '';
+    const customerId=firstValue(savedInvoiceCustomerId(item), editableInvoice.customerId);
+    const customerName=firstValue(savedInvoiceCustomerName(item), editableInvoice.customerName);
+    const phoneRaw=firstValue(savedInvoicePhone(item), editableInvoice.customerPhone);
+    const phone=formatPhone ? formatPhone(phoneRaw) : phoneRaw;
+    const email=firstValue(savedInvoiceEmail(item), editableInvoice.customerEmail);
 
     const vehicleRecord={
-      vehicleId:item.vehicleId || editableInvoice.vehicleId || '',
-      id:item.vehicleId || editableInvoice.vehicleId || '',
+      vehicleId:firstValue(savedInvoiceVehicleId(item), editableInvoice.vehicleId),
+      id:firstValue(savedInvoiceVehicleId(item), editableInvoice.vehicleId),
       customerId,
       customerName,
       phone,
       email,
-      vehicle:item.vehicle || editableInvoice.vehicle || '',
-      vin:item.vin || editableInvoice.vin || '',
-      plate:item.plate || editableInvoice.plate || '',
-      mileage:formatMileage ? formatMileage(item.mileage || editableInvoice.mileage || '') : (item.mileage || editableInvoice.mileage || '')
+      vehicle:firstValue(savedInvoiceVehicle(item), editableInvoice.vehicle),
+      vin:firstValue(savedInvoiceVin(item), editableInvoice.vin),
+      plate:firstValue(savedInvoicePlate(item), editableInvoice.plate),
+      mileage:formatMileage ? formatMileage(firstValue(savedInvoiceMileage(item), editableInvoice.mileage)) : firstValue(savedInvoiceMileage(item), editableInvoice.mileage)
     };
 
     const vehicles=[];
@@ -3883,22 +3944,22 @@
   function applyCustomerVehicleFromInvoiceItem(item){
     item=item||{};
 
-    invoice.customerId=item.customerId || invoice.customerId || '';
-    invoice.customerName=item.customerName || item.name || invoice.customerName || '';
-    invoice.customerPhone=formatPhone ? formatPhone(item.customerPhone || item.phone || invoice.customerPhone || '') : (item.customerPhone || item.phone || invoice.customerPhone || '');
-    invoice.customerEmail=item.customerEmail || item.email || invoice.customerEmail || '';
+    invoice.customerId=firstValue(savedInvoiceCustomerId(item), invoice.customerId);
+    invoice.customerName=firstValue(savedInvoiceCustomerName(item), invoice.customerName);
+    invoice.customerPhone=formatPhone ? formatPhone(firstValue(savedInvoicePhone(item), invoice.customerPhone)) : firstValue(savedInvoicePhone(item), invoice.customerPhone);
+    invoice.customerEmail=firstValue(savedInvoiceEmail(item), invoice.customerEmail);
 
-    invoice.vehicleId=item.vehicleId || invoice.vehicleId || '';
-    invoice.vehicle=item.vehicle || invoice.vehicle || '';
-    invoice.vin=item.vin || invoice.vin || '';
-    invoice.plate=item.plate || invoice.plate || '';
-    invoice.mileage=formatMileage ? formatMileage(item.mileage || invoice.mileage || '') : (item.mileage || invoice.mileage || '');
+    invoice.vehicleId=firstValue(savedInvoiceVehicleId(item), invoice.vehicleId);
+    invoice.vehicle=firstValue(savedInvoiceVehicle(item), invoice.vehicle);
+    invoice.vin=firstValue(savedInvoiceVin(item), invoice.vin);
+    invoice.plate=firstValue(savedInvoicePlate(item), invoice.plate);
+    invoice.mileage=formatMileage ? formatMileage(firstValue(savedInvoiceMileage(item), invoice.mileage)) : firstValue(savedInvoiceMileage(item), invoice.mileage);
 
     invoice.selectedCustomerProfile=buildCustomerProfileFromInvoiceItem(item, invoice);
 
-    // Merge/update local profile cache so service history/revisions know the selected customer/vehicle.
     try{
       const profile=getCurrentCustomerProfile();
+
       profile.customerId=invoice.customerId || profile.customerId || '';
       profile.customerName=invoice.customerName || profile.customerName || '';
       profile.name=invoice.customerName || profile.name || '';
@@ -3944,39 +4005,43 @@
   
   function invoiceFromSheetItem(item){
     item=item||{};
-    const clonedLines=JSON.parse(JSON.stringify(item.lines||[]));
-    const clonedPayments=JSON.parse(JSON.stringify(item.payments||[]));
+
+    const clonedLines=JSON.parse(JSON.stringify(item.lines || item.Lines || []));
+    const clonedPayments=JSON.parse(JSON.stringify(item.payments || item.Payments || []));
+    const originalDoc=savedInvoiceDocNumber(item);
+    const originalInvoiceId=firstValue(item.invoiceId, item.id, item.InvoiceId, item['Invoice ID']);
 
     const editable=Object.assign(defaultInvoice(), {
-      id:item.invoiceId || item.id || item.invoiceNumber || item.docNumber || ('INV-'+Date.now()),
-      invoiceId:item.invoiceId || item.id || '',
-      docNumber:item.invoiceNumber || item.docNumber || '',
-      status:item.status || 'Estimate',
-      paymentStatus:item.paymentStatus || (Number(item.balance||0)<=0 && Number(item.total||0)>0 ? 'Paid':'Unpaid'),
-      paymentMethod:item.paymentMethod || 'None',
-      amountPaid:Number(item.paid||item.amountPaid||0),
+      id:originalInvoiceId || originalDoc || ('INV-'+Date.now()),
+      invoiceId:originalInvoiceId || '',
+      docNumber:originalDoc || '',
+      status:firstValue(item.status, item.Status, 'Estimate'),
+      paymentStatus:firstValue(item.paymentStatus, item.PaymentStatus, item['Payment Status']) ||
+        (Number(item.balance||0)<=0 && Number(item.total||0)>0 ? 'Paid':'Unpaid'),
+      paymentMethod:firstValue(item.paymentMethod, item.PaymentMethod, 'None'),
+      amountPaid:Number(firstValue(item.paid, item.amountPaid, 0)) || 0,
       payments:clonedPayments,
 
-      customerId:item.customerId || '',
-      customerName:item.customerName || item.name || '',
-      customerPhone:formatPhone ? formatPhone(item.customerPhone || item.phone || '') : (item.customerPhone || item.phone || ''),
-      customerEmail:item.customerEmail || item.email || '',
+      customerId:savedInvoiceCustomerId(item),
+      customerName:savedInvoiceCustomerName(item),
+      customerPhone:formatPhone ? formatPhone(savedInvoicePhone(item)) : savedInvoicePhone(item),
+      customerEmail:savedInvoiceEmail(item),
 
-      vehicleId:item.vehicleId || '',
-      vehicle:item.vehicle || '',
-      vin:item.vin || '',
-      plate:item.plate || '',
-      mileage:formatMileage ? formatMileage(item.mileage||'') : (item.mileage||''),
+      vehicleId:savedInvoiceVehicleId(item),
+      vehicle:savedInvoiceVehicle(item),
+      vin:savedInvoiceVin(item),
+      plate:savedInvoicePlate(item),
+      mileage:formatMileage ? formatMileage(savedInvoiceMileage(item)) : savedInvoiceMileage(item),
 
-      openedDate:item.openedDate || item.createdAt || new Date().toISOString().slice(0,10),
-      promiseDate:item.promiseDate || '',
-      advisor:item.advisor || '',
-      concern:item.concern || '',
-      authStatus:item.authStatus || 'Not Authorized',
-      authorizedBy:item.authorizedBy || '',
-      techNotes:item.techNotes || '',
-      recommendations:item.recommendations || '',
-      internalNotes:item.internalNotes || '',
+      openedDate:firstValue(item.openedDate, item.createdAt, item.CreatedAt, new Date().toISOString().slice(0,10)),
+      promiseDate:firstValue(item.promiseDate, item.PromiseDate),
+      advisor:firstValue(item.advisor, item.Advisor),
+      concern:firstValue(item.concern, item.Concern),
+      authStatus:firstValue(item.authStatus, item.AuthStatus, 'Not Authorized'),
+      authorizedBy:firstValue(item.authorizedBy, item.AuthorizedBy),
+      techNotes:firstValue(item.techNotes, item.TechNotes),
+      recommendations:firstValue(item.recommendations, item.Recommendations),
+      internalNotes:firstValue(item.internalNotes, item.InternalNotes),
 
       lines:clonedLines.length
         ? clonedLines.map(l=>Object.assign({
@@ -3991,11 +4056,13 @@
           }, l, {id:l.id||uid()}))
         : [],
 
-      createdAt:item.createdAt || new Date().toISOString(),
-      updatedAt:item.updatedAt || new Date().toISOString(),
-      closedAt:item.closedAt || '',
+      createdAt:firstValue(item.createdAt, item.CreatedAt, new Date().toISOString()),
+      updatedAt:firstValue(item.updatedAt, item.UpdatedAt, new Date().toISOString()),
+      closedAt:firstValue(item.closedAt, item.ClosedAt),
       isDraft:false,
-      readOnly:String(item.status||'').toLowerCase()==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE'
+      readOnly:String(firstValue(item.status, item.Status)).toLowerCase()==='closed' ||
+        item.readOnly===true ||
+        String(item.readOnly || item.ReadOnly).toUpperCase()==='TRUE'
     });
 
     editable.selectedCustomerProfile=buildCustomerProfileFromInvoiceItem(item, editable);
@@ -4099,8 +4166,8 @@
     const item=allInvoiceHistory[index];
     if(!item)return;
 
-    const status=String(item.status||'').toLowerCase();
-    if(status==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE'){
+    const status=String(firstValue(item.status, item.Status)).toLowerCase();
+    if(status==='closed' || item.readOnly===true || String(item.readOnly || item.ReadOnly).toUpperCase()==='TRUE'){
       viewAllInvoiceHistory(index);
       toast('Closed invoices are view-only. Duplicate it if you need a new editable copy.');
       return;
@@ -4109,8 +4176,10 @@
     if(hasUnsavedWork()){
       const saveFirst=confirm('Save the current invoice before opening this one? Press OK to save and switch, or Cancel to switch without saving.');
       if(saveFirst){
-        try{ await saveInvoiceToGoogleSheets(); }
-        catch(err){
+        try{
+          if(isConvertedInvoice(invoice)) await saveInvoiceToGoogleSheets();
+          else saveActiveInvoiceDraft();
+        }catch(err){
           console.error(err);
           if(!confirm('Could not save current invoice. Switch anyway?'))return;
         }
@@ -4123,7 +4192,10 @@
     markCurrentInvoiceAsActive();
 
     closePopup('serviceHistoryViewModal');
-    showTab('lines');
+
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='lines'));
+    document.querySelectorAll('.work-section').forEach(s=>s.classList.toggle('active',s.id==='tab-lines'));
+
     renderAll();
 
     toast(`${invoice.docNumber || invoice.status || 'Invoice'} opened for editing`);
@@ -4196,6 +4268,8 @@
   function mergeCurrentInvoiceIntoAllInvoices(){
     if(!Array.isArray(allInvoiceHistory)) allInvoiceHistory=[];
 
+    if(!isConvertedInvoice(invoice)) return;
+
     const current=currentInvoiceHistoryItem();
     const key=String(current.invoiceId || current.invoiceNumber || current.docNumber || '').trim();
 
@@ -4206,7 +4280,8 @@
         item.invoiceId,
         item.id,
         item.invoiceNumber,
-        item.docNumber
+        item.docNumber,
+        item.roNumber
       ].filter(Boolean).map(x=>String(x).trim());
 
       return itemKeys.includes(key);
