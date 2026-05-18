@@ -921,6 +921,7 @@
 <!-- RIBBON BAR REMOVED FINAL -->
 <!-- SAVE NOW MOVED TO REVISIONS ROW FINAL -->
 <!-- DRAFT_LAYOUT_REPAIR_FINAL -->
+<!-- OPEN_ESTIMATE_LOADS_CUSTOMER_VEHICLE_FINAL -->
 </head>
 
 <body>
@@ -2952,7 +2953,25 @@
     });
   }
 
+  function ensureSelectedCustomerProfileFromInvoice(){
+    if(invoice.selectedCustomerProfile)return;
+    if(!(invoice.customerName || invoice.customerPhone || invoice.vehicle || invoice.plate || invoice.vin))return;
+
+    invoice.selectedCustomerProfile=buildCustomerProfileFromInvoiceItem({
+      customerId:invoice.customerId || '',
+      customerName:invoice.customerName || '',
+      customerPhone:invoice.customerPhone || '',
+      customerEmail:invoice.customerEmail || '',
+      vehicleId:invoice.vehicleId || '',
+      vehicle:invoice.vehicle || '',
+      vin:invoice.vin || '',
+      plate:invoice.plate || '',
+      mileage:invoice.mileage || ''
+    }, invoice);
+  }
+
   function renderAll(){
+    ensureSelectedCustomerProfileFromInvoice();
     invoice.customerPhone=formatPhone(invoice.customerPhone);
     invoice.mileage=formatMileage(invoice.mileage);
 
@@ -3814,12 +3833,121 @@
     return {customerName,phone,vehicle,doc,status,paymentStatus,total,paid,balance,date};
   }
 
+  function buildCustomerProfileFromInvoiceItem(item, editableInvoice){
+    item=item||{};
+    editableInvoice=editableInvoice||{};
+
+    const customerId=item.customerId || editableInvoice.customerId || '';
+    const customerName=item.customerName || item.name || editableInvoice.customerName || '';
+    const phone=formatPhone ? formatPhone(item.customerPhone || item.phone || editableInvoice.customerPhone || '') : (item.customerPhone || item.phone || editableInvoice.customerPhone || '');
+    const email=item.customerEmail || item.email || editableInvoice.customerEmail || '';
+
+    const vehicleRecord={
+      vehicleId:item.vehicleId || editableInvoice.vehicleId || '',
+      id:item.vehicleId || editableInvoice.vehicleId || '',
+      customerId,
+      customerName,
+      phone,
+      email,
+      vehicle:item.vehicle || editableInvoice.vehicle || '',
+      vin:item.vin || editableInvoice.vin || '',
+      plate:item.plate || editableInvoice.plate || '',
+      mileage:formatMileage ? formatMileage(item.mileage || editableInvoice.mileage || '') : (item.mileage || editableInvoice.mileage || '')
+    };
+
+    const vehicles=[];
+    if(vehicleRecord.vehicle || vehicleRecord.vin || vehicleRecord.plate || vehicleRecord.mileage){
+      vehicles.push(vehicleRecord);
+    }
+
+    return {
+      key:phone || email || customerName || customerId || 'unknown',
+      customerId,
+      customerName,
+      name:customerName,
+      customerPhone:phone,
+      phone,
+      customerEmail:email,
+      email,
+      vehicleId:vehicleRecord.vehicleId,
+      vehicle:vehicleRecord.vehicle,
+      vin:vehicleRecord.vin,
+      plate:vehicleRecord.plate,
+      mileage:vehicleRecord.mileage,
+      vehicles,
+      revisions:[],
+      serviceHistory:[]
+    };
+  }
+
+  function applyCustomerVehicleFromInvoiceItem(item){
+    item=item||{};
+
+    invoice.customerId=item.customerId || invoice.customerId || '';
+    invoice.customerName=item.customerName || item.name || invoice.customerName || '';
+    invoice.customerPhone=formatPhone ? formatPhone(item.customerPhone || item.phone || invoice.customerPhone || '') : (item.customerPhone || item.phone || invoice.customerPhone || '');
+    invoice.customerEmail=item.customerEmail || item.email || invoice.customerEmail || '';
+
+    invoice.vehicleId=item.vehicleId || invoice.vehicleId || '';
+    invoice.vehicle=item.vehicle || invoice.vehicle || '';
+    invoice.vin=item.vin || invoice.vin || '';
+    invoice.plate=item.plate || invoice.plate || '';
+    invoice.mileage=formatMileage ? formatMileage(item.mileage || invoice.mileage || '') : (item.mileage || invoice.mileage || '');
+
+    invoice.selectedCustomerProfile=buildCustomerProfileFromInvoiceItem(item, invoice);
+
+    // Merge/update local profile cache so service history/revisions know the selected customer/vehicle.
+    try{
+      const profile=getCurrentCustomerProfile();
+      profile.customerId=invoice.customerId || profile.customerId || '';
+      profile.customerName=invoice.customerName || profile.customerName || '';
+      profile.name=invoice.customerName || profile.name || '';
+      profile.customerPhone=invoice.customerPhone || profile.customerPhone || '';
+      profile.phone=invoice.customerPhone || profile.phone || '';
+      profile.customerEmail=invoice.customerEmail || profile.customerEmail || '';
+      profile.email=invoice.customerEmail || profile.email || '';
+      profile.vehicleId=invoice.vehicleId || profile.vehicleId || '';
+      profile.vehicle=invoice.vehicle || profile.vehicle || '';
+      profile.vin=invoice.vin || profile.vin || '';
+      profile.plate=invoice.plate || profile.plate || '';
+      profile.mileage=invoice.mileage || profile.mileage || '';
+
+      const vehicle={
+        vehicleId:invoice.vehicleId || '',
+        id:invoice.vehicleId || '',
+        customerId:invoice.customerId || '',
+        customerName:invoice.customerName || '',
+        phone:invoice.customerPhone || '',
+        email:invoice.customerEmail || '',
+        vehicle:invoice.vehicle || '',
+        vin:invoice.vin || '',
+        plate:invoice.plate || '',
+        mileage:invoice.mileage || ''
+      };
+
+      if(vehicle.vehicle || vehicle.vin || vehicle.plate || vehicle.mileage){
+        const existing=Array.isArray(profile.vehicles)?profile.vehicles:[];
+        const key=[vehicle.vehicleId,vehicle.vin,vehicle.plate,vehicle.vehicle].map(x=>String(x||'').toLowerCase()).join('|');
+        if(!existing.some(v=>[v.vehicleId||v.id,v.vin,v.plate,v.vehicle].map(x=>String(x||'').toLowerCase()).join('|')===key)){
+          existing.unshift(vehicle);
+        }
+        profile.vehicles=existing;
+      }
+
+      saveCurrentCustomerProfile(profile);
+      invoice.selectedCustomerProfile=profile;
+    }catch(err){
+      console.error(err);
+    }
+  }
+
+  
   function invoiceFromSheetItem(item){
     item=item||{};
     const clonedLines=JSON.parse(JSON.stringify(item.lines||[]));
     const clonedPayments=JSON.parse(JSON.stringify(item.payments||[]));
 
-    return Object.assign(defaultInvoice(), {
+    const editable=Object.assign(defaultInvoice(), {
       id:item.invoiceId || item.id || item.invoiceNumber || item.docNumber || ('INV-'+Date.now()),
       invoiceId:item.invoiceId || item.id || '',
       docNumber:item.invoiceNumber || item.docNumber || '',
@@ -3828,17 +3956,18 @@
       paymentMethod:item.paymentMethod || 'None',
       amountPaid:Number(item.paid||item.amountPaid||0),
       payments:clonedPayments,
+
       customerId:item.customerId || '',
       customerName:item.customerName || item.name || '',
       customerPhone:formatPhone ? formatPhone(item.customerPhone || item.phone || '') : (item.customerPhone || item.phone || ''),
       customerEmail:item.customerEmail || item.email || '',
-      vehicleId:item.vehicleId || '',
-      vehicleId:item.vehicleId || '',
+
       vehicleId:item.vehicleId || '',
       vehicle:item.vehicle || '',
       vin:item.vin || '',
       plate:item.plate || '',
       mileage:formatMileage ? formatMileage(item.mileage||'') : (item.mileage||''),
+
       openedDate:item.openedDate || item.createdAt || new Date().toISOString().slice(0,10),
       promiseDate:item.promiseDate || '',
       advisor:item.advisor || '',
@@ -3848,15 +3977,30 @@
       techNotes:item.techNotes || '',
       recommendations:item.recommendations || '',
       internalNotes:item.internalNotes || '',
-      lines:clonedLines.length ? clonedLines.map(l=>Object.assign({id:uid(),type:'Labor',description:'',qty:1,cost:0,price:0,taxable:false,tech:''},l,{id:l.id||uid()})) : [],
+
+      lines:clonedLines.length
+        ? clonedLines.map(l=>Object.assign({
+            id:uid(),
+            type:'Labor',
+            description:'',
+            qty:1,
+            cost:0,
+            price:0,
+            taxable:false,
+            tech:''
+          }, l, {id:l.id||uid()}))
+        : [],
+
       createdAt:item.createdAt || new Date().toISOString(),
       updatedAt:item.updatedAt || new Date().toISOString(),
       closedAt:item.closedAt || '',
       isDraft:false,
-      isDraft:false,
-      isDraft:false,
       readOnly:String(item.status||'').toLowerCase()==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE'
     });
+
+    editable.selectedCustomerProfile=buildCustomerProfileFromInvoiceItem(item, editable);
+
+    return editable;
   }
 
   function hasUnsavedWork(){
@@ -3975,11 +4119,14 @@
 
     invoice=invoiceFromSheetItem(item);
     invoice.isDraft=false;
+    applyCustomerVehicleFromInvoiceItem(item);
     markCurrentInvoiceAsActive();
+
     closePopup('serviceHistoryViewModal');
     showTab('lines');
     renderAll();
-    toast(`${invoice.status || 'Invoice'} opened for editing`);
+
+    toast(`${invoice.docNumber || invoice.status || 'Invoice'} opened for editing`);
   }
 
   
