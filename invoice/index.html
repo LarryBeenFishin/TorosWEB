@@ -923,6 +923,7 @@
 <!-- DRAFT_LAYOUT_REPAIR_FINAL -->
 <!-- OPEN_ESTIMATE_LOADS_CUSTOMER_VEHICLE_FINAL -->
 <!-- OPEN_SAVED_ESTIMATE_FULL_RESTORE_NO_NEW_RO_FINAL -->
+<!-- OPEN_SAVED_ESTIMATE_BIND_FIX_FINAL -->
 </head>
 
 <body>
@@ -1645,10 +1646,14 @@
     return !hasCustomer && !hasVehicle && !hasNotes && !hasPayments && meaningfulLines.length===0;
   }
 
-  function saveActiveInvoiceDraft(){
+  function saveActiveInvoiceDraft(options){
     try{
+      options=options||{};
       if(!invoice)return false;
-      bindFields();
+
+      if(options.bind !== false){
+        bindFields();
+      }
 
       localStorage.setItem(LS_ACTIVE_INVOICE_DRAFT, JSON.stringify({
         schemaVersion:4,
@@ -1718,7 +1723,7 @@
   }
 
   function markCurrentInvoiceAsActive(){
-    saveActiveInvoiceDraft();
+    saveActiveInvoiceDraft({bind:false});
   }
 
   
@@ -3681,54 +3686,7 @@
     setTimeout(()=>document.body.classList.remove('print-history-only'),300);
   }
 
-  function duplicateViewedHistoryInvoice(){
-    if(!activeHistoryInvoice){
-      toast('Open a history invoice first');
-      return;
-    }
-
-    if(!confirm('Duplicate this closed invoice into a new editable invoice?'))return;
-
-    const item=JSON.parse(JSON.stringify(activeHistoryInvoice));
-
-    invoice=defaultInvoice();
-    invoice.docNumber=(typeof nextDocNumber==='function') ? nextDocNumber() : invoice.docNumber;
-    invoice.status='Estimate';
-    invoice.paymentStatus='Unpaid';
-    invoice.readOnly=false;
-    invoice.closedAt='';
-    invoice.createdAt=new Date().toISOString();
-
-    invoice.customerName=item.customerName || invoice.customerName || '';
-    invoice.customerPhone=formatPhone ? formatPhone(item.customerPhone || item.phone || '') : (item.customerPhone || item.phone || '');
-    invoice.customerEmail=item.customerEmail || item.email || '';
-    invoice.vehicleId=item.vehicleId || '';
-    invoice.vehicle=item.vehicle || '';
-    invoice.vin=item.vin || '';
-    invoice.plate=item.plate || '';
-    invoice.mileage=item.mileage || '';
-
-    invoice.lines=(item.lines||[]).map(l=>({
-      id:uid(),
-      type:l.type||'Labor',
-      description:l.description||'',
-      qty:Number(l.qty)||0,
-      cost:Number(l.cost)||0,
-      price:Number(l.price)||0,
-      taxable:l.type==='Part' ? true : !!l.taxable,
-      tech:''
-    }));
-
-    invoice.payments=[];
-    invoice.internalNotes='';
-    invoice.recommendations='';
-    invoice.concern='Duplicated from closed invoice '+(item.docNumber||item.invoiceNumber||'');
-
-    closePopup('serviceHistoryViewModal');
-    showTab('lines');
-    renderAll();
-    toast('Duplicated to a new editable invoice');
-  }
+  
 
   function printViewedHistoryInvoice(){
     if(!activeHistoryInvoice){
@@ -3746,18 +3704,18 @@
       return;
     }
 
-    if(!confirm('Duplicate this document into a new editable invoice?'))return;
+    if(!confirm('Duplicate this document into a new draft?'))return;
 
     const item=JSON.parse(JSON.stringify(activeHistoryInvoice));
 
     invoice=defaultInvoice();
-    invoice.docNumber=(typeof nextDocNumber==='function') ? nextDocNumber() : invoice.docNumber;
-    invoice.status='Estimate';
+    invoice.status='Draft / Not Saved';
     invoice.paymentStatus='Unpaid';
     invoice.readOnly=false;
     invoice.closedAt='';
     invoice.createdAt=new Date().toISOString();
 
+    invoice.customerId=item.customerId || '';
     invoice.customerName=item.customerName || '';
     invoice.customerPhone=formatPhone ? formatPhone(item.customerPhone || item.phone || '') : (item.customerPhone || item.phone || '');
     invoice.customerEmail=item.customerEmail || item.email || '';
@@ -3765,7 +3723,7 @@
     invoice.vehicle=item.vehicle || '';
     invoice.vin=item.vin || '';
     invoice.plate=item.plate || '';
-    invoice.mileage=item.mileage || '';
+    invoice.mileage=formatMileage ? formatMileage(item.mileage || '') : (item.mileage || '');
 
     invoice.lines=(item.lines||[]).map(l=>({
       id:uid(),
@@ -3781,12 +3739,18 @@
     invoice.payments=[];
     invoice.internalNotes='';
     invoice.recommendations='';
-    invoice.concern='Duplicated from '+(item.docNumber||item.invoiceNumber||'history document');
+    invoice.concern='Duplicated from '+(item.docNumber||item.invoiceNumber||'saved document');
+
+    invoice.selectedCustomerProfile=buildCustomerProfileFromInvoiceItem(item, invoice);
 
     closePopup('serviceHistoryViewModal');
-    showTab('lines');
+
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='lines'));
+    document.querySelectorAll('.work-section').forEach(s=>s.classList.toggle('active',s.id==='tab-lines'));
+
     renderAll();
-    toast('Duplicated to a new editable invoice');
+    saveActiveInvoiceDraft({bind:false});
+    toast('Duplicated to a new draft. Convert to Estimate when ready.');
   }
 
   async function loadAllInvoicesFromSheet(force=false){
@@ -3821,16 +3785,16 @@
   }
 
   function normalizeInvoiceForHistory(item){
-    const customerName=item.customerName || item.name || '';
-    const phone=item.customerPhone || item.phone || '';
-    const vehicle=item.vehicle || '';
-    const doc=item.invoiceNumber || item.docNumber || item.invoiceId || item.id || '';
-    const status=item.status || '';
-    const paymentStatus=item.paymentStatus || '';
-    const total=Number(item.total||0);
-    const paid=Number(item.paid||0);
-    const balance=Number(item.balance||0);
-    const date=item.closedAt || item.updatedAt || item.createdAt || item.savedAt || '';
+    const customerName=savedInvoiceCustomerName ? savedInvoiceCustomerName(item) : (item.customerName || item.name || '');
+    const phone=savedInvoicePhone ? savedInvoicePhone(item) : (item.customerPhone || item.phone || '');
+    const vehicle=savedInvoiceVehicle ? savedInvoiceVehicle(item) : (item.vehicle || '');
+    const doc=savedInvoiceDocNumber ? savedInvoiceDocNumber(item) : (item.invoiceNumber || item.docNumber || item.invoiceId || item.id || '');
+    const status=firstValue ? firstValue(item.status,item.Status) : (item.status || '');
+    const paymentStatus=firstValue ? firstValue(item.paymentStatus,item.PaymentStatus,item['Payment Status']) : (item.paymentStatus || '');
+    const total=Number(firstValue ? firstValue(item.total,item.Total,0) : item.total||0);
+    const paid=Number(firstValue ? firstValue(item.paid,item.Paid,0) : item.paid||0);
+    const balance=Number(firstValue ? firstValue(item.balance,item.Balance,0) : item.balance||0);
+    const date=firstValue ? firstValue(item.closedAt,item.updatedAt,item.createdAt,item.savedAt,item.ClosedAt,item.UpdatedAt,item.CreatedAt) : (item.closedAt || item.updatedAt || item.createdAt || item.savedAt || '');
     return {customerName,phone,vehicle,doc,status,paymentStatus,total,paid,balance,date};
   }
 
@@ -4186,17 +4150,27 @@
       }
     }
 
-    invoice=invoiceFromSheetItem(item);
+    const opened=invoiceFromSheetItem(item);
+
+    // Replace the full invoice object first.
+    invoice=opened;
     invoice.isDraft=false;
+
+    // Restore customer and vehicle from the selected saved row.
     applyCustomerVehicleFromInvoiceItem(item);
-    markCurrentInvoiceAsActive();
 
-    closePopup('serviceHistoryViewModal');
-
+    // Switch tabs directly without running the async showTab save/refresh path.
     document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='lines'));
     document.querySelectorAll('.work-section').forEach(s=>s.classList.toggle('active',s.id==='tab-lines'));
 
+    closePopup('serviceHistoryViewModal');
+
+    // Render the loaded invoice BEFORE saving it as the active draft.
     renderAll();
+    saveActiveInvoiceDraft({bind:false});
+
+    const note=document.getElementById('invoiceAutosaveNote');
+    if(note) note.textContent='Opened '+(invoice.docNumber||'saved estimate');
 
     toast(`${invoice.docNumber || invoice.status || 'Invoice'} opened for editing`);
   }
@@ -4472,17 +4446,22 @@
   function duplicateAllInvoiceHistory(index){
     const item=allInvoiceHistory[index];
     if(!item)return;
+
     activeHistoryInvoice=JSON.parse(JSON.stringify({
-      docNumber:item.invoiceNumber || item.docNumber || item.invoiceId || '',
-      customerName:item.customerName || item.name || '',
-      customerPhone:item.customerPhone || item.phone || '',
-      customerEmail:item.customerEmail || item.email || '',
-      vehicle:item.vehicle || '',
-      vin:item.vin || '',
-      plate:item.plate || '',
-      mileage:item.mileage || '',
+      docNumber:savedInvoiceDocNumber(item),
+      invoiceNumber:savedInvoiceDocNumber(item),
+      customerId:savedInvoiceCustomerId(item),
+      customerName:savedInvoiceCustomerName(item),
+      customerPhone:savedInvoicePhone(item),
+      customerEmail:savedInvoiceEmail(item),
+      vehicleId:savedInvoiceVehicleId(item),
+      vehicle:savedInvoiceVehicle(item),
+      vin:savedInvoiceVin(item),
+      plate:savedInvoicePlate(item),
+      mileage:savedInvoiceMileage(item),
       lines:item.lines || []
     }));
+
     duplicateViewedHistoryInvoice();
   }
 
