@@ -651,6 +651,30 @@
       border-color:var(--navy);
     }
 
+  
+    .revision-vehicle-line{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+      margin:6px 0;
+      color:var(--navy);
+      font-size:12px;
+      font-weight:900;
+    }
+    .revision-vehicle-line span{
+      background:#eef3fa;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:4px 8px;
+    }
+    .revision-review-vehicle{
+      margin-top:4px;
+      color:#d8e6f7;
+      font-size:13px;
+      font-weight:800;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -681,6 +705,7 @@
 <!-- CLEAR STALE CUSTOMER VEHICLE FINAL -->
 <!-- STRICT CUSTOMER VEHICLE SOURCE FINAL -->
 <!-- REVISIONS SEPARATE SHEET FINAL -->
+<!-- REVISION VEHICLE DISPLAY FINAL -->
 </head>
 
 <body>
@@ -1051,7 +1076,7 @@
   <div class="modal-overlay" id="revisionReviewModal">
     <div class="modal revision-review-modal">
       <div class="modal-top">
-        <h2 id="revisionReviewTitle">Review Revision</h2>
+        <div><h2 id="revisionReviewTitle">Review Revision</h2><div id="revisionReviewVehicle" class="revision-review-vehicle"></div></div>
         <button class="close" onclick="closePopup('revisionReviewModal')">×</button>
       </div>
       <div class="modal-body stack">
@@ -2929,22 +2954,21 @@
   
   function openRevisionReview(id){
     const profile=getCurrentCustomerProfile();
-    const revision=(profile.revisions||[]).find(r=>r.id===id);
+    const revision=(profile.revisions||[]).find(r=>String(r.id||r.revisionId||r.invoiceId)===String(id));
     if(!revision)return;
-    activeRevisionReviewId=id;
-    revisionReviewLines=(revision.lines||[]).map(l=>({
-      id:uid(),
-      type:l.type||'Labor',
-      description:l.description||'',
-      qty:Number(l.qty)||0,
-      cost:cleanNumber(l.cost||0),
-      price:cleanNumber(l.price||0),
-      taxable:l.type==='Part' ? true : !!l.taxable
-    }));
+
+    activeRevisionReviewId=revision.id||revision.revisionId||revision.invoiceId;
+    revisionReviewLines=JSON.parse(JSON.stringify(revision.lines||[]));
+
     const title=document.getElementById('revisionReviewTitle');
-    if(title) title.textContent=`Review Revision · ${revision.docNumber||'New Revision'}`;
+    if(title) title.textContent=`Review Revision · ${revision.revisionNumber||revision.docNumber||'Revision'}`;
+
+    const vehicle=document.getElementById('revisionReviewVehicle');
+    if(vehicle) vehicle.textContent=revisionVehicleLine(revision);
+
     const notes=document.getElementById('revisionReviewNotes');
     if(notes) notes.value=revision.internalNotes||'';
+
     renderRevisionReviewLines();
     openPopup('revisionReviewModal');
   }
@@ -3045,20 +3069,87 @@
 
   
   function revisionVehicleLine(item){
-    const parts=[
-      item.vehicle || invoice.vehicle || '',
-      item.plate ? 'Plate: '+item.plate : '',
-      item.mileage ? 'Mileage: '+item.mileage : ''
-    ].filter(Boolean);
+    const vehicle=item.vehicle || '';
+    const plate=item.plate || '';
+    const mileage=item.mileage || '';
+    const vin=item.vin || '';
 
-    return parts.length ? parts.join(' · ') : 'No vehicle saved';
+    const parts=[];
+    if(vehicle) parts.push(vehicle);
+    if(plate) parts.push('Plate: '+plate);
+    if(mileage) parts.push('Mileage: '+mileage);
+    if(vin) parts.push('VIN: '+vin);
+
+    return parts.length ? parts.join(' · ') : 'No vehicle saved on this revision';
   }
+
+  function revisionVehicleBadges(item){
+    const vehicle=item.vehicle || '';
+    const plate=item.plate || '';
+    const mileage=item.mileage || '';
+    const vin=item.vin || '';
+
+    const badges=[];
+    if(vehicle) badges.push(`<span>${esc(vehicle)}</span>`);
+    if(plate) badges.push(`<span>Plate: ${esc(plate)}</span>`);
+    if(mileage) badges.push(`<span>Mileage: ${esc(mileage)}</span>`);
+    if(vin) badges.push(`<span>VIN: ${esc(vin)}</span>`);
+
+    return badges.length ? badges.join('') : '<span>No vehicle saved</span>';
+  }
+
+  
 
   function renderRevisionHistory(){
     const box=document.getElementById('revisionHistoryList');
     if(!box)return;
+
     const profile=getCurrentCustomerProfile();
-    box.innerHTML=renderHistoryCards(profile.revisions||[],'revision');
+    const revisions=Array.isArray(profile.revisions)?profile.revisions:[];
+
+    if(!invoice.customerName && !invoice.customerPhone){
+      box.innerHTML='<div class="empty">Select a customer to see revisions.</div>';
+      return;
+    }
+
+    if(!revisions.length){
+      box.innerHTML='<div class="empty">No revisions saved for this customer / vehicle yet.</div>';
+      return;
+    }
+
+    box.innerHTML=revisions.map(r=>{
+      const firstLine=(r.lines||[])[0]||{};
+      const total=Number(r.total||r.balance||0);
+      const dateText=r.savedAt||r.createdAt||r.updatedAt;
+      const displayDate=dateText ? new Date(dateText).toLocaleString() : '';
+      const doc=r.revisionNumber||r.docNumber||'Revision';
+
+      return `<div class="history-card">
+        <div class="history-card-top">
+          <div>
+            <strong>${esc(doc)}</strong>
+            <small>${esc(displayDate)}</small>
+          </div>
+          <span class="status-pill estimate">Revision</span>
+        </div>
+
+        <div class="revision-vehicle-line">
+          ${revisionVehicleBadges(r)}
+        </div>
+
+        <div class="history-meta">
+          <div><span>Total</span><b>${money(total)}</b></div>
+          <div><span>Lines</span><b>${(r.lines||[]).length}</b></div>
+        </div>
+
+        <small>${esc(firstLine.type||'Line')}: ${esc(firstLine.description||'Revision')} · ${money((Number(firstLine.qty)||0)*(Number(firstLine.price)||0))}</small>
+
+        <div class="mini-row">
+          <button class="blue" type="button" onclick="openRevisionReview('${esc(r.id||r.revisionId||r.invoiceId)}')">Review / Edit</button>
+          <button class="light" type="button" onclick="deleteCustomerProfileEntry('revision','${esc(r.id||r.revisionId||r.invoiceId)}')">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
   }
   function printViewedHistoryInvoice(){
     if(!activeHistoryInvoice){
