@@ -691,6 +691,59 @@
       color:#b42318;
     }
 
+  
+    .autosave-floating{
+      position:fixed;
+      left:14px;
+      bottom:14px;
+      z-index:9999;
+      background:rgba(15, 42, 74, .94);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      font-weight:900;
+      pointer-events:none;
+      max-width:calc(100vw - 28px);
+    }
+    @media(max-width:720px){
+      .autosave-floating{
+        left:10px;
+        bottom:10px;
+        font-size:11px;
+        padding:7px 10px;
+      }
+    }
+
+  
+    .live-loading{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:12px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:900;
+      background:#f8fbff;
+      border:1px dashed #c9d8ea;
+      border-radius:12px;
+      margin:8px 0;
+    }
+    .live-spinner{
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      border:2px solid #c9d8ea;
+      border-top-color:var(--navy);
+      animation:spinLive .75s linear infinite;
+      flex:0 0 auto;
+    }
+    @keyframes spinLive{
+      to{transform:rotate(360deg)}
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -729,6 +782,8 @@
 <!-- PROFIT LOSS DISCOUNT FIX -->
 <!-- RO DUPLICATE SAFE BACKEND PAIR -->
 <!-- LIVE HISTORY TABS FINAL -->
+<!-- AUTOSAVE BOTTOM LEFT FINAL -->
+<!-- LIVE TAB LOADING STATES FINAL -->
 </head>
 
 <body>
@@ -912,7 +967,7 @@
 </section>
 
       <aside class="panel totals-payment-panel">
-        <div class="panel-head"><h2>Totals / Payment</h2><div class="mini-row"><small id="invoiceAutosaveNote" style="color:var(--muted);font-weight:800"></small><button class="green" onclick="saveAndParkInvoice()">Save Estimate</button></div></div>
+        <div class="panel-head"><h2>Totals / Payment</h2><button class="green" onclick="saveAndParkInvoice()">Save Now</button></div>
         <div class="panel-body stack">
           <div class="totals-box" id="totalsBox"></div>
           <div class="payment-mini-title">
@@ -938,6 +993,7 @@
 
   <section class="print-shell" id="printableInvoice"></section>
   <div class="toast" id="toast"></div>
+  <div id="invoiceAutosaveNote" class="autosave-floating">Ready</div>
 <div class="modal-overlay" id="servicePopup">
     <div class="modal">
       <div class="modal-top"><h2 id="servicePopupTitle">Add Item</h2><button class="close" onclick="closePopup('servicePopup')">×</button></div>
@@ -3117,6 +3173,7 @@
   async function loadRevisionsFromGoogleSheets(){
     const box=document.getElementById('revisionHistoryList');
     if(!box)return;
+    box.innerHTML=liveLoadingHtml('Refreshing revisions...');
 
     const phone=digitsOnly ? digitsOnly(invoice.customerPhone) : String(invoice.customerPhone||'').replace(/\D/g,'');
     const vehicleId=invoice.vehicleId || '';
@@ -3366,7 +3423,7 @@
 
   async function loadAllInvoicesFromSheet(force=false){
     const box=document.getElementById('allInvoiceHistoryList');
-    if(box && force) box.innerHTML='<div class="empty">Loading invoices from Google Sheets...</div>';
+    if(box) box.innerHTML=liveLoadingHtml('Refreshing all invoices...');
 
     try{
       const url=getInvoiceBackendUrl()
@@ -3388,6 +3445,7 @@
       console.error(err);
       mergeCurrentInvoiceIntoAllInvoices();
       renderAllInvoiceHistory();
+
       if(box && !allInvoiceHistory.length){
         box.innerHTML='<div class="empty">Could not load invoices from Google Sheets.</div>';
       }
@@ -3495,7 +3553,7 @@
       try{
         await sendInvoiceToBackend('saveInvoice');
         const note=document.getElementById('invoiceAutosaveNote');
-        if(note) note.textContent='Auto-saved '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+        if(note) note.textContent='Auto-saved at '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
         refreshVisibleLiveTabsAfterSave();
       }catch(err){
         console.error(err);
@@ -3551,6 +3609,28 @@
     showTab('lines');
     renderAll();
     toast(`${invoice.status || 'Invoice'} opened for editing`);
+  }
+
+  
+  function liveLoadingHtml(text){
+    return `<div class="live-loading"><span class="live-spinner"></span><span>${esc(text||'Refreshing...')}</span></div>`;
+  }
+
+  function setLiveTabLoading(name, text){
+    if(name==='allinvoices'){
+      const box=document.getElementById('allInvoiceHistoryList');
+      if(box) box.innerHTML=liveLoadingHtml(text || 'Refreshing all invoices...');
+    }
+
+    if(name==='revisions'){
+      const box=document.getElementById('revisionHistoryList');
+      if(box) box.innerHTML=liveLoadingHtml(text || 'Refreshing revisions...');
+    }
+
+    if(name==='history'){
+      const box=document.getElementById('serviceHistoryList');
+      if(box) box.innerHTML=liveLoadingHtml(text || 'Refreshing service history...');
+    }
   }
 
   
@@ -3634,7 +3714,7 @@
       await sendInvoiceToBackend('saveInvoice');
 
       const note=document.getElementById('invoiceAutosaveNote');
-      if(note) note.textContent='Saved '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+      if(note) note.textContent='Saved at '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     }catch(err){
       console.error(err);
       const note=document.getElementById('invoiceAutosaveNote');
@@ -3878,6 +3958,7 @@
   
   
   function scheduleGoogleSheetHistoryLoad(){
+    setLiveTabLoading('history','Refreshing service history...');
     // Disabled to avoid duplicate service history display.
     // Service History now uses the local/customer-profile history cards with View Invoice and Delete.
   }
@@ -3970,6 +4051,7 @@
     document.querySelectorAll('.work-section').forEach(s=>s.classList.toggle('active',s.id==='tab-'+name));
 
     if(['allinvoices','history','revisions'].includes(name)){
+      setLiveTabLoading(name);
       await flushCurrentInvoiceForLiveTabs();
     }
 
@@ -3979,8 +4061,14 @@
     }
 
     if(name==='history'){
+      setLiveTabLoading('history','Refreshing service history...');
       if(typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
-      renderServiceHistory();
+      if(typeof loadServiceHistoryFromGoogleSheets==='function'){
+        try{ await loadServiceHistoryFromGoogleSheets(); }
+        catch(err){ console.error(err); renderServiceHistory(); }
+      }else{
+        renderServiceHistory();
+      }
     }
 
     if(name==='allinvoices'){
