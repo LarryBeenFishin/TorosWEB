@@ -680,6 +680,7 @@
 <!-- VEHICLE DELETE CLEARS QUICK DISPLAY FINAL -->
 <!-- CLEAR STALE CUSTOMER VEHICLE FINAL -->
 <!-- STRICT CUSTOMER VEHICLE SOURCE FINAL -->
+<!-- REVISIONS SEPARATE SHEET FINAL -->
 </head>
 
 <body>
@@ -2580,6 +2581,8 @@
     revision.customerName=invoice.customerName||'';
     revision.customerPhone=invoice.customerPhone||'';
     revision.customerEmail=invoice.customerEmail||'';
+    revision.customerId=invoice.selectedCustomerProfile?.customerId||'';
+    revision.vehicleId=invoice.vehicleId||'';
     revision.vehicle=invoice.vehicle||'';
     revision.vin=invoice.vin||'';
     revision.plate=invoice.plate||'';
@@ -2897,6 +2900,8 @@
       customerName:invoice.customerName||'',
       customerPhone:invoice.customerPhone||'',
       customerEmail:invoice.customerEmail||'',
+      customerId:invoice.selectedCustomerProfile?.customerId||'',
+      vehicleId:invoice.vehicleId||'',
       vehicle:invoice.vehicle||'',
       vin:invoice.vin||'',
       plate:invoice.plate||'',
@@ -2991,6 +2996,64 @@
     toast('Revision auto-saved');
   }
   
+  async function loadRevisionsFromGoogleSheets(){
+    const box=document.getElementById('revisionHistoryList');
+    if(!box)return;
+
+    const phone=digitsOnly ? digitsOnly(invoice.customerPhone) : String(invoice.customerPhone||'').replace(/\D/g,'');
+    const vehicleId=invoice.vehicleId || '';
+
+    if(!phone && !vehicleId){
+      box.innerHTML='<div class="empty">Select a customer and vehicle to see revisions.</div>';
+      return;
+    }
+
+    box.innerHTML='<div class="empty">Loading revisions...</div>';
+
+    try{
+      const url=getInvoiceBackendUrl()
+        + '?action=getRevisions'
+        + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD)
+        + '&phone=' + encodeURIComponent(invoice.customerPhone || '')
+        + '&vehicleId=' + encodeURIComponent(vehicleId)
+        + '&customerId=' + encodeURIComponent(invoice.selectedCustomerProfile?.customerId || '')
+        + '&ts=' + Date.now();
+
+      const res=await fetch(url,{cache:'no-store'});
+      const data=await res.json();
+
+      if(data.status !== 'success'){
+        throw new Error(data.message || 'Could not load revisions');
+      }
+
+      const profile=getCurrentCustomerProfile();
+      profile.revisions=(data.revisions||[]).map(r=>Object.assign({},r,{
+        id:r.revisionId || r.id || uid(),
+        invoiceId:r.revisionId || r.invoiceId || r.id || '',
+        revisionId:r.revisionId || r.invoiceId || r.id || '',
+        docNumber:r.revisionNumber || r.docNumber || '',
+        status:'Revision',
+        paymentStatus:'Quote'
+      }));
+      saveCurrentCustomerProfile(profile);
+      renderRevisionHistory();
+    }catch(err){
+      console.error(err);
+      box.innerHTML='<div class="empty">Could not load revisions from Google Sheets.</div>';
+    }
+  }
+
+  
+  function revisionVehicleLine(item){
+    const parts=[
+      item.vehicle || invoice.vehicle || '',
+      item.plate ? 'Plate: '+item.plate : '',
+      item.mileage ? 'Mileage: '+item.mileage : ''
+    ].filter(Boolean);
+
+    return parts.length ? parts.join(' · ') : 'No vehicle saved';
+  }
+
   function renderRevisionHistory(){
     const box=document.getElementById('revisionHistoryList');
     if(!box)return;
@@ -3139,7 +3202,7 @@
         throw new Error(data.message || 'Could not load invoices');
       }
 
-      allInvoiceHistory=data.invoices || [];
+      allInvoiceHistory=(data.invoices || []).filter(item=>String(item.status||'').toLowerCase()!=='revision');
       renderAllInvoiceHistory();
     }catch(err){
       console.error(err);
@@ -3476,6 +3539,8 @@
     if(name==='history' && typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
   
     if(name==='allinvoices') loadAllInvoicesFromSheet(false);
+  
+    if(name==='revisions') loadRevisionsFromGoogleSheets();
   }
 
   function setStatus(s){invoice.status=s;if(s==='Paid')invoice.paymentStatus='Paid';renderAll()}
@@ -4007,21 +4072,22 @@
     const total=Math.max(0,labor+parts+fees-discount+tax);
 
     return {
-      id:revision.invoiceId || revision.id || '',
-      invoiceId:revision.invoiceId || revision.id || '',
-      docNumber:revision.docNumber || ('REV-'+Date.now()),
-      invoiceNumber:revision.docNumber || ('REV-'+Date.now()),
+      revisionId:revision.revisionId || revision.invoiceId || revision.id || '',
+      id:revision.revisionId || revision.invoiceId || revision.id || '',
+      revisionNumber:revision.revisionNumber || revision.docNumber || ('REV-'+Date.now()),
+      docNumber:revision.revisionNumber || revision.docNumber || ('REV-'+Date.now()),
+      originalInvoiceNumber:revision.originalInvoiceNumber || invoice.docNumber || '',
       status:'Revision',
-      paymentStatus:'Quote',
+      customerId:invoice.selectedCustomerProfile?.customerId || revision.customerId || '',
       customerName:invoice.customerName || revision.customerName || '',
       customerPhone:invoice.customerPhone || revision.customerPhone || '',
       customerEmail:invoice.customerEmail || revision.customerEmail || '',
+      vehicleId:invoice.vehicleId || revision.vehicleId || '',
       vehicle:invoice.vehicle || revision.vehicle || '',
       vin:invoice.vin || revision.vin || '',
       plate:invoice.plate || revision.plate || '',
       mileage:invoice.mileage || revision.mileage || '',
       lines,
-      payments:[],
       totals:{labor,parts,fees,discounts:discount,shopSupplies:0,tax,total,paid:0,balance:total},
       laborTotal:labor,
       partsTotal:parts,
@@ -4035,7 +4101,6 @@
       internalNotes:revision.internalNotes || '',
       createdAt:revision.savedAt || revision.createdAt || new Date().toISOString(),
       updatedAt:new Date().toISOString(),
-      closedAt:'',
       readOnly:false
     };
   }
@@ -4046,9 +4111,9 @@
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({
-        action:'saveInvoice',
+        action:'saveRevision',
         password:INVOICE_BACKEND_PASSWORD,
-        invoice:payload
+        revision:payload
       })
     });
 
@@ -4058,24 +4123,31 @@
       throw new Error(data.message || 'Could not save revision to Google Sheets');
     }
 
-    if(data.invoiceId){
-      revision.invoiceId=data.invoiceId;
+    if(data.revisionId){
+      revision.revisionId=data.revisionId;
+      revision.invoiceId=data.revisionId;
+      revision.id=revision.id || data.revisionId;
+    }
+
+    if(data.revisionNumber){
+      revision.revisionNumber=data.revisionNumber;
+      revision.docNumber=data.revisionNumber;
     }
 
     return data;
   }
 
   async function deleteRevisionFromGoogleSheets(revision){
-    const candidate=revision.invoiceId || revision.docNumber || revision.id;
+    const candidate=revision.revisionId || revision.invoiceId || revision.id || revision.docNumber;
     if(!candidate)return {status:'not_found'};
 
     const res=await fetch(getInvoiceBackendUrl(), {
       method:'POST',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({
-        action:'deleteInvoice',
+        action:'deleteRevision',
         password:INVOICE_BACKEND_PASSWORD,
-        invoiceId:String(candidate)
+        revisionId:String(candidate)
       })
     });
 
