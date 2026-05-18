@@ -638,6 +638,19 @@
       padding:8px 10px;
     }
 
+  
+    .vehicle-manage-actions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .vehicle-pill.active{
+      background:var(--navy);
+      color:#fff;
+      border-color:var(--navy);
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -662,6 +675,7 @@
 <!-- CUSTOMER LOADS FROM BACKEND MULTI VEHICLE FIX -->
 <!-- VEHICLE SAVE BACKEND PRESERVE OLD VEHICLE -->
 <!-- VEHICLES TAB FINAL -->
+<!-- VEHICLE ADD DELETE UI FINAL -->
 </head>
 
 <body>
@@ -951,6 +965,10 @@
           <strong>Vehicles on this customer profile</strong>
           <div id="modalVehiclePills" class="vehicle-pill-row"></div>
           <small>Pick a saved vehicle or type a new one below to add it to this customer.</small>
+          <div class="vehicle-manage-actions">
+            <button class="light" id="addNewVehicleBtn" type="button" onclick="startNewVehicleForCustomer()">+ Add New Vehicle</button>
+            <button class="light" id="deleteVehicleBtn" type="button" onclick="deleteSelectedVehicleFromCustomer()">Delete Selected Vehicle</button>
+          </div>
         </div>
 
         <div class="customer-save-note">If this customer is new, saving creates a customer profile. If the phone already exists, the vehicle typed below is added to that customer’s vehicle list.</div>
@@ -1800,19 +1818,20 @@
     if(!box || !pills)return;
 
     const vehicles=normalizeVehicleList(customer);
+    window.modalVehicleOptions=vehicles;
 
     if(!vehicles.length){
       box.classList.remove('open');
       pills.innerHTML='';
-      window.modalVehicleOptions=[];
+      window.selectedModalVehicleId='';
+      window.selectedModalVehicleIndex=-1;
       return;
     }
 
     box.classList.add('open');
-    window.modalVehicleOptions=vehicles;
 
     pills.innerHTML=vehicles.map((vehicle,index)=>`
-      <button class="vehicle-pill" type="button" onclick="applyModalVehicle(${index})">
+      <button class="vehicle-pill ${String(window.selectedModalVehicleId||'')===String(vehicle.vehicleId||vehicle.id||'')?'active':''}" type="button" onclick="applyModalVehicle(${index})">
         ${esc(vehicle.vehicle||'Vehicle')}${vehicle.plate?' · '+esc(vehicle.plate):''}
       </button>
     `).join('');
@@ -1822,15 +1841,106 @@
     const vehicle=(window.modalVehicleOptions||[])[index];
     if(!vehicle)return;
 
+    window.selectedModalVehicleIndex=index;
+    window.selectedModalVehicleId=vehicle.vehicleId || vehicle.id || '';
+
     document.getElementById('modalVehicle').value=vehicle.vehicle||'';
     document.getElementById('modalVin').value=vehicle.vin||'';
     document.getElementById('modalPlate').value=vehicle.plate||'';
     document.getElementById('modalMileage').value=formatMileage ? formatMileage(vehicle.mileage||'') : (vehicle.mileage||'');
-    window.selectedModalVehicleId=vehicle.vehicleId || vehicle.id || '';
+
+    document.querySelectorAll('.vehicle-pill').forEach((btn,i)=>btn.classList.toggle('active',i===index));
 
     toast('Vehicle selected');
   }
 
+  function startNewVehicleForCustomer(){
+    window.selectedModalVehicleId='';
+    window.selectedModalVehicleIndex=-1;
+
+    ['modalVehicle','modalVin','modalPlate','modalMileage'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.value='';
+    });
+
+    document.querySelectorAll('.vehicle-pill').forEach(btn=>btn.classList.remove('active'));
+
+    const vehicleInput=document.getElementById('modalVehicle');
+    if(vehicleInput) vehicleInput.focus();
+
+    toast('Enter the new vehicle info, then click Save Customer / Vehicle');
+  }
+
+  async function deleteVehicleFromGoogleSheets(vehicle){
+    const res=await fetch(getInvoiceBackendUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'deleteVehicle',
+        password:INVOICE_BACKEND_PASSWORD,
+        vehicleId:vehicle.vehicleId || vehicle.id || '',
+        phone:document.getElementById('modalCustomerPhone')?.value || invoice.customerPhone || '',
+        vehicle:vehicle.vehicle || '',
+        vin:vehicle.vin || '',
+        plate:vehicle.plate || ''
+      })
+    });
+
+    const data=await res.json();
+
+    if(data.status !== 'success' && data.status !== 'not_found'){
+      throw new Error(data.message || 'Could not delete vehicle');
+    }
+
+    return data;
+  }
+
+  async function deleteSelectedVehicleFromCustomer(){
+    const vehicles=window.modalVehicleOptions||[];
+    const selectedId=String(window.selectedModalVehicleId||'');
+    let vehicle=vehicles.find(v=>String(v.vehicleId||v.id||'')===selectedId);
+
+    if(!vehicle && vehicles.length===1) vehicle=vehicles[0];
+
+    if(!vehicle){
+      toast('Select a vehicle to delete');
+      return;
+    }
+
+    const label=[vehicle.vehicle,vehicle.plate].filter(Boolean).join(' · ') || 'this vehicle';
+    if(!confirm(`Delete ${label} from this customer?`))return;
+
+    try{
+      await deleteVehicleFromGoogleSheets(vehicle);
+    }catch(err){
+      console.error(err);
+      if(!confirm('Could not delete this vehicle from Google Sheets. Remove it from this browser only?'))return;
+    }
+
+    // Refresh customers from backend, then reopen picker for this customer.
+    await loadCustomers();
+
+    const phone=document.getElementById('modalCustomerPhone')?.value || invoice.customerPhone || '';
+    const email=document.getElementById('modalCustomerEmail')?.value || invoice.customerEmail || '';
+    const updated=findCustomerByPhoneOrEmail(phone,email);
+
+    window.selectedModalVehicleId='';
+    window.selectedModalVehicleIndex=-1;
+
+    if(updated){
+      renderModalVehiclePicker(updated);
+      const vehiclesNow=normalizeVehicleList(updated);
+      if(vehiclesNow[0]) applyModalVehicle(0);
+      else startNewVehicleForCustomer();
+    }else{
+      renderModalVehiclePicker({vehicles:[]});
+      startNewVehicleForCustomer();
+    }
+
+    toast('Vehicle deleted');
+  }
+
+  
   async function saveCustomerProfileToSheet(customer){
     const res=await fetch(getInvoiceBackendUrl(), {
       method:'POST',
@@ -1986,6 +2096,7 @@
     set('modalMileage', formatMileage ? formatMileage(primaryVehicle.mileage || c.mileage) : (primaryVehicle.mileage || c.mileage));
 
     renderModalVehiclePicker(Object.assign({},c,{vehicles}));
+    if(vehicles.length) applyModalVehicle(0);
 
     const search=document.getElementById('modalCustomerSearch');
     const results=document.getElementById('modalCustomerResults');
