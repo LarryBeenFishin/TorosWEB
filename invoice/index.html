@@ -686,6 +686,17 @@
       margin-bottom:10px;
     }
 
+  
+    .autosave-status{
+      min-height:18px;
+      padding:0 12px 6px;
+      margin-top:-4px;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:800;
+      text-align:right;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -719,6 +730,7 @@
 <!-- REVISION VEHICLE DISPLAY FINAL -->
 <!-- OPEN SAVED WORK FINAL -->
 <!-- REVISION_TO_ORDER_DELETE_AND_LINES_AUTOSAVE -->
+<!-- SAVE NOW AUTOSAVE STATUS CLEANUP -->
 </head>
 
 <body>
@@ -903,7 +915,11 @@
 </section>
 
       <aside class="panel totals-payment-panel">
-        <div class="panel-head"><h2>Totals / Payment</h2><div class="mini-row"><small id="invoiceAutosaveNote" style="color:var(--muted);font-weight:800"></small><button class="green" onclick="saveAndParkInvoice()">Save Estimate</button></div></div>
+        <div class="panel-head">
+          <h2>Totals / Payment</h2>
+          <button class="green" onclick="saveAndParkInvoice()">Save Now</button>
+        </div>
+        <div id="invoiceAutosaveNote" class="autosave-status"></div>
         <div class="panel-body stack">
           <div class="totals-box" id="totalsBox"></div>
           <div class="payment-mini-title">
@@ -3454,7 +3470,7 @@
       if(!invoice.status || invoice.status==='Paid') invoice.status='Estimate';
       await saveInvoiceToGoogleSheets();
       await loadAllInvoicesFromSheet(true);
-      toast(`${invoice.status || 'Invoice'} saved. You can reopen it from All Invoices.`);
+      toast('Saved. You can reopen it from All Invoices.');
     }catch(err){
       console.error(err);
       toast(err.message || 'Could not save invoice');
