@@ -757,6 +757,40 @@
       opacity:.55;
     }
 
+  
+    .draft-ticket-row{
+      grid-template-columns:minmax(260px, 1.2fr) minmax(220px, .8fr) minmax(190px, auto);
+      align-items:stretch;
+      gap:8px;
+    }
+    .ticket-row .field-card input[readonly]{
+      background:#fff;
+      color:var(--navy);
+      cursor:default;
+    }
+    .convert-card{
+      display:flex;
+      justify-content:flex-end;
+    }
+    .convert-card button{
+      width:100%;
+      min-height:38px;
+      white-space:nowrap;
+    }
+    .draft-mode #docBadge{
+      background:#eef3fa;
+      color:var(--muted);
+      border-color:#c9d8ea;
+    }
+    @media(max-width:900px){
+      .draft-ticket-row{
+        grid-template-columns:1fr;
+      }
+      .convert-card{
+        justify-content:stretch;
+      }
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -800,6 +834,7 @@
 <!-- ACTIVE DRAFT RESTORE NO OVERWRITE FINAL -->
 <!-- ACTIVE DRAFT RESTORE HARDENED FINAL -->
 <!-- DRAFT CONVERT TO ESTIMATE FINAL -->
+<!-- DRAFT CONVERT CLEAN FIXED FINAL -->
 </head>
 
 <body>
@@ -827,10 +862,26 @@
       <div class="ribbon-spacer"></div><span class="status-pill estimate" id="docBadge">Draft / Not Saved</span>
     </nav>
 
-    <section class="ticket-row">
-      <div class="field-card yellow"><label>Estimate / RO #</label><input id="docNumber" placeholder="Not assigned yet" readonly></div>
-      <div class="field-card"><label>Status</label><select id="quickStatusSelect" onchange="setStatus(this.value)"><option>Draft / Not Saved</option><option>Estimate</option><option>Repair Order</option><option>Invoice</option></select></div>
-      <div class="field-card convert-card"><label>&nbsp;</label><button class="green" id="convertEstimateBtn" type="button" onclick="convertDraftToEstimate()">Convert to Estimate</button></div>
+    <section class="ticket-row draft-ticket-row">
+      <div class="field-card yellow ro-card">
+        <label>Estimate / RO #</label>
+        <input id="docNumber" placeholder="Not assigned yet" readonly>
+      </div>
+
+      <div class="field-card status-card">
+        <label>Status</label>
+        <select id="quickStatusSelect" onchange="setStatus(this.value)">
+          <option>Draft / Not Saved</option>
+          <option>Estimate</option>
+          <option>Repair Order</option>
+          <option>Invoice</option>
+        </select>
+      </div>
+
+      <div class="field-card convert-card">
+        <label>&nbsp;</label>
+        <button class="green" id="convertEstimateBtn" type="button" onclick="convertDraftToEstimate()">Convert to Estimate</button>
+      </div>
     </section>
 
     <section class="main">
@@ -1494,17 +1545,18 @@
     invoice.docNumber=await getNextRoNumberFromBackend();
     const docInput=document.getElementById('docNumber');
     if(docInput) docInput.value=invoice.docNumber;
+    updateDraftUiState();
     renderAll();
     return invoice.docNumber;
   }
 
   
-  const LS_ACTIVE_INVOICE_DRAFT='toros_active_invoice_draft_v2';
+  const LS_ACTIVE_INVOICE_DRAFT='toros_active_invoice_draft_v3';
 
   function isDefaultBlankInvoice(inv){
     inv=inv||invoice||{};
 
-    // Any unconverted draft is local-only and should never be sent to Google Sheets.
+    // Drafts are local-only. They should never be sent to Google Sheets.
     if(!isConvertedInvoice(inv))return true;
 
     const lines=Array.isArray(inv.lines)?inv.lines:[];
@@ -1512,10 +1564,7 @@
     const hasVehicle=!!(inv.vehicle||inv.vin||inv.plate||inv.mileage);
     const hasNotes=!!(inv.concern||inv.techNotes||inv.recommendations||inv.internalNotes);
     const hasPayments=Array.isArray(inv.payments)&&inv.payments.length>0;
-    const meaningfulLines=lines.filter(l=>{
-      const desc=String(l.description||'').trim();
-      return !!desc;
-    });
+    const meaningfulLines=lines.filter(l=>String(l.description||'').trim());
 
     return !hasCustomer && !hasVehicle && !hasNotes && !hasPayments && meaningfulLines.length===0;
   }
@@ -1526,11 +1575,14 @@
       bindFields();
 
       localStorage.setItem(LS_ACTIVE_INVOICE_DRAFT, JSON.stringify({
+        schemaVersion:3,
         savedAt:new Date().toISOString(),
         invoice:JSON.parse(JSON.stringify(invoice))
       }));
 
+      // Clean old draft keys so stale customer/vehicle data cannot come back.
       localStorage.removeItem('toros_active_invoice_draft_v1');
+      localStorage.removeItem('toros_active_invoice_draft_v2');
       return true;
     }catch(err){
       console.error(err);
@@ -1542,12 +1594,13 @@
     try{
       localStorage.removeItem(LS_ACTIVE_INVOICE_DRAFT);
       localStorage.removeItem('toros_active_invoice_draft_v1');
+      localStorage.removeItem('toros_active_invoice_draft_v2');
     }catch(err){}
   }
 
   function readActiveInvoiceDraft(){
     try{
-      return localStorage.getItem(LS_ACTIVE_INVOICE_DRAFT) || localStorage.getItem('toros_active_invoice_draft_v1') || '';
+      return localStorage.getItem(LS_ACTIVE_INVOICE_DRAFT) || '';
     }catch(err){
       return '';
     }
@@ -1559,7 +1612,7 @@
       if(!raw)return false;
 
       const parsed=JSON.parse(raw);
-      if(!parsed || !parsed.invoice)return false;
+      if(!parsed || parsed.schemaVersion!==3 || !parsed.invoice)return false;
 
       const saved=parsed.invoice;
       const status=String(saved.status||'').toLowerCase();
@@ -1570,13 +1623,14 @@
       }
 
       invoice=Object.assign(defaultInvoice(), saved);
-      invoice.lines=Array.isArray(saved.lines)&&saved.lines.length ? saved.lines : invoice.lines;
+      invoice.lines=Array.isArray(saved.lines) ? saved.lines : [];
       invoice.payments=Array.isArray(saved.payments) ? saved.payments : [];
+      invoice.isDraft=!invoice.docNumber || invoice.status==='Draft / Not Saved';
 
       renderAll();
 
       const note=document.getElementById('invoiceAutosaveNote');
-      if(note) note.textContent='Restored '+(invoice.docNumber||'saved invoice');
+      if(note) note.textContent=invoice.isDraft ? 'Draft restored locally' : 'Restored '+(invoice.docNumber||'saved invoice');
 
       return true;
     }catch(err){
@@ -1635,18 +1689,27 @@
     const saveBtn=document.getElementById('saveNowBtn');
     const statusSelect=document.getElementById('quickStatusSelect');
     const docInput=document.getElementById('docNumber');
+    const docBadge=document.getElementById('docBadge');
 
     if(convertBtn) convertBtn.style.display=converted?'none':'inline-flex';
-    if(saveBtn) saveBtn.disabled=!converted;
+    if(saveBtn) saveBtn.disabled=false;
+
     if(statusSelect){
-      if(!converted && !Array.from(statusSelect.options).some(o=>o.value==='Draft / Not Saved')){
-        statusSelect.insertAdjacentHTML('afterbegin','<option>Draft / Not Saved</option>');
+      const wanted=converted ? (invoice.status || 'Estimate') : 'Draft / Not Saved';
+      if(Array.from(statusSelect.options).some(o=>o.value===wanted || o.textContent===wanted)){
+        statusSelect.value=wanted;
       }
-      statusSelect.value=invoice.status || (converted?'Estimate':'Draft / Not Saved');
     }
+
     if(docInput){
       docInput.readOnly=true;
       docInput.placeholder=converted?'':'Not assigned yet';
+      docInput.value=invoice.docNumber || '';
+    }
+
+    if(docBadge){
+      docBadge.textContent=converted ? (invoice.status || 'Estimate') : 'Draft / Not Saved';
+      docBadge.className='status-pill estimate';
     }
 
     document.body.classList.toggle('draft-mode',!converted);
@@ -1661,14 +1724,16 @@
     }
 
     const hasCustomer=!!(invoice.customerName||invoice.customerPhone);
+    const hasVehicle=!!(invoice.vehicle||invoice.vin||invoice.plate);
     const hasLines=Array.isArray(invoice.lines)&&invoice.lines.length>0;
 
-    if(!hasCustomer && !hasLines){
+    if(!hasCustomer && !hasVehicle && !hasLines){
       if(!confirm('Convert this blank draft to an estimate and assign an RO number?'))return;
     }
 
     invoice.status='Estimate';
     invoice.isDraft=false;
+
     await assignRoNumberIfNeeded();
     await saveInvoiceToGoogleSheets();
     saveActiveInvoiceDraft();
@@ -2817,22 +2882,27 @@
   function renderAll(){
     invoice.customerPhone=formatPhone(invoice.customerPhone);
     invoice.mileage=formatMileage(invoice.mileage);
+
     ['customerName','customerPhone','customerEmail','vehicle','vin','plate','mileage','docNumber','openedDate','promiseDate','advisor','concern','authStatus','authorizedBy','techNotes','recommendations','internalNotes','paymentMethod'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.value=invoice[id]||'';
     });
-    updateCustomerVehicleDisplay();updateCustomerPanelState();
-    document.getElementById('quickStatusSelect').value=invoice.status;
+
+    updateCustomerVehicleDisplay();
+    updateCustomerPanelState();
+
+    const statusSelect=document.getElementById('quickStatusSelect');
+    if(statusSelect) statusSelect.value=invoice.status || 'Draft / Not Saved';
+
     ensurePayments();
-    if(!invoice.payments.length && Number(invoice.amountPaid||0)>0){invoice.payments=[{id:uid(),method:invoice.paymentMethod&&invoice.paymentMethod!=='None'?invoice.paymentMethod:'Cash',amount:cleanNumber(invoice.amountPaid)}];}
-    document.getElementById('amountPaid').value=Number(invoice.amountPaid||0).toFixed(2);
-    renderPayments();
-    ['modalCustomerName','modalCustomerPhone','modalCustomerEmail','modalVehicle','modalVin','modalPlate','modalMileage'].forEach(id=>{
-      const map={modalCustomerName:'customerName',modalCustomerPhone:'customerPhone',modalCustomerEmail:'customerEmail',modalVehicle:'vehicle',modalVin:'vin',modalPlate:'plate',modalMileage:'mileage'};
-      const el=document.getElementById(id); if(el) el.value=invoice[map[id]]||'';
-    });
-    renderStatus();renderLines();renderTotals();renderPayment();renderCannedJobs();renderSavedDocs();renderPrint();
-    if(document.getElementById('tab-revisions')?.classList.contains('active')) renderRevisionHistory();
-    if(document.getElementById('tab-history')?.classList.contains('active')) renderServiceHistory();
+    if(!invoice.payments.length && Number(invoice.amountPaid||0)>0){
+      invoice.payments=[{id:uid(),method:invoice.paymentMethod||'Payment',amount:Number(invoice.amountPaid)||0,note:'Imported payment'}];
+    }
+
+    renderLines();
+    renderTotals();
+    renderPayment();
+    renderPrint();
+    updateDraftUiState();
   }
 
   function renderStatus(){
@@ -3710,6 +3780,7 @@
       updatedAt:item.updatedAt || new Date().toISOString(),
       closedAt:item.closedAt || '',
       isDraft:false,
+      isDraft:false,
       readOnly:String(item.status||'').toLowerCase()==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE'
     });
   }
@@ -4314,7 +4385,7 @@
     if(s==='Paid')invoice.paymentStatus='Paid';
     if(s==='Estimate' || s==='Repair Order' || s==='Invoice') invoice.isDraft=false;
     renderAll();
-    queueInvoiceAutoSave?.('statusChange');
+    if(typeof queueInvoiceAutoSave==='function') queueInvoiceAutoSave('statusChange');
   }
   function setPaymentStatus(s){invoice.paymentStatus=s;if(s==='Paid')markPaidFull(false);else renderPayment();updateInvoice()}
   function renderPayment(){document.querySelectorAll('.payment-chip').forEach(b=>b.classList.toggle('active',b.dataset.pay===invoice.paymentStatus))}
@@ -5423,11 +5494,18 @@
 
 
 
+  
   window.addEventListener('DOMContentLoaded', ()=>{
+    try{
+      localStorage.removeItem('toros_active_invoice_draft_v1');
+      localStorage.removeItem('toros_active_invoice_draft_v2');
+    }catch(err){}
+
     setTimeout(()=>{
       if(!restoreActiveInvoiceDraft()){
-        invoice.docNumber='';
+        invoice=defaultInvoice();
         renderAll();
+        saveActiveInvoiceDraft();
       }
     },0);
   });
