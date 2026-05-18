@@ -678,6 +678,7 @@
 <!-- VEHICLE ADD DELETE UI FINAL -->
 <!-- VEHICLE ID SAFE FINAL -->
 <!-- VEHICLE DELETE CLEARS QUICK DISPLAY FINAL -->
+<!-- CLEAR STALE CUSTOMER VEHICLE FINAL -->
 </head>
 
 <body>
@@ -1710,13 +1711,21 @@
     invoice.customerEmail=c.email||'';
 
     const vehicles=normalizeVehicleList(c);
-    const primaryVehicle=vehicles[0] || c;
+    const primaryVehicle=vehicles[0] || null;
 
-    invoice.vehicleId=primaryVehicle.vehicleId||primaryVehicle.id||'';
-    invoice.vehicle=primaryVehicle.vehicle||c.vehicle||'';
-    invoice.vin=primaryVehicle.vin||c.vin||'';
-    invoice.plate=primaryVehicle.plate||c.plate||'';
-    invoice.mileage=formatMileage ? formatMileage(primaryVehicle.mileage||c.mileage||'') : (primaryVehicle.mileage||c.mileage||'');
+    if(primaryVehicle){
+      invoice.vehicleId=primaryVehicle.vehicleId||primaryVehicle.id||'';
+      invoice.vehicle=primaryVehicle.vehicle||'';
+      invoice.vin=primaryVehicle.vin||'';
+      invoice.plate=primaryVehicle.plate||'';
+      invoice.mileage=formatMileage ? formatMileage(primaryVehicle.mileage||'') : (primaryVehicle.mileage||'');
+    }else{
+      invoice.vehicleId='';
+      invoice.vehicle='';
+      invoice.vin='';
+      invoice.plate='';
+      invoice.mileage='';
+    }
 
     invoice.selectedCustomerProfile=Object.assign({},c,{vehicles});
 
@@ -1865,6 +1874,28 @@
     toast('Vehicle selected');
   }
 
+  async function clearCustomerQuickVehicleInSheet(){
+    const phone=document.getElementById('modalCustomerPhone')?.value || invoice.customerPhone || '';
+    const customerId=invoice.selectedCustomerProfile?.customerId || '';
+
+    if(!phone && !customerId)return;
+
+    try{
+      await fetch(getInvoiceBackendUrl(), {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({
+          action:'clearCustomerQuickVehicle',
+          password:INVOICE_BACKEND_PASSWORD,
+          phone,
+          customerId
+        })
+      });
+    }catch(err){
+      console.error(err);
+    }
+  }
+
   function clearVehicleFieldsFromModalAndInvoice(){
     window.selectedModalVehicleId='';
     window.selectedModalVehicleIndex=-1;
@@ -1879,6 +1910,14 @@
     invoice.vin='';
     invoice.plate='';
     invoice.mileage='';
+
+    if(invoice.selectedCustomerProfile){
+      invoice.selectedCustomerProfile.vehicle='';
+      invoice.selectedCustomerProfile.vin='';
+      invoice.selectedCustomerProfile.plate='';
+      invoice.selectedCustomerProfile.mileage='';
+      invoice.selectedCustomerProfile.vehicles=[];
+    }
 
     document.querySelectorAll('.vehicle-pill').forEach(btn=>btn.classList.remove('active'));
     renderAll();
@@ -1955,10 +1994,12 @@
         applyModalVehicle(0);
       }else{
         clearVehicleFieldsFromModalAndInvoice();
+        await clearCustomerQuickVehicleInSheet();
       }
     }else{
       renderModalVehiclePicker({vehicles:[]});
       clearVehicleFieldsFromModalAndInvoice();
+      await clearCustomerQuickVehicleInSheet();
     }
 
     toast('Vehicle deleted');
