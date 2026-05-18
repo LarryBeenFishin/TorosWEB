@@ -661,6 +661,7 @@
 <!-- CUSTOMER PROFILES MULTI VEHICLE ADDED -->
 <!-- CUSTOMER LOADS FROM BACKEND MULTI VEHICLE FIX -->
 <!-- VEHICLE SAVE BACKEND PRESERVE OLD VEHICLE -->
+<!-- VEHICLES TAB FINAL -->
 </head>
 
 <body>
@@ -1825,6 +1826,7 @@
     document.getElementById('modalVin').value=vehicle.vin||'';
     document.getElementById('modalPlate').value=vehicle.plate||'';
     document.getElementById('modalMileage').value=formatMileage ? formatMileage(vehicle.mileage||'') : (vehicle.mileage||'');
+    window.selectedModalVehicleId=vehicle.vehicleId || vehicle.id || '';
 
     toast('Vehicle selected');
   }
@@ -2145,6 +2147,7 @@
       vin:document.getElementById('modalVin').value.trim(),
       plate:document.getElementById('modalPlate').value.trim(),
       mileage:formatMileage(document.getElementById('modalMileage').value),
+      vehicleId:window.selectedModalVehicleId || '',
       source:'Invoice'
     };
 
