@@ -728,6 +728,7 @@
 <!-- RO NUMBER COUNTER FINAL -->
 <!-- PROFIT LOSS DISCOUNT FIX -->
 <!-- RO DUPLICATE SAFE BACKEND PAIR -->
+<!-- LIVE HISTORY TABS FINAL -->
 </head>
 
 <body>
@@ -3363,21 +3364,15 @@
     toast('Duplicated to a new editable invoice');
   }
 
-  async function loadAllInvoicesFromSheet(force){
+  async function loadAllInvoicesFromSheet(force=false){
     const box=document.getElementById('allInvoiceHistoryList');
-    if(!box)return;
-
-    if(allInvoiceHistory.length && !force){
-      renderAllInvoiceHistory();
-      return;
-    }
-
-    box.innerHTML='<div class="empty">Loading invoices from Google Sheets...</div>';
+    if(box && force) box.innerHTML='<div class="empty">Loading invoices from Google Sheets...</div>';
 
     try{
       const url=getInvoiceBackendUrl()
         + '?action=getInvoices'
-        + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD);
+        + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD)
+        + '&ts=' + Date.now();
 
       const res=await fetch(url,{cache:'no-store'});
       const data=await res.json();
@@ -3387,10 +3382,15 @@
       }
 
       allInvoiceHistory=(data.invoices || []).filter(item=>String(item.status||'').toLowerCase()!=='revision');
+      mergeCurrentInvoiceIntoAllInvoices();
       renderAllInvoiceHistory();
     }catch(err){
       console.error(err);
-      box.innerHTML='<div class="empty">Could not load invoices from Google Sheets.</div>';
+      mergeCurrentInvoiceIntoAllInvoices();
+      renderAllInvoiceHistory();
+      if(box && !allInvoiceHistory.length){
+        box.innerHTML='<div class="empty">Could not load invoices from Google Sheets.</div>';
+      }
     }
   }
 
@@ -3468,6 +3468,23 @@
     return !!(invoice.invoiceId || invoice.customerName || invoice.customerPhone || invoice.vehicle || (invoice.lines||[]).length);
   }
 
+  function refreshVisibleLiveTabsAfterSave(){
+    const active=document.querySelector('.tab.active')?.dataset?.tab || '';
+
+    if(active==='allinvoices'){
+      mergeCurrentInvoiceIntoAllInvoices();
+      renderAllInvoiceHistory();
+    }
+
+    if(active==='history'){
+      renderServiceHistory();
+    }
+
+    if(active==='revisions'){
+      renderRevisionHistory();
+    }
+  }
+
   function queueInvoiceAutoSave(reason){
     if(!shouldAutoSaveInvoice())return;
 
@@ -3479,6 +3496,7 @@
         await sendInvoiceToBackend('saveInvoice');
         const note=document.getElementById('invoiceAutosaveNote');
         if(note) note.textContent='Auto-saved '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+        refreshVisibleLiveTabsAfterSave();
       }catch(err){
         console.error(err);
         const note=document.getElementById('invoiceAutosaveNote');
@@ -3536,7 +3554,97 @@
   }
 
   
+  function currentInvoiceHistoryItem(){
+    bindFields();
+    const totals=calc();
+
+    return {
+      id:invoice.invoiceId || invoice.id || invoice.docNumber || '',
+      invoiceId:invoice.invoiceId || invoice.id || '',
+      invoiceNumber:invoice.docNumber || '',
+      docNumber:invoice.docNumber || '',
+      status:invoice.status || 'Estimate',
+      paymentStatus:invoice.paymentStatus || '',
+      customerId:invoice.selectedCustomerProfile?.customerId || invoice.customerId || '',
+      customerName:invoice.customerName || '',
+      customerPhone:invoice.customerPhone || '',
+      phone:invoice.customerPhone || '',
+      customerEmail:invoice.customerEmail || '',
+      email:invoice.customerEmail || '',
+      vehicleId:invoice.vehicleId || '',
+      vehicle:invoice.vehicle || '',
+      vin:invoice.vin || '',
+      plate:invoice.plate || '',
+      mileage:invoice.mileage || '',
+      lines:JSON.parse(JSON.stringify(invoice.lines || [])),
+      payments:JSON.parse(JSON.stringify(invoice.payments || [])),
+      laborTotal:totals.labor || 0,
+      partsTotal:totals.parts || 0,
+      feesTotal:totals.fees || 0,
+      discountTotal:totals.discounts || 0,
+      shopSupplies:totals.shopSupplies || 0,
+      tax:totals.tax || 0,
+      total:totals.total || 0,
+      paid:totals.paid || 0,
+      balance:totals.balance || 0,
+      internalNotes:invoice.internalNotes || '',
+      createdAt:invoice.createdAt || new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
+      closedAt:invoice.closedAt || '',
+      readOnly:invoice.readOnly || false
+    };
+  }
+
+  function mergeCurrentInvoiceIntoAllInvoices(){
+    if(!Array.isArray(allInvoiceHistory)) allInvoiceHistory=[];
+
+    const current=currentInvoiceHistoryItem();
+    const key=String(current.invoiceId || current.invoiceNumber || current.docNumber || '').trim();
+
+    if(!key || String(current.status||'').toLowerCase()==='revision')return;
+
+    const existingIndex=allInvoiceHistory.findIndex(item=>{
+      const itemKeys=[
+        item.invoiceId,
+        item.id,
+        item.invoiceNumber,
+        item.docNumber
+      ].filter(Boolean).map(x=>String(x).trim());
+
+      return itemKeys.includes(key);
+    });
+
+    if(existingIndex >= 0){
+      allInvoiceHistory[existingIndex]=Object.assign({}, allInvoiceHistory[existingIndex], current);
+    }else if(current.customerName || current.customerPhone || current.vehicle || (current.lines||[]).length){
+      allInvoiceHistory.unshift(current);
+    }
+  }
+
+  async function flushCurrentInvoiceForLiveTabs(){
+    if(!invoice || invoice.readOnly)return;
+
+    const status=String(invoice.status||'').toLowerCase();
+    if(status==='closed' || status==='cancelled')return;
+
+    if(typeof invoiceAutoSaveTimer !== 'undefined') clearTimeout(invoiceAutoSaveTimer);
+
+    try{
+      await assignRoNumberIfNeeded?.();
+      await sendInvoiceToBackend('saveInvoice');
+
+      const note=document.getElementById('invoiceAutosaveNote');
+      if(note) note.textContent='Saved '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    }catch(err){
+      console.error(err);
+      const note=document.getElementById('invoiceAutosaveNote');
+      if(note) note.textContent='Live save failed';
+    }
+  }
+
+  
   function renderAllInvoiceHistory(){
+    mergeCurrentInvoiceIntoAllInvoices();
     const box=document.getElementById('allInvoiceHistoryList');
     if(!box)return;
 
@@ -3857,17 +3965,27 @@
     openPopup('profitLossModal');
   }
   
-  function showTab(name){
+  async function showTab(name){
     document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
     document.querySelectorAll('.work-section').forEach(s=>s.classList.toggle('active',s.id==='tab-'+name));
-    if(name==='revisions') renderRevisionHistory();
-    if(name==='history') renderServiceHistory();
-  
-    if(name==='history' && typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
-  
-    if(name==='allinvoices') loadAllInvoicesFromSheet(false);
-  
-    if(name==='revisions') loadRevisionsFromGoogleSheets();
+
+    if(['allinvoices','history','revisions'].includes(name)){
+      await flushCurrentInvoiceForLiveTabs();
+    }
+
+    if(name==='revisions'){
+      if(typeof loadRevisionsFromGoogleSheets==='function') await loadRevisionsFromGoogleSheets();
+      else renderRevisionHistory();
+    }
+
+    if(name==='history'){
+      if(typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
+      renderServiceHistory();
+    }
+
+    if(name==='allinvoices'){
+      await loadAllInvoicesFromSheet(true);
+    }
   }
 
   function setStatus(s){invoice.status=s;if(s==='Paid')invoice.paymentStatus='Paid';renderAll()}
