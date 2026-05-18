@@ -744,6 +744,19 @@
       to{transform:rotate(360deg)}
     }
 
+  
+    .convert-card{
+      display:flex;
+      justify-content:flex-end;
+    }
+    .convert-card button{
+      width:100%;
+      min-height:38px;
+    }
+    .draft-disabled{
+      opacity:.55;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -786,6 +799,7 @@
 <!-- LIVE TAB LOADING STATES FINAL -->
 <!-- ACTIVE DRAFT RESTORE NO OVERWRITE FINAL -->
 <!-- ACTIVE DRAFT RESTORE HARDENED FINAL -->
+<!-- DRAFT CONVERT TO ESTIMATE FINAL -->
 </head>
 
 <body>
@@ -810,12 +824,13 @@
       <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Labor</button><div class="drop-menu"><div class="drop-title">Labor</div><button onclick="openServicePopup('Labor')">Add Labor Popup</button><button onclick="addLine('Labor')">Quick Add Empty Labor</button><button onclick="openServicePopup('Diagnostic')">Add Diagnostic Popup</button></div></div>
       <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Maint.</button><div class="drop-menu"><div class="drop-title">Maintenance</div><button onclick="openServicePopup('Maintenance')">Add Maintenance Service</button><button onclick="addMaintenance('Oil Change Service',0.5,69.99)">Oil Change</button><button onclick="addMaintenance('Brake Inspection',0.5,0)">Brake Inspection</button><button onclick="addMaintenance('Battery Test / Replacement',0.4,0)">Battery Service</button></div></div>
       <div class="dropdown"><button class="drop-btn" onclick="toggleDropdown(this)">Options</button><div class="drop-menu right"><div class="drop-title">Invoice Options</div><button onclick="openServicePopup('Discount')">Add Discount</button><button onclick="copyAuthorizationText()">Copy Approval Text</button><button onclick="saveDocument()">Save Document</button><div class="drop-sep"></div><button onclick="openSettings()">Settings Popup</button></div></div>
-      <div class="ribbon-spacer"></div><span class="status-pill estimate" id="docBadge">Estimate</span>
+      <div class="ribbon-spacer"></div><span class="status-pill estimate" id="docBadge">Draft / Not Saved</span>
     </nav>
 
     <section class="ticket-row">
-      <div class="field-card yellow"><label>Estimate / RO #</label><input id="docNumber" oninput="updateInvoice()"></div>
-      <div class="field-card"><label>Status</label><select id="quickStatusSelect" onchange="setStatus(this.value)"><option>Estimate</option><option>Repair Order</option><option>Invoice</option></select></div>
+      <div class="field-card yellow"><label>Estimate / RO #</label><input id="docNumber" placeholder="Not assigned yet" readonly></div>
+      <div class="field-card"><label>Status</label><select id="quickStatusSelect" onchange="setStatus(this.value)"><option>Draft / Not Saved</option><option>Estimate</option><option>Repair Order</option><option>Invoice</option></select></div>
+      <div class="field-card convert-card"><label>&nbsp;</label><button class="green" id="convertEstimateBtn" type="button" onclick="convertDraftToEstimate()">Convert to Estimate</button></div>
     </section>
 
     <section class="main">
@@ -969,7 +984,7 @@
 </section>
 
       <aside class="panel totals-payment-panel">
-        <div class="panel-head"><h2>Totals / Payment</h2><button class="green" onclick="saveAndParkInvoice()">Save Now</button></div>
+        <div class="panel-head"><h2>Totals / Payment</h2><button class="green" id="saveNowBtn" onclick="saveAndParkInvoice()">Save Now</button></div>
         <div class="panel-body stack">
           <div class="totals-box" id="totalsBox"></div>
           <div class="payment-mini-title">
@@ -1366,6 +1381,11 @@
   async function sendInvoiceToBackend(action){
     bindFields();
 
+    if(action==='saveInvoice' && !isConvertedInvoice(invoice)){
+      saveActiveInvoiceDraft();
+      return {status:'skipped', message:'Draft not converted'};
+    }
+
     if(action==='saveInvoice' && isDefaultBlankInvoice(invoice)){
       return {status:'skipped', message:'Blank invoice not saved'};
     }
@@ -1398,8 +1418,10 @@
       invoice.docNumber=data.invoiceNumber;
     }
 
+    invoice.isDraft=false;
     invoice.updatedAt=new Date().toISOString();
     saveActiveInvoiceDraft();
+    updateDraftUiState();
     return data;
   }
 
@@ -1464,6 +1486,11 @@
 
   async function assignRoNumberIfNeeded(){
     if(invoice.docNumber && !/^TA-\d+/.test(String(invoice.docNumber))) return invoice.docNumber;
+
+    if(String(invoice.status||'')==='Draft / Not Saved'){
+      return '';
+    }
+
     invoice.docNumber=await getNextRoNumberFromBackend();
     const docInput=document.getElementById('docNumber');
     if(docInput) docInput.value=invoice.docNumber;
@@ -1476,20 +1503,19 @@
 
   function isDefaultBlankInvoice(inv){
     inv=inv||invoice||{};
+
+    // Any unconverted draft is local-only and should never be sent to Google Sheets.
+    if(!isConvertedInvoice(inv))return true;
+
     const lines=Array.isArray(inv.lines)?inv.lines:[];
-    const hasDoc=!!(inv.docNumber || inv.invoiceId);
     const hasCustomer=!!(inv.customerName||inv.customerPhone||inv.customerEmail);
     const hasVehicle=!!(inv.vehicle||inv.vin||inv.plate||inv.mileage);
     const hasNotes=!!(inv.concern||inv.techNotes||inv.recommendations||inv.internalNotes);
     const hasPayments=Array.isArray(inv.payments)&&inv.payments.length>0;
     const meaningfulLines=lines.filter(l=>{
       const desc=String(l.description||'').trim();
-      const isDefault=desc==='Diagnostic / inspection labor' && Number(l.qty||0)===1 && Number(l.price||0)===Number(settings.laborRate||0);
-      return desc && !isDefault;
+      return !!desc;
     });
-
-    // If it has an RO or invoiceId, it is not blank. This is important for restoring existing work.
-    if(hasDoc)return false;
 
     return !hasCustomer && !hasVehicle && !hasNotes && !hasPayments && meaningfulLines.length===0;
   }
@@ -1499,16 +1525,11 @@
       if(!invoice)return false;
       bindFields();
 
-      if(isDefaultBlankInvoice(invoice)){
-        return false;
-      }
-
       localStorage.setItem(LS_ACTIVE_INVOICE_DRAFT, JSON.stringify({
         savedAt:new Date().toISOString(),
         invoice:JSON.parse(JSON.stringify(invoice))
       }));
 
-      // remove older draft key if it exists from previous build
       localStorage.removeItem('toros_active_invoice_draft_v1');
       return true;
     }catch(err){
@@ -1573,15 +1594,91 @@
   function defaultInvoice(){
     const today=new Date().toISOString().slice(0,10);
     return {
-      id:'INV-'+Date.now(),status:'Estimate',paymentStatus:'Unpaid',paymentMethod:'None',amountPaid:0,payments:[],
-      openedDate:today,promiseDate:'',advisor:'',customerName:'',customerPhone:'',customerEmail:'',
-      vehicleId:'',vehicle:'',vin:'',plate:'',mileage:'',docNumber:'',concern:'',authStatus:'Not Authorized',
-      authorizedBy:'',techNotes:'',recommendations:'',internalNotes:'',
-      lines:[{id:uid(),type:'Labor',description:'Diagnostic / inspection labor',qty:1,cost:0,price:settings.laborRate,taxable:false,tech:''}],
+      id:'DRAFT-'+Date.now(),
+      invoiceId:'',
+      isDraft:true,
+      status:'Draft / Not Saved',
+      paymentStatus:'Unpaid',
+      paymentMethod:'None',
+      amountPaid:0,
+      payments:[],
+      openedDate:today,
+      promiseDate:'',
+      advisor:'',
+      customerName:'',
+      customerPhone:'',
+      customerEmail:'',
+      vehicleId:'',
+      vehicle:'',
+      vin:'',
+      plate:'',
+      mileage:'',
+      docNumber:'',
+      concern:'',
+      authStatus:'Not Authorized',
+      authorizedBy:'',
+      techNotes:'',
+      recommendations:'',
+      internalNotes:'',
+      lines:[],
       updatedAt:new Date().toISOString()
     };
   }
 
+  function isConvertedInvoice(inv=invoice){
+    return !!(inv && inv.docNumber && String(inv.status||'') !== 'Draft / Not Saved');
+  }
+
+  function updateDraftUiState(){
+    const converted=isConvertedInvoice(invoice);
+    const convertBtn=document.getElementById('convertEstimateBtn');
+    const saveBtn=document.getElementById('saveNowBtn');
+    const statusSelect=document.getElementById('quickStatusSelect');
+    const docInput=document.getElementById('docNumber');
+
+    if(convertBtn) convertBtn.style.display=converted?'none':'inline-flex';
+    if(saveBtn) saveBtn.disabled=!converted;
+    if(statusSelect){
+      if(!converted && !Array.from(statusSelect.options).some(o=>o.value==='Draft / Not Saved')){
+        statusSelect.insertAdjacentHTML('afterbegin','<option>Draft / Not Saved</option>');
+      }
+      statusSelect.value=invoice.status || (converted?'Estimate':'Draft / Not Saved');
+    }
+    if(docInput){
+      docInput.readOnly=true;
+      docInput.placeholder=converted?'':'Not assigned yet';
+    }
+
+    document.body.classList.toggle('draft-mode',!converted);
+  }
+
+  async function convertDraftToEstimate(){
+    bindFields();
+
+    if(isConvertedInvoice(invoice)){
+      toast('This estimate already has '+invoice.docNumber);
+      return;
+    }
+
+    const hasCustomer=!!(invoice.customerName||invoice.customerPhone);
+    const hasLines=Array.isArray(invoice.lines)&&invoice.lines.length>0;
+
+    if(!hasCustomer && !hasLines){
+      if(!confirm('Convert this blank draft to an estimate and assign an RO number?'))return;
+    }
+
+    invoice.status='Estimate';
+    invoice.isDraft=false;
+    await assignRoNumberIfNeeded();
+    await saveInvoiceToGoogleSheets();
+    saveActiveInvoiceDraft();
+    updateDraftUiState();
+    renderAll();
+
+    toast('Converted to estimate '+invoice.docNumber);
+  }
+
+  
   function toggleDropdown(btn){
     const wrap=btn.closest('.dropdown');
     document.querySelectorAll('.dropdown.open').forEach(d=>{if(d!==wrap)d.classList.remove('open')});
@@ -3612,6 +3709,7 @@
       createdAt:item.createdAt || new Date().toISOString(),
       updatedAt:item.updatedAt || new Date().toISOString(),
       closedAt:item.closedAt || '',
+      isDraft:false,
       readOnly:String(item.status||'').toLowerCase()==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE'
     });
   }
@@ -3631,18 +3729,17 @@
   function shouldAutoSaveInvoice(){
     const status=String(invoice.status||'').toLowerCase();
     if(invoice.readOnly || status==='closed' || status==='cancelled')return false;
-
-    // Prevent refresh-created blank invoices from overwriting a real RO.
-    if(isDefaultBlankInvoice(invoice))return false;
+    if(!isConvertedInvoice(invoice))return false;
 
     return !!(
       invoice.invoiceId ||
+      invoice.docNumber ||
       invoice.customerName ||
       invoice.customerPhone ||
       invoice.vehicle ||
       invoice.vin ||
       invoice.plate ||
-      (invoice.lines||[]).some(l=>String(l.description||'').trim() && String(l.description||'').trim()!=='Diagnostic / inspection labor')
+      (invoice.lines||[]).some(l=>String(l.description||'').trim())
     );
   }
 
@@ -3691,15 +3788,14 @@
     try{
       bindFields();
 
-      if(isDefaultBlankInvoice(invoice)){
-        toast('Nothing to save yet');
+      if(!isConvertedInvoice(invoice)){
+        await convertDraftToEstimate();
         return;
       }
 
-      await assignRoNumberIfNeeded();
       invoice.readOnly=false;
       invoice.closedAt='';
-      if(!invoice.status || invoice.status==='Paid') invoice.status='Estimate';
+      if(!invoice.status || invoice.status==='Paid' || invoice.status==='Draft / Not Saved') invoice.status='Estimate';
       await saveInvoiceToGoogleSheets();
       saveActiveInvoiceDraft();
       await loadAllInvoicesFromSheet(true);
@@ -3733,6 +3829,7 @@
     }
 
     invoice=invoiceFromSheetItem(item);
+    invoice.isDraft=false;
     markCurrentInvoiceAsActive();
     closePopup('serviceHistoryViewModal');
     showTab('lines');
@@ -4205,7 +4302,20 @@
     }
   }
 
-  function setStatus(s){invoice.status=s;if(s==='Paid')invoice.paymentStatus='Paid';renderAll()}
+  function setStatus(s){
+    if(!isConvertedInvoice(invoice) && s!=='Draft / Not Saved'){
+      const select=document.getElementById('quickStatusSelect');
+      if(select) select.value='Draft / Not Saved';
+      toast('Click Convert to Estimate before changing status');
+      return;
+    }
+
+    invoice.status=s;
+    if(s==='Paid')invoice.paymentStatus='Paid';
+    if(s==='Estimate' || s==='Repair Order' || s==='Invoice') invoice.isDraft=false;
+    renderAll();
+    queueInvoiceAutoSave?.('statusChange');
+  }
   function setPaymentStatus(s){invoice.paymentStatus=s;if(s==='Paid')markPaidFull(false);else renderPayment();updateInvoice()}
   function renderPayment(){document.querySelectorAll('.payment-chip').forEach(b=>b.classList.toggle('active',b.dataset.pay===invoice.paymentStatus))}
 
@@ -4509,6 +4619,7 @@
       if(el) el.textContent=money(value);
     });
     renderPayment();updatePaidToggle();renderPrint();
+    updateDraftUiState();
   }
 
   function ensurePayments(){
@@ -4840,7 +4951,6 @@
   function startFreshInvoice(){
     clearActiveInvoiceDraft();
     invoice=defaultInvoice();
-    invoice.docNumber='';
 
     const pickerSearch=document.getElementById('customerPickerSearch');
     if(pickerSearch) pickerSearch.value='';
@@ -4856,33 +4966,33 @@
     }
 
     renderAll();
+    saveActiveInvoiceDraft();
     showTab('lines');
   }
 
   async function newInvoice(){
     if(hasUnsavedWork && hasUnsavedWork()){
-      const saveFirst=confirm('Save the current invoice before starting a new one? Press OK to save, or Cancel to start new without saving.');
-      if(saveFirst){
+      const saveFirst=confirm('Save the current estimate before starting a new draft? Press OK to save, or Cancel to start new without saving.');
+      if(saveFirst && isConvertedInvoice(invoice)){
         try{ await saveInvoiceToGoogleSheets(); saveActiveInvoiceDraft(); }
         catch(err){
           console.error(err);
-          if(!confirm('Could not save current invoice. Start a new invoice anyway?'))return;
+          if(!confirm('Could not save current estimate. Start a new draft anyway?'))return;
         }
       }
     }
 
     clearActiveInvoiceDraft();
     invoice=defaultInvoice();
-    invoice.docNumber='';
     renderAll();
-    await assignRoNumberIfNeeded();
     saveActiveInvoiceDraft();
     showTab('lines');
-    toast('New estimate started with '+invoice.docNumber);
+    toast('New draft started. Click Convert to Estimate when ready.');
   }
 
   async function closeInvoice(){
     bindFields();
+    if(!isConvertedInvoice(invoice)){ toast('Convert to Estimate before closing'); return; }
     const totals=calc();
 
     if(Number(totals.total||0)<=0){
