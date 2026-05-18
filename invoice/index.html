@@ -679,6 +679,7 @@
 <!-- VEHICLE ID SAFE FINAL -->
 <!-- VEHICLE DELETE CLEARS QUICK DISPLAY FINAL -->
 <!-- CLEAR STALE CUSTOMER VEHICLE FINAL -->
+<!-- STRICT CUSTOMER VEHICLE SOURCE FINAL -->
 </head>
 
 <body>
@@ -1629,34 +1630,31 @@
     try{
       const backendUrl=getInvoiceBackendUrl()
         + '?action=getCustomers'
-        + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD);
+        + '&password=' + encodeURIComponent(INVOICE_BACKEND_PASSWORD)
+        + '&ts=' + Date.now();
 
       const res=await fetch(backendUrl,{cache:'no-store'});
       const data=await res.json();
 
-      if(data.status==='success'){
-        customers=(data.customers||[]).map(c=>Object.assign({},c,{vehicles:normalizeVehicleList(c)}));
-        renderCustomerPickerResults();
-        prefillFromQuery();
-        return;
+      if(data.status!=='success'){
+        throw new Error(data.message || 'Customer list could not load');
       }
-    }catch(err){
-      console.error('Apps Script customer load failed',err);
-    }
 
-    try{
-      const res=await fetch('/api/get-customers',{headers:adminAuthHeaders(),cache:'no-store'});
-      const data=await res.json();
       customers=(data.customers||[]).map(c=>Object.assign({},c,{vehicles:normalizeVehicleList(c)}));
       renderCustomerPickerResults();
       prefillFromQuery();
+      return;
     }catch(e){
-      if(box) box.innerHTML='<div class="empty" style="margin:10px">Customer list could not load. You can still enter customer info manually.</div>';
+      console.error(e);
+      customers=[];
+      if(box) box.innerHTML='<div class="empty" style="margin:10px">Customer list could not load from Google Sheets. Try refreshing once.</div>';
     }
   }
 
   function customerSearchText(c){
-    return [c.name,c.phone,c.email,c.vehicle,c.lastService,c.vin,c.plate,c.mileage].join(' ').toLowerCase();
+    const vehicles=normalizeVehicleList(c);
+    const vehicleText=vehicles.map(v=>[v.vehicle,v.vin,v.plate,v.mileage].join(' ')).join(' ');
+    return [c.name,c.phone,c.email,vehicleText,c.lastService].join(' ').toLowerCase();
   }
 
   function openCustomerPicker(){
@@ -1696,10 +1694,13 @@
 
     box.innerHTML=matches.map(c=>{
       const index=customers.indexOf(c);
+      const vehicleCount=normalizeVehicleList(c).length;
+      const vehicleLabel=vehicleCount===1 ? '1 vehicle' : `${vehicleCount} vehicles`;
+
       return `<button class="customer-picker-card" type="button" onclick="selectCustomer(${index});closePopup('customerPickerPopup')">
         <strong>${esc(c.name||'Customer')}</strong>
-        <small>${esc(formatPhone ? formatPhone(c.phone||'') : c.phone||'No phone')} · ${esc((normalizeVehicleList(c).length>1)?(normalizeVehicleList(c).length+' vehicles'):(c.vehicle||'No vehicle'))}</small>
-        <small>${esc(c.email||'No email')}${c.plate?' · Plate: '+esc(c.plate):''}${c.vin?' · VIN: '+esc(c.vin):''}</small>
+        <small>${esc(formatPhone ? formatPhone(c.phone||'') : c.phone||'No phone')} · ${esc(vehicleLabel)}</small>
+        <small>${esc(c.email||'No email')}</small>
       </button>`;
     }).join('');
   }
@@ -1775,7 +1776,8 @@
     function addVehicle(v){
       if(!v)return;
       const record={
-        id:v.id || uid(),
+        id:v.vehicleId || v.id || uid(),
+        vehicleId:v.vehicleId || v.id || '',
         vehicle:v.vehicle || v.Vehicle || '',
         vin:v.vin || v.VIN || '',
         plate:v.plate || v.Plate || v.licensePlate || '',
@@ -1784,23 +1786,37 @@
 
       if(!record.vehicle && !record.vin && !record.plate)return;
 
-      const key=[record.vin,record.plate,record.vehicle].map(x=>String(x||'').trim().toLowerCase()).join('|');
-      if(vehicles.some(existing=>[existing.vin,existing.plate,existing.vehicle].map(x=>String(x||'').trim().toLowerCase()).join('|')===key))return;
+      const key=[
+        record.vehicleId,
+        record.vin,
+        record.plate,
+        record.vehicle
+      ].map(x=>String(x||'').trim().toLowerCase()).join('|');
+
+      if(vehicles.some(existing=>[
+        existing.vehicleId || existing.id,
+        existing.vin,
+        existing.plate,
+        existing.vehicle
+      ].map(x=>String(x||'').trim().toLowerCase()).join('|')===key))return;
 
       vehicles.push(record);
     }
 
-    if(Array.isArray(customer?.vehicles)){
-      customer.vehicles.forEach(addVehicle);
+    // New setup: if Vehicles sheet data exists, trust only that.
+    if(Object.prototype.hasOwnProperty.call(customer||{},'vehicles')){
+      if(Array.isArray(customer.vehicles)){
+        customer.vehicles.forEach(addVehicle);
+      }else if(typeof customer.vehicles === 'string'){
+        try{
+          const parsed=JSON.parse(customer.vehicles || '[]');
+          if(Array.isArray(parsed)) parsed.forEach(addVehicle);
+        }catch(e){}
+      }
+      return vehicles;
     }
 
-    if(typeof customer?.vehicles === 'string'){
-      try{
-        const parsed=JSON.parse(customer.vehicles);
-        if(Array.isArray(parsed)) parsed.forEach(addVehicle);
-      }catch(e){}
-    }
-
+    // Fallback only for very old local records that do not have vehicles at all.
     addVehicle({
       vehicle:customer?.vehicle || '',
       vin:customer?.vin || customer?.VIN || '',
