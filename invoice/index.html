@@ -801,6 +801,79 @@
       margin-left:0;
     }
 
+  
+    /* Layout repair after removing the old ribbon */
+    .app{
+      min-height:100vh;
+      height:100vh;
+      display:flex !important;
+      flex-direction:column !important;
+      overflow:hidden;
+    }
+    .topbar{
+      flex:0 0 auto;
+    }
+    .ticket-row{
+      flex:0 0 auto;
+      display:grid;
+      grid-template-columns:minmax(260px,1.2fr) minmax(220px,.8fr) minmax(190px,auto);
+      gap:8px;
+      padding:8px 4px 8px;
+      align-items:stretch;
+    }
+    .main{
+      flex:1 1 auto !important;
+      min-height:0 !important;
+      height:auto !important;
+      display:grid !important;
+      grid-template-columns:280px minmax(0,1fr) 270px;
+      gap:8px;
+      padding:0 4px 8px;
+      overflow:hidden !important;
+    }
+    .main > .panel,
+    .main > .work-area,
+    .main > aside.panel{
+      min-height:0 !important;
+      height:100% !important;
+      overflow:hidden;
+    }
+    .panel-body,
+    .work-body,
+    .work-section,
+    .history-list{
+      min-height:0;
+    }
+    .work-area{
+      display:flex;
+      flex-direction:column;
+    }
+    .work-tabs{
+      flex:0 0 auto;
+    }
+    .work-section.active{
+      flex:1 1 auto;
+      min-height:0;
+      overflow:auto;
+    }
+    .totals-payment-panel .panel-body{
+      overflow:auto;
+    }
+    @media(max-width:1000px){
+      .main{
+        grid-template-columns:1fr;
+        overflow:auto !important;
+      }
+      .app{
+        overflow:auto;
+        height:auto;
+        min-height:100vh;
+      }
+      .ticket-row{
+        grid-template-columns:1fr;
+      }
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -847,6 +920,7 @@
 <!-- DRAFT CONVERT CLEAN FIXED FINAL -->
 <!-- RIBBON BAR REMOVED FINAL -->
 <!-- SAVE NOW MOVED TO REVISIONS ROW FINAL -->
+<!-- DRAFT_LAYOUT_REPAIR_FINAL -->
 </head>
 
 <body>
@@ -863,7 +937,7 @@
       </div>
     </header>
 
-<section class="ticket-row draft-ticket-row">
+<section class="ticket-row">
       <div class="field-card yellow ro-card">
         <label>Estimate / RO #</label>
         <input id="docNumber" placeholder="Not assigned yet" readonly>
@@ -1552,12 +1626,11 @@
   }
 
   
-  const LS_ACTIVE_INVOICE_DRAFT='toros_active_invoice_draft_v3';
+  const LS_ACTIVE_INVOICE_DRAFT='toros_active_invoice_draft_v4';
 
   function isDefaultBlankInvoice(inv){
     inv=inv||invoice||{};
 
-    // Drafts are local-only. They should never be sent to Google Sheets.
     if(!isConvertedInvoice(inv))return true;
 
     const lines=Array.isArray(inv.lines)?inv.lines:[];
@@ -1576,14 +1649,14 @@
       bindFields();
 
       localStorage.setItem(LS_ACTIVE_INVOICE_DRAFT, JSON.stringify({
-        schemaVersion:3,
+        schemaVersion:4,
         savedAt:new Date().toISOString(),
         invoice:JSON.parse(JSON.stringify(invoice))
       }));
 
-      // Clean old draft keys so stale customer/vehicle data cannot come back.
       localStorage.removeItem('toros_active_invoice_draft_v1');
       localStorage.removeItem('toros_active_invoice_draft_v2');
+      localStorage.removeItem('toros_active_invoice_draft_v3');
       return true;
     }catch(err){
       console.error(err);
@@ -1596,6 +1669,7 @@
       localStorage.removeItem(LS_ACTIVE_INVOICE_DRAFT);
       localStorage.removeItem('toros_active_invoice_draft_v1');
       localStorage.removeItem('toros_active_invoice_draft_v2');
+      localStorage.removeItem('toros_active_invoice_draft_v3');
     }catch(err){}
   }
 
@@ -1613,7 +1687,7 @@
       if(!raw)return false;
 
       const parsed=JSON.parse(raw);
-      if(!parsed || parsed.schemaVersion!==3 || !parsed.invoice)return false;
+      if(!parsed || parsed.schemaVersion!==4 || !parsed.invoice)return false;
 
       const saved=parsed.invoice;
       const status=String(saved.status||'').toLowerCase();
@@ -1697,9 +1771,7 @@
 
     if(statusSelect){
       const wanted=converted ? (invoice.status || 'Estimate') : 'Draft / Not Saved';
-      if(Array.from(statusSelect.options).some(o=>o.value===wanted || o.textContent===wanted)){
-        statusSelect.value=wanted;
-      }
+      statusSelect.value=wanted;
     }
 
     if(docInput){
@@ -3782,6 +3854,7 @@
       closedAt:item.closedAt || '',
       isDraft:false,
       isDraft:false,
+      isDraft:false,
       readOnly:String(item.status||'').toLowerCase()==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE'
     });
   }
@@ -5496,10 +5569,12 @@
 
 
   
+  
   window.addEventListener('DOMContentLoaded', ()=>{
     try{
       localStorage.removeItem('toros_active_invoice_draft_v1');
       localStorage.removeItem('toros_active_invoice_draft_v2');
+      localStorage.removeItem('toros_active_invoice_draft_v3');
     }catch(err){}
 
     setTimeout(()=>{
