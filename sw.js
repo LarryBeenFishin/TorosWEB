@@ -1,4 +1,4 @@
-const CACHE_NAME = "toros-admin-v8-no-cache-invoice";
+const CACHE_NAME = "toros-admin-v10-no-invoice-cache";
 
 const STATIC_ASSETS = [
   "/logo.png",
@@ -43,6 +43,12 @@ self.addEventListener("fetch", event => {
 
   // Never cache invoice pages
   if (url.pathname.startsWith("/invoice")) {
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
+
+  // Never cache the service worker itself
+  if (url.pathname === "/sw.js") {
     event.respondWith(fetch(request, { cache: "no-store" }));
     return;
   }
