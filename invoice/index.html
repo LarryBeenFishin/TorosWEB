@@ -784,6 +784,7 @@
 <!-- LIVE HISTORY TABS FINAL -->
 <!-- AUTOSAVE BOTTOM LEFT FINAL -->
 <!-- LIVE TAB LOADING STATES FINAL -->
+<!-- ACTIVE DRAFT RESTORE NO OVERWRITE FINAL -->
 </head>
 
 <body>
@@ -1362,6 +1363,12 @@
   }
 
   async function sendInvoiceToBackend(action){
+    bindFields();
+
+    if(action==='saveInvoice' && isDefaultBlankInvoice(invoice)){
+      return {status:'skipped', message:'Blank invoice not saved'};
+    }
+
     await assignRoNumberIfNeeded();
     const payload=makeBackendInvoicePayload();
 
@@ -1391,11 +1398,13 @@
     }
 
     invoice.updatedAt=new Date().toISOString();
+    saveActiveInvoiceDraft();
     return data;
   }
 
   async function saveInvoiceToGoogleSheets(){
     const data=await sendInvoiceToBackend('saveInvoice');
+        saveActiveInvoiceDraft();
     toast('Invoice saved to Google Sheets');
     return data;
   }
@@ -1459,6 +1468,78 @@
     if(docInput) docInput.value=invoice.docNumber;
     renderAll();
     return invoice.docNumber;
+  }
+
+  
+  const LS_ACTIVE_INVOICE_DRAFT='toros_active_invoice_draft_v1';
+
+  function isDefaultBlankInvoice(inv){
+    inv=inv||invoice||{};
+    const lines=Array.isArray(inv.lines)?inv.lines:[];
+    const hasCustomer=!!(inv.customerName||inv.customerPhone||inv.customerEmail);
+    const hasVehicle=!!(inv.vehicle||inv.vin||inv.plate||inv.mileage);
+    const hasNotes=!!(inv.concern||inv.techNotes||inv.recommendations||inv.internalNotes);
+    const hasPayments=Array.isArray(inv.payments)&&inv.payments.length>0;
+    const meaningfulLines=lines.filter(l=>{
+      const desc=String(l.description||'').trim();
+      const isDefault=desc==='Diagnostic / inspection labor' && Number(l.qty||0)===1 && Number(l.price||0)===Number(settings.laborRate||0);
+      return desc && !isDefault;
+    });
+
+    return !hasCustomer && !hasVehicle && !hasNotes && !hasPayments && meaningfulLines.length===0;
+  }
+
+  function saveActiveInvoiceDraft(){
+    try{
+      if(!invoice)return;
+      bindFields();
+      localStorage.setItem(LS_ACTIVE_INVOICE_DRAFT, JSON.stringify({
+        savedAt:new Date().toISOString(),
+        invoice
+      }));
+    }catch(err){
+      console.error(err);
+    }
+  }
+
+  function clearActiveInvoiceDraft(){
+    try{
+      localStorage.removeItem(LS_ACTIVE_INVOICE_DRAFT);
+    }catch(err){}
+  }
+
+  function restoreActiveInvoiceDraft(){
+    try{
+      const raw=localStorage.getItem(LS_ACTIVE_INVOICE_DRAFT);
+      if(!raw)return false;
+
+      const parsed=JSON.parse(raw);
+      if(!parsed || !parsed.invoice)return false;
+
+      const saved=parsed.invoice;
+      const status=String(saved.status||'').toLowerCase();
+
+      if(status==='closed' || status==='cancelled'){
+        clearActiveInvoiceDraft();
+        return false;
+      }
+
+      invoice=Object.assign(defaultInvoice(), saved);
+      renderAll();
+
+      const note=document.getElementById('invoiceAutosaveNote');
+      if(note) note.textContent='Restored '+(invoice.docNumber||'saved invoice');
+
+      return true;
+    }catch(err){
+      console.error(err);
+      clearActiveInvoiceDraft();
+      return false;
+    }
+  }
+
+  function markCurrentInvoiceAsActive(){
+    saveActiveInvoiceDraft();
   }
 
   
@@ -3523,7 +3604,19 @@
   function shouldAutoSaveInvoice(){
     const status=String(invoice.status||'').toLowerCase();
     if(invoice.readOnly || status==='closed' || status==='cancelled')return false;
-    return !!(invoice.invoiceId || invoice.customerName || invoice.customerPhone || invoice.vehicle || (invoice.lines||[]).length);
+
+    // Prevent refresh-created blank invoices from overwriting a real RO.
+    if(isDefaultBlankInvoice(invoice))return false;
+
+    return !!(
+      invoice.invoiceId ||
+      invoice.customerName ||
+      invoice.customerPhone ||
+      invoice.vehicle ||
+      invoice.vin ||
+      invoice.plate ||
+      (invoice.lines||[]).some(l=>String(l.description||'').trim() && String(l.description||'').trim()!=='Diagnostic / inspection labor')
+    );
   }
 
   function refreshVisibleLiveTabsAfterSave(){
@@ -3569,11 +3662,18 @@
   async function saveAndParkInvoice(){
     try{
       bindFields();
+
+      if(isDefaultBlankInvoice(invoice)){
+        toast('Nothing to save yet');
+        return;
+      }
+
       await assignRoNumberIfNeeded();
       invoice.readOnly=false;
       invoice.closedAt='';
       if(!invoice.status || invoice.status==='Paid') invoice.status='Estimate';
       await saveInvoiceToGoogleSheets();
+      saveActiveInvoiceDraft();
       await loadAllInvoicesFromSheet(true);
       toast('Saved. You can reopen it from All Invoices.');
     }catch(err){
@@ -3605,6 +3705,7 @@
     }
 
     invoice=invoiceFromSheetItem(item);
+    markCurrentInvoiceAsActive();
     closePopup('serviceHistoryViewModal');
     showTab('lines');
     renderAll();
@@ -4709,52 +4810,18 @@
 
   
   function startFreshInvoice(){
-    const fresh=defaultInvoice();
-    fresh.customerName='';
-    fresh.customerPhone='';
-    fresh.customerEmail='';
-    fresh.vehicleId='';
-    fresh.vehicle='';
-    fresh.vin='';
-    fresh.plate='';
-    fresh.mileage='';
-    fresh.promiseDate='';
-    fresh.advisor='';
-    fresh.concern='';
-    fresh.internalNotes='';
-    fresh.recommendations='';
-    fresh.payments=[];
-    fresh.paymentStatus='Unpaid';
-    fresh.status='Estimate';
-    fresh.readOnly=false;
-    fresh.closedAt='';
-
-    invoice=fresh;
-
-    const pickerSearch=document.getElementById('customerPickerSearch');
-    if(pickerSearch) pickerSearch.value='';
-
-    const modalSearch=document.getElementById('modalCustomerSearch');
-    if(modalSearch) modalSearch.value='';
-const localHistory=document.getElementById('serviceHistoryList');
-    if(localHistory) localHistory.innerHTML='';
-
-    if(window.history && window.location.search){
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab==='lines'));
-    document.querySelectorAll('.work-section').forEach(p=>p.classList.toggle('active',p.id==='tab-lines'));
-
+    clearActiveInvoiceDraft();
+    invoice=defaultInvoice();
+    invoice.docNumber='';
     renderAll();
-    if(typeof updateCustomerPanelState==='function') updateCustomerPanelState();
+    showTab('lines');
   }
 
   async function newInvoice(){
     if(hasUnsavedWork && hasUnsavedWork()){
       const saveFirst=confirm('Save the current invoice before starting a new one? Press OK to save, or Cancel to start new without saving.');
       if(saveFirst){
-        try{ await saveInvoiceToGoogleSheets(); }
+        try{ await saveInvoiceToGoogleSheets(); saveActiveInvoiceDraft(); }
         catch(err){
           console.error(err);
           if(!confirm('Could not save current invoice. Start a new invoice anyway?'))return;
@@ -4762,10 +4829,12 @@ const localHistory=document.getElementById('serviceHistoryList');
       }
     }
 
+    clearActiveInvoiceDraft();
     invoice=defaultInvoice();
     invoice.docNumber='';
     renderAll();
     await assignRoNumberIfNeeded();
+    saveActiveInvoiceDraft();
     showTab('lines');
     toast('New estimate started with '+invoice.docNumber);
   }
@@ -5174,7 +5243,7 @@ const localHistory=document.getElementById('serviceHistoryList');
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));document.querySelectorAll('.dropdown.open').forEach(d=>d.classList.remove('open'))}});
 
   loadCustomers();
-  renderAll();
+  if(!restoreActiveInvoiceDraft()) renderAll();
   loadPresetsFromGoogleSheets();
   initInvoiceFromAdminUrl();
   initInvoiceViewFromUrl();
