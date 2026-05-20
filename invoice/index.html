@@ -875,387 +875,189 @@
     }
 
   
-  /* =========================
-     PWA / MOBILE ONLY LAYOUT
-     Desktop styles are untouched.
-  ========================= */
-  @media (max-width: 760px), (display-mode: standalone) and (max-width: 900px){
-    html,
-    body{
-      height:auto !important;
-      min-height:100dvh !important;
-      overflow:auto !important;
+    /* Desktop/mobile polish and no-mojibake controls */
+    .drag-handle,
+    .revision-drag-handle{
+      width:28px;
+      height:28px;
+      min-width:28px;
+      border-radius:8px;
+      border:1px solid #bcd0e8;
+      background:#eef5ff;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:grab;
+      user-select:none;
+      overflow:hidden;
+      color:transparent;
+      font-size:0;
+    }
+    .drag-handle:active,
+    .revision-drag-handle:active{
+      cursor:grabbing;
+    }
+    .drag-grip-lines{
+      width:14px;
+      height:12px;
+      display:block;
+      background:
+        linear-gradient(var(--navy),var(--navy)) 0 0/14px 2px no-repeat,
+        linear-gradient(var(--navy),var(--navy)) 0 5px/14px 2px no-repeat,
+        linear-gradient(var(--navy),var(--navy)) 0 10px/14px 2px no-repeat;
+      opacity:.9;
+    }
+    .icon-btn.danger,
+    button.icon-btn.danger{
+      font-size:0 !important;
+      color:transparent !important;
+      position:relative;
+      min-width:34px;
+      width:34px;
+      height:34px;
+      padding:0;
+      border-radius:10px;
+      flex:0 0 auto;
+    }
+    .icon-btn.danger::before,
+    button.icon-btn.danger::before{
+      content:"X";
+      color:#fff;
+      font-size:14px;
+      font-weight:900;
+      line-height:1;
+    }
+    .close{
+      font-size:0 !important;
+      color:transparent !important;
+      position:relative;
+    }
+    .close::before{
+      content:"X";
+      color:#fff;
+      font-size:14px;
+      font-weight:900;
+    }
+    .cost-disabled{
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:31px;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:#f4f7fb;
+      font-weight:800;
+    }
+    .cost-disabled::before{
+      content:"-";
+    }
+    .cost-disabled{
+      font-size:0;
+    }
+
+    .lines-table-wrap,
+    .lines-wrap,
+    .table-scroll{
+      max-width:100%;
+      overflow:auto;
       -webkit-overflow-scrolling:touch;
     }
-
-    body{
-      background:var(--bg) !important;
-      padding:0 !important;
+    #linesBody input{
+      min-width:0;
+    }
+    .work-section.active{
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    .mini-row{
+      flex-wrap:wrap;
+    }
+    .panel,
+    .work-area,
+    .totals-payment-panel{
+      min-width:0;
     }
 
-    .app{
-      height:auto !important;
-      min-height:100dvh !important;
-      display:flex !important;
-      flex-direction:column !important;
-      gap:8px !important;
-      padding:8px !important;
-      overflow:visible !important;
+    @media(max-width:900px){
+      body{
+        overflow:auto;
+      }
+      .app{
+        height:auto !important;
+        min-height:100vh;
+        overflow:visible !important;
+      }
+      .main{
+        grid-template-columns:1fr !important;
+        overflow:visible !important;
+      }
+      .panel,
+      .work-area,
+      .totals-payment-panel{
+        height:auto !important;
+        max-height:none !important;
+      }
+      .work-section.active{
+        max-height:none;
+      }
+      table{
+        min-width:820px;
+      }
+      .top-actions{
+        flex-wrap:wrap;
+        justify-content:flex-end;
+      }
+      .ticket-row{
+        grid-template-columns:1fr !important;
+      }
     }
 
-    .topbar{
-      min-height:auto !important;
-      border-radius:14px !important;
-      padding:8px !important;
-      gap:8px !important;
-      align-items:center !important;
-      position:sticky !important;
-      top:0 !important;
-      z-index:1000 !important;
-    }
-
-    .brand{
-      gap:8px !important;
-      min-width:0 !important;
-      flex:1 1 auto !important;
-    }
-
-    .brand img{
-      width:78px !important;
-      height:34px !important;
-      padding:4px 6px !important;
-      border-radius:9px !important;
-      flex:0 0 auto !important;
-    }
-
-    .brand small{
-      font-size:8px !important;
-      letter-spacing:.06em !important;
-    }
-
-    .brand h1{
-      font-size:15px !important;
-      line-height:1.05 !important;
-      white-space:normal !important;
-    }
-
-    .top-actions{
-      gap:5px !important;
-      flex:0 0 auto !important;
-    }
-
-    .top-actions button{
-      min-height:32px !important;
-      padding:7px 8px !important;
-      font-size:12px !important;
-      border-radius:9px !important;
-    }
-
-    .top-actions button:nth-child(2){
+  
+    #modalCustomerSearch,
+    label[for="modalCustomerSearch"],
+    #modalCustomerSearchResults{
       display:none !important;
     }
-
-    .ticket-row{
-      display:grid !important;
-      grid-template-columns:1fr !important;
-      gap:7px !important;
-      padding:0 !important;
+    .customer-top-actions{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:8px;
+      width:100%;
     }
-
-    .field-card{
-      border-radius:13px !important;
-      padding:8px !important;
-    }
-
-    .field-card input,
-    .field-card select{
-      height:38px !important;
-      font-size:14px !important;
-    }
-
-    .convert-card button,
-    #convertEstimateBtn{
-      width:100% !important;
-      min-height:40px !important;
-      font-size:14px !important;
-    }
-
-    .main{
-      display:flex !important;
-      flex-direction:column !important;
-      gap:8px !important;
-      overflow:visible !important;
-      min-height:auto !important;
-      height:auto !important;
-      padding:0 !important;
-    }
-
-    .main > .panel,
-    .main > aside.panel,
-    .work-area{
-      width:100% !important;
-      height:auto !important;
-      min-height:auto !important;
-      overflow:visible !important;
-      border-radius:14px !important;
-    }
-
-    .panel-head{
-      min-height:40px !important;
-      height:auto !important;
-      padding:9px 10px !important;
-    }
-
-    .panel-head h2{
-      font-size:15px !important;
-    }
-
-    .panel-body{
-      max-height:none !important;
-      overflow:visible !important;
-      padding:10px !important;
-    }
-
-    .customer-top-actions,
-    .mini-row.customer-top-actions{
-      display:grid !important;
-      grid-template-columns:1fr 1fr !important;
-      gap:7px !important;
-      width:100% !important;
-    }
-
     .customer-top-actions button{
-      width:100% !important;
-      min-width:0 !important;
-      padding-left:7px !important;
-      padding-right:7px !important;
-      font-size:12px !important;
+      width:100%;
+      min-width:0;
+      padding-left:8px;
+      padding-right:8px;
+      font-size:12px;
     }
-
-    .customer-empty-state,
-    .info-card{
-      border-radius:12px !important;
-    }
-
-    .work-area{
-      order:2 !important;
-    }
-
-    .totals-payment-panel{
-      order:3 !important;
-    }
-
-    .work-tabs{
-      display:flex !important;
-      gap:4px !important;
-      overflow-x:auto !important;
-      white-space:nowrap !important;
-      padding:6px 6px 0 !important;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;
-    }
-
-    .work-tabs::-webkit-scrollbar{
+    .customer-card-actions{
       display:none;
+      margin-top:-2px;
     }
-
-    .work-tabs .tab{
-      flex:0 0 auto !important;
-      padding:8px 10px !important;
-      font-size:13px !important;
-      border-radius:10px 10px 0 0 !important;
+    .customer-card-actions button{
+      width:100%;
     }
-
-    .work-body{
-      overflow:visible !important;
-      min-height:auto !important;
+    .customer-card-actions.show{
+      display:block;
     }
-
-    .work-section{
-      padding:8px !important;
-      overflow:visible !important;
-      min-height:360px !important;
+    .main{
+      grid-template-columns:320px minmax(0,1fr) 300px !important;
     }
-
-    .jobs-toolbar,
-    .work-actions,
-    .line-actions,
-    .mini-row{
-      gap:6px !important;
-      flex-wrap:wrap !important;
+    @media(max-width:1100px){
+      .main{
+        grid-template-columns:280px minmax(0,1fr) 270px !important;
+      }
+      .customer-top-actions{
+        grid-template-columns:1fr;
+      }
     }
-
-    .jobs-toolbar button,
-    .work-actions button,
-    .line-actions button,
-    .mini-row button{
-      min-height:36px !important;
-      font-size:12px !important;
-      padding:8px 10px !important;
+    @media(max-width:900px){
+      .main{
+        grid-template-columns:1fr !important;
+      }
     }
-
-    #tab-lines .table-wrap,
-    .table-wrap{
-      overflow-x:auto !important;
-      -webkit-overflow-scrolling:touch;
-      border-radius:12px !important;
-    }
-
-    table{
-      min-width:760px !important;
-    }
-
-    th,
-    td{
-      font-size:12px !important;
-      padding:6px !important;
-    }
-
-    input,
-    select,
-    textarea,
-    button{
-      font-size:16px;
-    }
-
-    .totals-payment-panel{
-      position:relative !important;
-    }
-
-    .totals-payment-panel .panel-body{
-      overflow:visible !important;
-    }
-
-    .total-row,
-    .totals-grand,
-    .total-big{
-      border-radius:12px !important;
-    }
-
-    .split-payment-row{
-      display:grid !important;
-      grid-template-columns:1fr 1fr 42px !important;
-      gap:6px !important;
-      align-items:center !important;
-    }
-
-    .split-payment-row select,
-    .split-payment-row input{
-      min-width:0 !important;
-      width:100% !important;
-      height:40px !important;
-      font-size:14px !important;
-    }
-
-    .split-payment-row button{
-      width:42px !important;
-      min-width:42px !important;
-      height:40px !important;
-      padding:0 !important;
-    }
-
-    .side-actions{
-      display:grid !important;
-      grid-template-columns:1fr 1fr !important;
-      gap:8px !important;
-    }
-
-    .side-actions button{
-      width:100% !important;
-      min-height:40px !important;
-    }
-
-    .autosave-floating{
-      left:8px !important;
-      bottom:8px !important;
-      max-width:calc(100vw - 16px) !important;
-      font-size:11px !important;
-      padding:7px 10px !important;
-      z-index:9999 !important;
-    }
-
-    .modal{
-      width:calc(100vw - 18px) !important;
-      max-width:calc(100vw - 18px) !important;
-      max-height:calc(100dvh - 18px) !important;
-      border-radius:16px !important;
-      overflow:hidden !important;
-    }
-
-    .modal-body{
-      max-height:calc(100dvh - 145px) !important;
-      overflow:auto !important;
-      -webkit-overflow-scrolling:touch;
-      padding:12px !important;
-    }
-
-    .modal-foot{
-      padding:10px 12px !important;
-      gap:8px !important;
-      position:sticky !important;
-      bottom:0 !important;
-      background:#f8fbff !important;
-      z-index:5 !important;
-    }
-
-    .modal-foot button{
-      min-height:40px !important;
-      font-size:14px !important;
-    }
-
-    .grid2,
-    .grid3{
-      grid-template-columns:1fr !important;
-    }
-
-    .full{
-      grid-column:auto !important;
-    }
-
-    .history-card,
-    .all-invoice-card{
-      border-radius:12px !important;
-      padding:10px !important;
-    }
-
-    .history-meta{
-      grid-template-columns:1fr 1fr !important;
-      gap:6px !important;
-    }
-
-    .all-invoice-card-top,
-    .history-card-top{
-      align-items:flex-start !important;
-      gap:8px !important;
-    }
-  }
-
-  @media (max-width: 430px){
-    .brand h1{
-      font-size:14px !important;
-    }
-
-    .top-actions button{
-      padding:7px 7px !important;
-      font-size:11px !important;
-    }
-
-    .customer-top-actions,
-    .mini-row.customer-top-actions{
-      grid-template-columns:1fr !important;
-    }
-
-    .work-section{
-      padding:6px !important;
-    }
-
-    .jobs-toolbar button,
-    .work-actions button,
-    .line-actions button,
-    .mini-row button{
-      flex:1 1 auto !important;
-    }
-  }
 
   </style>
 <!-- patched-new-close-flow-v2 -->
@@ -1308,7 +1110,7 @@
 <!-- OPEN_SAVED_ESTIMATE_FULL_RESTORE_NO_NEW_RO_FINAL -->
 <!-- OPEN_SAVED_ESTIMATE_BIND_FIX_FINAL -->
 <!-- PAYMENT_MARK_PAID_AND_CLOSE_CLEAR_FINAL -->
-<!-- PWA_MOBILE_FRIENDLY_FINAL -->
+<!-- NO_MOJIBAKE_MOBILE_DESKTOP_SMOOTH_FINAL -->
 </head>
 
 <body>
@@ -1351,17 +1153,16 @@
       <aside class="panel">
         <div class="panel-head"><h2>Customer / Vehicle</h2></div>
         <div class="panel-body stack">
-          <div class="mini-row">
+          <div class="mini-row customer-top-actions">
             <button class="blue" type="button" onclick="openCustomerPicker()">Search Customer</button>
+            <button class="light" type="button" onclick="openNewCustomerPopup()">New Customer</button>
+          </div>
+          <div class="customer-card-actions" id="customerCardActions">
             <button class="light" type="button" onclick="openPopup('customerPopup')">Edit Info</button>
           </div>
           <div class="customer-empty-state" id="customerEmptyState">
             <strong>No customer selected</strong>
             <span>Search your customer database or enter customer info manually.</span>
-            <div class="mini-row">
-              <button class="blue" type="button" onclick="openCustomerPicker()">Search Customer</button>
-              <button class="light" type="button" onclick="openPopup('customerPopup')">Add Manually</button>
-            </div>
           </div>
           <div class="info-card" id="customerVehicleDisplay">
             <div class="info-row"><div class="info-label">Customer</div><div class="info-value muted" id="displayCustomerName">No customer selected</div></div>
@@ -1527,7 +1328,7 @@
   <div id="invoiceAutosaveNote" class="autosave-floating">Ready</div>
 <div class="modal-overlay" id="servicePopup">
     <div class="modal">
-      <div class="modal-top"><h2 id="servicePopupTitle">Add Item</h2><button class="close" onclick="closePopup('servicePopup')">Ã</button></div>
+      <div class="modal-top"><h2 id="servicePopupTitle">Add Item</h2><button class="close" onclick="closePopup('servicePopup')">X</button></div>
       <div class="modal-body stack">
         <div class="grid3">
           <div id="popupTypeWrap"><label>Type</label><select id="popupType" onchange="updatePopupCostVisibility(); syncPopupPartPriceFromCost(); updateServicePopupLayout();"><option>Labor</option><option>Part</option><option>Fee</option><option>Discount</option><option>Symptom</option><option>Job</option><option>Maintenance</option><option>Diagnostic</option><option>Fluids</option></select></div>
@@ -1573,7 +1374,7 @@
   
   <div class="modal-overlay" id="customerPickerPopup">
     <div class="modal">
-      <div class="modal-top"><h2>Search Customer Database</h2><button class="close" onclick="closePopup('customerPickerPopup')">Ã</button></div>
+      <div class="modal-top"><h2>Search Customer Database</h2><button class="close" onclick="closePopup('customerPickerPopup')">X</button></div>
       <div class="modal-body stack">
         <div>
           <label>Search</label>
@@ -1593,12 +1394,10 @@
 
   <div class="modal-overlay" id="customerPopup">
     <div class="modal">
-      <div class="modal-top"><h2>Customer / Vehicle</h2><button class="close" onclick="closePopup('customerPopup')">Ã</button></div>
+      <div class="modal-top"><h2>Customer / Vehicle</h2><button class="close" onclick="closePopup('customerPopup')">X</button></div>
       <div class="modal-body stack">
         <div class="customer-modal-search">
-          <label>Search Customer List</label>
-          <input id="modalCustomerSearch" placeholder="Search name, phone, email, vehicle, plate, VIN..." oninput="searchModalCustomers(this.value)" autocomplete="off">
-          <div id="modalCustomerResults" class="customer-modal-results"></div>
+<div id="modalCustomerResults" class="customer-modal-results"></div>
         </div>
 
         <div id="modalVehiclePickerBox" class="vehicle-picker-box">
@@ -1611,7 +1410,7 @@
           </div>
         </div>
 
-        <div class="customer-save-note">If this customer is new, saving creates a customer profile. If the phone already exists, the vehicle typed below is added to that customerâs vehicle list.</div>
+        <div class="customer-save-note">If this customer is new, saving creates a customer profile. If the phone already exists, the vehicle typed below is added to that customer’s vehicle list.</div>
 
         <div class="grid2">
           <div><label>Customer Name</label><input id="modalCustomerName"></div>
@@ -1629,7 +1428,7 @@
 
   <div class="modal-overlay" id="settingsModal">
     <div class="modal sm">
-      <div class="modal-top"><h2>Invoice Settings</h2><button class="close" onclick="closePopup('settingsModal')">Ã</button></div>
+      <div class="modal-top"><h2>Invoice Settings</h2><button class="close" onclick="closePopup('settingsModal')">X</button></div>
       <div class="modal-body stack">
         <div class="grid2">
           <div><label>Default Labor Rate</label><input id="settingLaborRate" type="number" step="0.01"></div>
@@ -1646,7 +1445,7 @@
 
   <div class="modal-overlay" id="cannedModal">
     <div class="modal">
-      <div class="modal-top"><h2 id="cannedModalTitle">Create Canned Job</h2><button class="close" onclick="closePopup('cannedModal')">Ã</button></div>
+      <div class="modal-top"><h2 id="cannedModalTitle">Create Canned Job</h2><button class="close" onclick="closePopup('cannedModal')">X</button></div>
       <div class="modal-body stack">
                 <div class="grid2">
           <div class="full"><label>Job Name</label><input id="cannedName" placeholder="Front Brake Pads & Rotors"></div>
@@ -1687,7 +1486,7 @@
     <div class="modal revision-review-modal">
       <div class="modal-top">
         <div><h2 id="revisionReviewTitle">Review Revision</h2><div id="revisionReviewVehicle" class="revision-review-vehicle"></div></div>
-        <button class="close" onclick="closePopup('revisionReviewModal')">Ã</button>
+        <button class="close" onclick="closePopup('revisionReviewModal')">X</button>
       </div>
       <div class="modal-body stack">
         <div class="revision-review-toolbar">
@@ -1727,7 +1526,7 @@
     <div class="modal" style="width:min(860px,96vw)">
       <div class="modal-top">
         <h2 id="profitLossTitle">Profit / Loss</h2>
-        <button class="close" onclick="closePopup('profitLossModal')">Ã</button>
+        <button class="close" onclick="closePopup('profitLossModal')">X</button>
       </div>
       <div class="modal-body stack">
         <div class="profit-grid" id="profitLossSummary"></div>
@@ -1753,7 +1552,7 @@
     <div class="modal history-view-modal">
       <div class="modal-top">
         <h2 id="serviceHistoryViewTitle">Service History Invoice</h2>
-        <button class="close" onclick="closePopup('serviceHistoryViewModal')">Ã</button>
+        <button class="close" onclick="closePopup('serviceHistoryViewModal')">X</button>
       </div>
       <div class="modal-body stack">
         <div id="serviceHistoryViewCustomer" class="hint" style="font-size:12px;padding:8px 10px"></div>
@@ -2347,7 +2146,7 @@
       return `<div class="saved-discount-row">
         <div>
           <strong>${esc(d.description||'Discount')}</strong>
-          <small>${value} Â· ${mode} discount</small>
+          <small>${value} · ${mode} discount</small>
         </div>
         <button class="blue" type="button" onclick="addSavedDiscountToInvoice('${d.id}')">Use</button>
         <button class="light" type="button" onclick="deleteSavedDiscount('${d.id}')">Delete</button>
@@ -2436,7 +2235,7 @@
       return `<div class="saved-fee-row">
         <div>
           <strong>${esc(f.description||'Fee')}</strong>
-          <small>${money(total)} total Â· Qty ${qty}</small>
+          <small>${money(total)} total · Qty ${qty}</small>
         </div>
         <button class="blue" type="button" onclick="addSavedFeeToInvoice('${f.id}')">Use</button>
         <button class="light" type="button" onclick="deleteSavedFee('${f.id}')">Delete</button>
@@ -2549,6 +2348,25 @@
     return [c.name,c.phone,c.email,vehicleText,c.lastService].join(' ').toLowerCase();
   }
 
+  function openNewCustomerPopup(){
+    window.selectedModalVehicleId='';
+    window.selectedModalVehicleIndex=-1;
+    window.modalVehicleOptions=[];
+
+    ['modalCustomerName','modalCustomerPhone','modalCustomerEmail','modalVehicle','modalVin','modalPlate','modalMileage'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.value='';
+    });
+
+    const picker=document.getElementById('modalVehiclePicker');
+    if(picker) picker.innerHTML='';
+
+    openPopup('customerPopup');
+
+    const nameInput=document.getElementById('modalCustomerName');
+    if(nameInput) setTimeout(()=>nameInput.focus(),50);
+  }
+
   function openCustomerPicker(){
     openPopup('customerPickerPopup');
     setTimeout(()=>{
@@ -2591,7 +2409,7 @@
 
       return `<button class="customer-picker-card" type="button" onclick="selectCustomer(${index});closePopup('customerPickerPopup')">
         <strong>${esc(c.name||'Customer')}</strong>
-        <small>${esc(formatPhone ? formatPhone(c.phone||'') : c.phone||'No phone')} Â· ${esc(vehicleLabel)}</small>
+        <small>${esc(formatPhone ? formatPhone(c.phone||'') : c.phone||'No phone')} · ${esc(vehicleLabel)}</small>
         <small>${esc(c.email||'No email')}</small>
       </button>`;
     }).join('');
@@ -2753,7 +2571,7 @@
 
     pills.innerHTML=vehicles.map((vehicle,index)=>`
       <button class="vehicle-pill ${String(window.selectedModalVehicleId||'')===String(vehicle.vehicleId||vehicle.id||'')?'active':''}" type="button" onclick="applyModalVehicle(${index})">
-        ${esc(vehicle.vehicle||'Vehicle')}${vehicle.plate?' Â· '+esc(vehicle.plate):''}
+        ${esc(vehicle.vehicle||'Vehicle')}${vehicle.plate?' · '+esc(vehicle.plate):''}
       </button>
     `).join('');
   }
@@ -2874,7 +2692,7 @@
       return;
     }
 
-    const label=[vehicle.vehicle,vehicle.plate].filter(Boolean).join(' Â· ') || 'this vehicle';
+    const label=[vehicle.vehicle,vehicle.plate].filter(Boolean).join(' · ') || 'this vehicle';
     if(!confirm(`Delete ${label} from this customer?`))return;
 
     try{
@@ -3040,8 +2858,8 @@
     box.innerHTML=matches.map((c,i)=>`
       <button class="customer-modal-result" type="button" onclick="selectModalCustomer(${i})">
         <strong>${esc(c.name || 'No customer name')}</strong>
-        <small>${esc(formatPhone ? formatPhone(c.phone) : c.phone || 'No phone')} Â· ${esc(c.vehicle || 'No vehicle')}</small>
-        <small>${esc(c.email || 'No email')} ${c.plate ? 'Â· Plate: '+esc(c.plate) : ''}</small>
+        <small>${esc(formatPhone ? formatPhone(c.phone) : c.phone || 'No phone')} · ${esc(c.vehicle || 'No vehicle')}</small>
+        <small>${esc(c.email || 'No email')} ${c.plate ? '· Plate: '+esc(c.plate) : ''}</small>
       </button>
     `).join('');
 
@@ -3319,8 +3137,14 @@
     const hasCustomer=!!(invoice.customerName || invoice.customerPhone || invoice.vehicle);
     const empty=document.getElementById('customerEmptyState');
     const card=document.getElementById('customerVehicleDisplay');
+    const actions=document.getElementById('customerCardActions');
+
     if(empty) empty.style.display=hasCustomer?'none':'flex';
     if(card) card.style.display=hasCustomer?'block':'none';
+    if(actions){
+      actions.style.display=hasCustomer?'block':'none';
+      actions.classList.toggle('show',hasCustomer);
+    }
   }
 
   function updateCustomerVehicleDisplay(){
@@ -3608,10 +3432,10 @@
       return `<div class="empty">${kind==='revision'?'No revisions saved yet.':'No service history saved yet.'}</div>`;
     }
     return list.map(item=>{
-      const lineSummary=(item.lines||[]).slice(0,4).map(l=>`${esc(l.type||'Line')}: ${esc(l.description||'')} Â· ${money((Number(l.qty)||0)*(Number(l.price)||0))}`).join('<br>');
+      const lineSummary=(item.lines||[]).slice(0,4).map(l=>`${esc(l.type||'Line')}: ${esc(l.description||'')} · ${money((Number(l.qty)||0)*(Number(l.price)||0))}`).join('<br>');
       const extra=(item.lines||[]).length>4?`<br><small>+ ${(item.lines||[]).length-4} more line(s)</small>`:'';
       return `<div class="history-card">
-        <strong>${esc(item.docNumber||'No document #')} Â· ${esc(item.status||'Estimate')}</strong>
+        <strong>${esc(item.docNumber||'No document #')} · ${esc(item.status||'Estimate')}</strong>
         <small>${new Date(item.savedAt||Date.now()).toLocaleString()}</small>
         <div class="history-meta">
           <div><span>Total</span><b>${money(item.total||0)}</b></div>
@@ -3781,31 +3605,25 @@
   }
   
   function renderRevisionReviewLines(){
-    const box=document.getElementById('revisionReviewLines');
-    if(!box)return;
-    if(!revisionReviewLines.length){
-      box.innerHTML='<div class="empty" style="margin:8px">No lines in this revision yet.</div>';
-      renderRevisionReviewTotals();
-      return;
-    }
+    const body=document.getElementById('revisionReviewLinesBody');
+    if(!body)return;
 
-    box.innerHTML=revisionReviewLines.map(line=>{
+    body.innerHTML=(revisionReviewLines||[]).map(line=>{
       const total=(Number(line.qty)||0)*(Number(line.price)||0);
       const cls=String(line.type||'').toLowerCase().replace(/\s+/g,'-');
-      const costCell=line.type==='Part'
-        ? `<input type="number" step="0.01" value="${fixed2(line.cost||0)}" oninput="updateRevisionReviewLine('${line.id}','cost',this.value)" onblur="this.value=fixed2(this.value)">`
-        : `<div class="cost-disabled">â</div>`;
 
-      return `<div class="revision-review-row" ondragover="overRevisionLineDrag(event,'${line.id}')" ondragleave="leaveRevisionLineDrag(event)" ondrop="dropRevisionLine(event,'${line.id}')">
-        <div><span class="revision-drag-handle" draggable="true" ondragstart="startRevisionLineDrag(event,'${line.id}')" ondragend="draggedRevisionLineId=null;clearRevisionDragClasses()" title="Drag to reorder">â°</span></div>
-        <div><span class="line-type-badge ${cls}">${esc(line.type||'Line')}</span></div>
-        <div><input value="${esc(line.description||'')}" oninput="updateRevisionReviewLine('${line.id}','description',this.value)"></div>
-        <div><input type="number" step="0.01" value="${Number(line.qty)||0}" oninput="updateRevisionReviewLine('${line.id}','qty',this.value)"></div>
-        <div>${costCell}</div>
-        <div><input type="number" step="0.01" value="${fixed2(line.price||0)}" oninput="updateRevisionReviewLine('${line.id}','price',this.value)" onblur="this.value=fixed2(this.value)"></div>
-        <div class="line-total">${money(total)}</div>
-        <div><button class="icon-btn danger" type="button" onclick="removeRevisionReviewLine('${line.id}')">Ã</button></div>
-      </div>`;
+      return `<tr ondragover="overRevisionLineDrag(event,'${line.id}')" ondragleave="leaveRevisionLineDrag(event)" ondrop="dropRevisionLine(event,'${line.id}')">
+        <td><span class="revision-drag-handle" draggable="true" ondragstart="startRevisionLineDrag(event,'${line.id}')" ondragend="draggedRevisionLineId=null;clearRevisionDragClasses()" title="Drag to reorder"><span class="drag-grip-lines" aria-hidden="true"></span></span></td>
+        <td><span class="line-type-badge ${cls}">${esc(line.type||'Line')}</span></td>
+        <td><input value="${esc(line.description||'')}" oninput="updateRevisionReviewLine('${line.id}','description',this.value)"></td>
+        <td><input type="number" step="0.01" value="${line.qty}" oninput="updateRevisionReviewLine('${line.id}','qty',this.value)"></td>
+        <td>${line.type==='Part'
+          ? `<input type="number" step="0.01" value="${fixed2(line.cost||0)}" oninput="updateRevisionReviewLine(\'${line.id}\',\'cost\',this.value)">`
+          : `<div class="cost-disabled" aria-label="No cost"></div>`}</td>
+        <td><input type="number" step="0.01" value="${fixed2(line.price||0)}" oninput="updateRevisionReviewLine('${line.id}','price',this.value)"></td>
+        <td class="line-total">${money(total)}</td>
+        <td><button class="icon-btn danger" type="button" aria-label="Remove line" onclick="removeRevisionReviewLine('${line.id}')">X</button></td>
+      </tr>`;
     }).join('');
 
     renderRevisionReviewTotals();
@@ -3869,7 +3687,7 @@
     revisionReviewLines=JSON.parse(JSON.stringify(revision.lines||[]));
 
     const title=document.getElementById('revisionReviewTitle');
-    if(title) title.textContent=`Review Revision Â· ${revision.revisionNumber||revision.docNumber||'Revision'}`;
+    if(title) title.textContent=`Review Revision · ${revision.revisionNumber||revision.docNumber||'Revision'}`;
 
     const vehicle=document.getElementById('revisionReviewVehicle');
     if(vehicle) vehicle.textContent=revisionVehicleLine(revision);
@@ -3989,7 +3807,7 @@
     if(mileage) parts.push('Mileage: '+mileage);
     if(vin) parts.push('VIN: '+vin);
 
-    return parts.length ? parts.join(' Â· ') : 'No vehicle saved on this revision';
+    return parts.length ? parts.join(' · ') : 'No vehicle saved on this revision';
   }
 
   function revisionVehicleBadges(item){
@@ -4051,7 +3869,7 @@
           <div><span>Lines</span><b>${(r.lines||[]).length}</b></div>
         </div>
 
-        <small>${esc(firstLine.type||'Line')}: ${esc(firstLine.description||'Revision')} Â· ${money((Number(firstLine.qty)||0)*(Number(firstLine.price)||0))}</small>
+        <small>${esc(firstLine.type||'Line')}: ${esc(firstLine.description||'Revision')} · ${money((Number(firstLine.qty)||0)*(Number(firstLine.price)||0))}</small>
 
         <div class="mini-row">
           <button class="blue" type="button" onclick="openRevisionReview('${esc(r.id||r.revisionId||r.invoiceId)}')">Review / Edit</button>
@@ -4720,17 +4538,17 @@
       const isClosed=statusLower==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE';
       const lines=(item.lines||[]).slice(0,3).map(l=>{
         const lineTotal=(Number(l.qty)||0)*(Number(l.price)||0);
-        return `${esc(l.type||'Line')}: ${esc(l.description||'')} Â· ${money(lineTotal)}`;
+        return `${esc(l.type||'Line')}: ${esc(l.description||'')} · ${money(lineTotal)}`;
       }).join('<br>');
 
       return `<div class="all-invoice-card">
         <div class="all-invoice-card-top">
           <div>
             <strong>${esc(n.doc || 'No document #')}</strong>
-            <small>${esc(n.customerName || 'No customer')} Â· ${esc(formatPhone ? formatPhone(n.phone) : n.phone || 'No phone')}</small>
-            <small>${esc(n.vehicle || 'No vehicle')} ${item.mileage ? 'Â· '+esc(formatMileage ? formatMileage(item.mileage) : item.mileage) : ''}</small>
+            <small>${esc(n.customerName || 'No customer')} · ${esc(formatPhone ? formatPhone(n.phone) : n.phone || 'No phone')}</small>
+            <small>${esc(n.vehicle || 'No vehicle')} ${item.mileage ? '· '+esc(formatMileage ? formatMileage(item.mileage) : item.mileage) : ''}</small>
           </div>
-          <div class="all-invoice-pill">${esc(n.status || 'No Status')}${n.paymentStatus ? ' Â· '+esc(n.paymentStatus) : ''}</div>
+          <div class="all-invoice-pill">${esc(n.status || 'No Status')}${n.paymentStatus ? ' · '+esc(n.paymentStatus) : ''}</div>
         </div>
 
         <div class="history-meta">
@@ -4784,11 +4602,11 @@
 
   function renderHistoryInvoiceModal(item){
     const title=document.getElementById('serviceHistoryViewTitle');
-    if(title) title.textContent=`${item.status||'Invoice'} Â· ${item.docNumber||item.invoiceNumber||'No document #'}`;
+    if(title) title.textContent=`${item.status||'Invoice'} · ${item.docNumber||item.invoiceNumber||'No document #'}`;
 
     const customer=document.getElementById('serviceHistoryViewCustomer');
     if(customer){
-      customer.innerHTML=`<strong>${esc(item.customerName||'Customer')}</strong> Â· ${esc(item.vehicle||'Vehicle')}<br>${esc(formatPhone ? formatPhone(item.customerPhone||'') : item.customerPhone||'')} Â· ${esc(item.customerEmail||'')}`;
+      customer.innerHTML=`<strong>${esc(item.customerName||'Customer')}</strong> · ${esc(item.vehicle||'Vehicle')}<br>${esc(formatPhone ? formatPhone(item.customerPhone||'') : item.customerPhone||'')} · ${esc(item.customerEmail||'')}`;
     }
 
     const summary=document.getElementById('serviceHistoryViewSummary');
@@ -4992,7 +4810,7 @@
           <div class="profit-line-row">
             <div><strong>${esc(l.type)}:</strong> ${esc(l.description)}</div>
             <div>${l.qty}</div>
-            <div>${l.type==='Part'?money(l.cost):'â'}</div>
+            <div>${l.type==='Part'?money(l.cost):'&mdash;'}</div>
             <div class="${l.revenue<0?'bad-text':''}">${money(l.revenue)}</div>
             <div class="${l.profit<0?'bad-text':''}"><strong>${money(l.profit)}</strong></div>
           </div>
@@ -5299,20 +5117,23 @@
 
   function renderLines(){
     const body=document.getElementById('linesBody');
+    if(!body)return;
+
     body.innerHTML=invoice.lines.map(l=>{
       const total=(Number(l.qty)||0)*(Number(l.price)||0);
       const cls=String(l.type||'').toLowerCase().replace(/\s+/g,'-');
+
       return `<tr ondragover="overInvoiceLineDrag(event,'${l.id}')" ondragleave="leaveInvoiceLineDrag(event)" ondrop="dropInvoiceLine(event,'${l.id}')">
-        <td><span class="drag-handle" draggable="true" ondragstart="startInvoiceLineDrag(event,'${l.id}')" ondragend="draggedInvoiceLineId=null;clearDragClasses()" title="Drag to reorder">â°</span></td>
+        <td><span class="drag-handle" draggable="true" ondragstart="startInvoiceLineDrag(event,'${l.id}')" ondragend="draggedInvoiceLineId=null;clearDragClasses()" title="Drag to reorder"><span class="drag-grip-lines" aria-hidden="true"></span></span></td>
         <td><span class="line-type-badge ${cls}">${esc(l.type||'Line')}</span></td>
         <td><input value="${esc(l.description)}" oninput="updateLine('${l.id}','description',this.value)"></td>
         <td><input type="number" step="0.01" value="${l.qty}" oninput="updateLine('${l.id}','qty',this.value)"></td>
         <td>${l.type==='Part'
           ? `<input type="number" step="0.01" value="${fixed2(l.cost||0)}" oninput="updateLine(\'${l.id}\',\'cost\',this.value)">`
-          : `<div class="cost-disabled">â</div>`}</td>
+          : `<div class="cost-disabled" aria-label="No cost"></div>`}</td>
         <td><input data-line-price="${l.id}" type="number" step="0.01" value="${fixed2(l.price||0)}" oninput="updateLine(\'${l.id}\',\'price\',this.value)"></td>
         <td class="line-total" data-line-total="${l.id}">${money(total)}</td>
-        <td><button class="icon-btn danger" onclick="removeLine('${l.id}')">Ã</button></td>
+        <td><button class="icon-btn danger" type="button" aria-label="Remove line" onclick="removeLine('${l.id}')">X</button></td>
       </tr>`;
     }).join('');
   }
@@ -5432,7 +5253,7 @@
         onchange="updatePayment('${p.id}','amount',this.value);this.value=fixed2(this.value)" 
         onblur="updatePayment('${p.id}','amount',this.value);this.value=fixed2(this.value)" 
         onkeydown="if(event.key==='Enter'){this.blur()}">
-      <button class="icon-btn danger" type="button" onclick="removePayment('${p.id}')">Ã</button>
+      <button class="icon-btn danger" type="button" onclick="removePayment('${p.id}')">X</button>
     </div>`).join('');
     syncPaymentFields();
     updatePaidToggle();
@@ -5876,7 +5697,7 @@
     if(!box)return;
     const docs=getDocs();
     if(!docs.length){box.innerHTML='<div class="empty">No saved documents yet. Saved invoices are local for now until you connect a database.</div>';return}
-    box.innerHTML=docs.slice(0,8).map(d=>`<div class="result-card" onclick="loadDocument('${d.id}')"><strong>${esc(d.docNumber||d.id)} Â· ${esc(d.status)}</strong><small>${esc(d.customerName||'No customer')} Â· ${esc(d.vehicle||'No vehicle')}</small><small>${new Date(d.updatedAt||Date.now()).toLocaleString()}</small></div>`).join('');
+    box.innerHTML=docs.slice(0,8).map(d=>`<div class="result-card" onclick="loadDocument('${d.id}')"><strong>${esc(d.docNumber||d.id)} · ${esc(d.status)}</strong><small>${esc(d.customerName||'No customer')} · ${esc(d.vehicle||'No vehicle')}</small><small>${new Date(d.updatedAt||Date.now()).toLocaleString()}</small></div>`).join('');
   }
   function loadDocument(id){const d=getDocs().find(x=>x.id===id);if(!d)return;invoice=d;renderAll();toast('Document loaded')}
 
@@ -5976,15 +5797,15 @@
       const total=(Number(line.qty)||0)*(Number(line.price)||0);
       const costCell=line.type==='Part'
         ? `<input type="number" step="0.01" value="${fixed2(line.cost||0)}" oninput="updateCannedBuilderLine('${line.id}','cost',this.value)" onblur="this.value=fixed2(this.value)">`
-        : `<div class="cost-disabled">â</div>`;
+        : `<div class="cost-disabled">&mdash;</div>`;
       return `<div class="canned-line-row" ondragover="overCannedLineDrag(event,'${line.id}')" ondragleave="leaveCannedLineDrag(event)" ondrop="dropCannedLine(event,'${line.id}')">
-        <div><span class="drag-handle" draggable="true" ondragstart="startCannedLineDrag(event,'${line.id}')" ondragend="draggedCannedLineId=null;clearDragClasses()" title="Drag to reorder">â°</span></div>
+        <div><span class="drag-handle" draggable="true" ondragstart="startCannedLineDrag(event,'${line.id}')" ondragend="draggedCannedLineId=null;clearDragClasses()" title="Drag to reorder"><span class="drag-grip-lines" aria-hidden="true"></span></span></div>
         <div><span class="canned-type-pill ${cls}">${esc(line.type)}</span></div>
         <div><input value="${esc(line.description)}" oninput="updateCannedBuilderLine('${line.id}','description',this.value)"></div>
         <div><input type="number" step="0.01" value="${line.qty}" oninput="updateCannedBuilderLine('${line.id}','qty',this.value)"></div>
         <div>${costCell}</div>
         <div><input data-canned-price="${line.id}" type="number" step="0.01" value="${fixed2(line.price||0)}" oninput="updateCannedBuilderLine('${line.id}','price',this.value)" onblur="this.value=fixed2(this.value)"></div>
-        <div><button class="icon-btn danger" type="button" onclick="removeCannedBuilderLine('${line.id}')">Ã</button></div>
+        <div><button class="icon-btn danger" type="button" onclick="removeCannedBuilderLine('${line.id}')">X</button></div>
       </div>`;
     }).join('');
   }
@@ -6046,7 +5867,7 @@
     const box=document.getElementById('cannedList');
     const jobs=getCanned();
     if(!jobs.length){box.innerHTML='<div class="empty">No canned jobs yet. Create one for repeat work like brakes, oil changes, diagnostics, or flushes.</div>';return}
-    box.innerHTML=jobs.map(j=>`<div class="result-card"><strong>${esc(j.name)}</strong><small>${esc(j.laborDesc)} Â· ${j.hours} hrs Â· Labor ${money(j.laborCost || ((j.hours||0)*(j.laborRate||settings.laborRate)))}</small><small>Parts: ${esc(j.partDesc||'None')} Â· ${money(j.partPrice||0)}</small><div class="mini-row" style="margin-top:7px"><button class="blue" onclick="applyCannedJob('${j.id}')">Transfer</button><button class="light" onclick="editCannedJob('${j.id}')">Edit</button><button class="${pendingCannedDeleteId===j.id?'confirm-delete':'light'}" onclick="deleteCannedJob('${j.id}')">${pendingCannedDeleteId===j.id?'Confirm Delete':'Delete'}</button></div></div>`).join('');
+    box.innerHTML=jobs.map(j=>`<div class="result-card"><strong>${esc(j.name)}</strong><small>${esc(j.laborDesc)} · ${j.hours} hrs · Labor ${money(j.laborCost || ((j.hours||0)*(j.laborRate||settings.laborRate)))}</small><small>Parts: ${esc(j.partDesc||'None')} · ${money(j.partPrice||0)}</small><div class="mini-row" style="margin-top:7px"><button class="blue" onclick="applyCannedJob('${j.id}')">Transfer</button><button class="light" onclick="editCannedJob('${j.id}')">Edit</button><button class="${pendingCannedDeleteId===j.id?'confirm-delete':'light'}" onclick="deleteCannedJob('${j.id}')">${pendingCannedDeleteId===j.id?'Confirm Delete':'Delete'}</button></div></div>`).join('');
   }
   function syncCannedLaborFromHours(){
     const hours=Number(document.getElementById('cannedLaborHours')?.value||0);
