@@ -223,6 +223,139 @@
       box-shadow: 0 0 0 4px rgba(175,39,39,.10);
     }
 
+    select, textarea {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      font-size: 16px;
+      box-sizing: border-box;
+      color: var(--navy);
+      background: #fff;
+      outline: none;
+      font-family: Arial, sans-serif;
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 6px;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .danger {
+      background: #dc2626;
+      box-shadow: 0 8px 18px rgba(220,38,38,.18);
+    }
+
+    .danger:hover {
+      background: #b91c1c;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5, 15, 30, .58);
+      padding: 18px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(720px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.28);
+      border: 1px solid var(--line);
+      padding: 22px;
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .modal h2 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -.03em;
+      color: var(--navy);
+    }
+
+    .modal-subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .modal-x {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      padding: 0;
+      background: #edf3fb;
+      color: var(--navy);
+      box-shadow: none;
+      flex: 0 0 auto;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .modal-x:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+      margin-top: 12px;
+    }
+
+    .form-full {
+      grid-column: 1 / -1;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .modal-actions button {
+      flex: 1 1 160px;
+    }
+
+    .modal-notice {
+      margin-top: 12px;
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
     .stats-row {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -469,6 +602,8 @@
       .customer-card { border-radius: 20px; padding: 16px; }
       .detail-grid { grid-template-columns: 1fr; }
       .detail.full { grid-column: auto; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-full { grid-column: auto; }
     }
   </style>
 </head>
@@ -485,6 +620,7 @@
           </div>
         </div>
         <div class="hero-actions">
+          <button class="green" onclick="openAddCustomerModal()">+ Add Customer</button>
           <a href="/admin" class="btn light">Back to Admin</a>
           <button onclick="loadCustomers()">Refresh</button>
         </div>
@@ -514,10 +650,74 @@
     </div>
   </main>
 
+
+  <div id="customerModalOverlay" class="modal-overlay" onclick="handleCustomerModalBackdrop(event)">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="customerModalTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="customerModalTitle">Add Customer</h2>
+          <p class="modal-subtitle" id="customerModalSubtitle">Create a customer profile manually.</p>
+        </div>
+        <button class="modal-x" onclick="closeCustomerModal()" type="button">×</button>
+      </div>
+
+      <input id="customerIdField" type="hidden">
+
+      <div class="form-grid">
+        <div>
+          <label for="customerNameField">Customer Name *</label>
+          <input id="customerNameField" placeholder="Customer name" autocomplete="name">
+        </div>
+        <div>
+          <label for="customerPhoneField">Phone *</label>
+          <input id="customerPhoneField" placeholder="(847) 555-1234" autocomplete="tel">
+        </div>
+        <div>
+          <label for="customerEmailField">Email</label>
+          <input id="customerEmailField" placeholder="email@example.com" autocomplete="email">
+        </div>
+        <div>
+          <label for="customerVehicleField">Vehicle</label>
+          <input id="customerVehicleField" placeholder="2024 Hyundai Sonata">
+        </div>
+        <div>
+          <label for="customerVinField">VIN</label>
+          <input id="customerVinField" placeholder="VIN">
+        </div>
+        <div>
+          <label for="customerPlateField">Plate</label>
+          <input id="customerPlateField" placeholder="Plate">
+        </div>
+        <div>
+          <label for="customerMileageField">Mileage</label>
+          <input id="customerMileageField" placeholder="Mileage">
+        </div>
+        <div>
+          <label for="customerServiceField">Last Service</label>
+          <input id="customerServiceField" placeholder="Oil Change, Brakes, etc.">
+        </div>
+        <div class="form-full">
+          <label for="customerNotesField">Notes</label>
+          <textarea id="customerNotesField" placeholder="Customer notes..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="green" onclick="saveCustomerFromModal()" type="button">Save Customer</button>
+        <button class="light" onclick="closeCustomerModal()" type="button">Cancel</button>
+      </div>
+
+      <div id="customerModalNotice" class="modal-notice"></div>
+    </div>
+  </div>
+
+
   <script>
     // Auth
     function getAdminToken() { return localStorage.getItem("torosAdminToken") || ""; }
     function adminAuthHeaders() { return { "x-admin-token": getAdminToken() }; }
+    function adminPostHeaders() { return { "Content-Type": "application/json", "x-admin-token": getAdminToken() }; }
+    const ADMIN_POST_API = "/api/admin-appointment";
 
     if (!localStorage.getItem("torosAdminLoggedIn")) {
       window.location.href = "/admin";
@@ -646,6 +846,8 @@
           </div>
 
           <div class="card-actions">
+            <button class="mini-btn blue" onclick="openEditCustomerModal('${escapeAttr(getCustomerKey(c))}')" type="button">Edit</button>
+            <button class="mini-btn danger" onclick="deleteCustomerFromCard('${escapeAttr(getCustomerKey(c))}')" type="button">Delete</button>
             ${callBtn}
             ${textBtn}
             ${emailBtn}
@@ -654,6 +856,161 @@
         </article>
       `;
     }
+
+
+    function getCustomerKey(c) {
+      return String(c.customerId || c.id || c.normalizedPhone || c.phone || "").trim();
+    }
+
+    function findCustomerByKey(key) {
+      key = String(key || "").trim();
+      return customers.find(c => getCustomerKey(c) === key || String(c.phone || "") === key || String(c.normalizedPhone || "") === key) || null;
+    }
+
+    function openAddCustomerModal() {
+      document.getElementById("customerModalTitle").textContent = "Add Customer";
+      document.getElementById("customerModalSubtitle").textContent = "Create a customer profile manually.";
+      document.getElementById("customerModalNotice").textContent = "";
+
+      setCustomerModalValues({});
+      document.getElementById("customerModalOverlay").classList.add("open");
+      setTimeout(() => document.getElementById("customerNameField").focus(), 50);
+    }
+
+    function openEditCustomerModal(key) {
+      const customer = findCustomerByKey(key);
+      if (!customer) {
+        alert("Customer could not be found. Refresh and try again.");
+        return;
+      }
+
+      document.getElementById("customerModalTitle").textContent = "Edit Customer";
+      document.getElementById("customerModalSubtitle").textContent = "Update customer profile details.";
+      document.getElementById("customerModalNotice").textContent = "";
+
+      setCustomerModalValues(customer);
+      document.getElementById("customerModalOverlay").classList.add("open");
+      setTimeout(() => document.getElementById("customerNameField").focus(), 50);
+    }
+
+    function setCustomerModalValues(c) {
+      document.getElementById("customerIdField").value = c.customerId || c.id || "";
+      document.getElementById("customerNameField").value = c.name || "";
+      document.getElementById("customerPhoneField").value = c.phone || "";
+      document.getElementById("customerEmailField").value = c.email || "";
+      document.getElementById("customerVehicleField").value = c.vehicle || "";
+      document.getElementById("customerVinField").value = c.vin || "";
+      document.getElementById("customerPlateField").value = c.plate || "";
+      document.getElementById("customerMileageField").value = c.mileage || "";
+      document.getElementById("customerServiceField").value = c.lastService || "";
+      document.getElementById("customerNotesField").value = c.notes || "";
+    }
+
+    function getCustomerModalPayload() {
+      return {
+        action: "saveCustomerProfile",
+        customer: {
+          customerId: document.getElementById("customerIdField").value.trim(),
+          name: document.getElementById("customerNameField").value.trim(),
+          phone: document.getElementById("customerPhoneField").value.trim(),
+          email: document.getElementById("customerEmailField").value.trim(),
+          vehicle: document.getElementById("customerVehicleField").value.trim(),
+          vin: document.getElementById("customerVinField").value.trim(),
+          plate: document.getElementById("customerPlateField").value.trim(),
+          mileage: document.getElementById("customerMileageField").value.trim(),
+          service: document.getElementById("customerServiceField").value.trim(),
+          notes: document.getElementById("customerNotesField").value.trim(),
+          source: "Admin Manual",
+          countAppointment: false
+        }
+      };
+    }
+
+    async function saveCustomerFromModal() {
+      const notice = document.getElementById("customerModalNotice");
+      const payload = getCustomerModalPayload();
+
+      if (!payload.customer.name || !payload.customer.phone) {
+        notice.textContent = "Customer name and phone number are required.";
+        notice.style.color = "var(--red)";
+        return;
+      }
+
+      notice.textContent = "Saving customer...";
+      notice.style.color = "var(--muted)";
+
+      try {
+        const response = await fetch(ADMIN_POST_API, {
+          method: "POST",
+          headers: adminPostHeaders(),
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success" || result.success) {
+          notice.textContent = "Customer saved.";
+          notice.style.color = "var(--green)";
+          await loadCustomers();
+          closeCustomerModal();
+        } else {
+          notice.textContent = result.message || "Could not save customer.";
+          notice.style.color = "var(--red)";
+        }
+      } catch (err) {
+        notice.textContent = "Could not save customer.";
+        notice.style.color = "var(--red)";
+      }
+    }
+
+    async function deleteCustomerFromCard(key) {
+      const customer = findCustomerByKey(key);
+      if (!customer) {
+        alert("Customer could not be found. Refresh and try again.");
+        return;
+      }
+
+      const name = customer.name || customer.phone || "this customer";
+      const confirmed = confirm(`Delete ${name}? This removes the customer profile and saved vehicle records. It will not delete old invoices or appointments.`);
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch(ADMIN_POST_API, {
+          method: "POST",
+          headers: adminPostHeaders(),
+          body: JSON.stringify({
+            action: "deleteCustomer",
+            customerId: customer.customerId || customer.id || "",
+            phone: customer.phone || customer.normalizedPhone || ""
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success" || result.success) {
+          customers = customers.filter(c => getCustomerKey(c) !== getCustomerKey(customer));
+          renderCustomers();
+          document.getElementById("statusLine").textContent = "Customer deleted.";
+          await loadCustomers();
+        } else {
+          alert(result.message || "Could not delete customer.");
+        }
+      } catch (err) {
+        alert("Could not delete customer.");
+      }
+    }
+
+    function closeCustomerModal() {
+      document.getElementById("customerModalOverlay").classList.remove("open");
+      document.getElementById("customerModalNotice").textContent = "";
+    }
+
+    function handleCustomerModalBackdrop(event) {
+      if (event.target && event.target.id === "customerModalOverlay") {
+        closeCustomerModal();
+      }
+    }
+
 
     function clearSearch() {
       document.getElementById("searchInput").value = "";
