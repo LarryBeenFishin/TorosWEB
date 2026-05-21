@@ -407,6 +407,14 @@
       background: #17683f;
     }
 
+    .danger-btn {
+      background: #dc2626;
+    }
+
+    .danger-btn:hover {
+      background: #b91c1c;
+    }
+
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -3561,6 +3569,7 @@ body.toros-admin-logged-in #openTextPanelBtn {
           <button class="quick-text-btn" onclick="textSelectedAppointmentCustomer()">Text Customer</button>
           <button class="success-btn" onclick="openInvoiceForSelectedAppointment()">Create Invoice</button>
           <button class="secondary-btn" onclick="switchToEditMode()">Edit / Reschedule</button>
+          <button class="danger-btn" onclick="deleteSelectedAppointment()">Delete Appointment</button>
           <button class="light-btn" onclick="closeModal()">Close</button>
         </div>
       </div>
@@ -4233,6 +4242,44 @@ body.toros-admin-logged-in #openTextPanelBtn {
       } catch (err) {
         notice.textContent = "Could not create appointment.";
         notice.style.color = "#af2727";
+      }
+    }
+
+
+    async function deleteSelectedAppointment() {
+      if (!selectedAppointment) {
+        alert("No appointment selected.");
+        return;
+      }
+
+      const customerName = selectedAppointment.name || selectedAppointment.customer || "this customer";
+      const confirmed = confirm(`Delete the appointment for ${customerName}? This removes it from the admin calendar and Google Calendar.`);
+      if (!confirmed) return;
+
+      const payload = {
+        action: "deleteAppointment",
+        eventId: selectedAppointment.eventId || selectedAppointment.appointmentId || selectedAppointment.id || "",
+        appointmentId: selectedAppointment.appointmentId || selectedAppointment.id || selectedAppointment.eventId || "",
+        name: selectedAppointment.name || selectedAppointment.customer || selectedAppointment.customerName || "",
+        phone: selectedAppointment.phone || selectedAppointment.customerPhone || "",
+        date: formatAppointmentDate(selectedAppointment),
+        time: selectedAppointment.time || ""
+      };
+
+      try {
+        const result = await postToScript(payload);
+
+        if (result.status === "success" || result.success || result.ok) {
+          showToast("Appointment deleted.", "success", 2500);
+          selectedAppointment = null;
+          closeModal();
+          await loadAppointments(true);
+        } else {
+          alert(result.message || "Could not delete appointment.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Could not delete appointment.");
       }
     }
 
