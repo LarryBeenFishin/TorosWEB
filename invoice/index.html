@@ -4345,17 +4345,7 @@
 
   function revisionVehicleBadges(item){
     const vehicle=item.vehicle || '';
-    const plate=item.plate || '';
-    const mileage=item.mileage || '';
-    const vin=item.vin || '';
-
-    const badges=[];
-    if(vehicle) badges.push(`<span>${esc(vehicle)}</span>`);
-    if(plate) badges.push(`<span>Plate: ${esc(plate)}</span>`);
-    if(mileage) badges.push(`<span>Mileage: ${esc(mileage)}</span>`);
-    if(vin) badges.push(`<span>VIN: ${esc(vin)}</span>`);
-
-    return badges.length ? badges.join('') : '<span>No vehicle saved</span>';
+    return vehicle ? `<span>${esc(vehicle)}</span>` : '<span>No vehicle saved</span>';
   }
 
   
@@ -4390,7 +4380,6 @@
             <strong>${esc(doc)}</strong>
             <small>${esc(displayDate)}</small>
           </div>
-          <span class="status-pill estimate">Revision</span>
         </div>
 
         <div class="revision-vehicle-line">
