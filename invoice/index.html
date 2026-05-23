@@ -1124,6 +1124,51 @@
       flex:0 0 auto!important;
     }
 
+
+    /* PRINT ONLY THE MITCHELL-STYLE INVOICE SHELL */
+    @media print{
+      html,body{
+        margin:0!important;
+        padding:0!important;
+        background:#fff!important;
+        color:#000!important;
+        width:100%!important;
+        height:auto!important;
+        overflow:visible!important;
+      }
+      body.print-invoice-only .app,
+      body.print-invoice-only .toast,
+      body.print-invoice-only .modal-overlay,
+      body.print-invoice-only .autosave-floating,
+      body.print-invoice-only > *:not(.print-shell){
+        display:none!important;
+        visibility:hidden!important;
+      }
+      body.print-invoice-only .print-shell{
+        display:block!important;
+        visibility:visible!important;
+        position:static!important;
+        margin:0!important;
+        padding:0!important;
+        width:100%!important;
+      }
+      body.print-invoice-only .print-shell *{
+        visibility:visible!important;
+      }
+      body.print-invoice-only .print-page{
+        width:100%!important;
+        min-height:10.35in!important;
+        margin:0!important;
+        box-shadow:none!important;
+        page-break-after:avoid!important;
+        break-after:avoid!important;
+      }
+      @page{
+        size:letter;
+        margin:.22in;
+      }
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -6542,7 +6587,15 @@
         <div class="print-footer-note">Thank you for choosing Toro's Auto Care. Please keep this invoice for your records.</div>
       </div>`;
   }
-  function printInvoice(){bindFields();renderPrint();window.print()}
+  function printInvoice(){
+    bindFields();
+    renderPrint();
+    document.body.classList.add('print-invoice-only');
+    setTimeout(()=>window.print(), 30);
+  }
+  window.addEventListener('afterprint', ()=>{
+    document.body.classList.remove('print-invoice-only');
+  });
   function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove('show'),1800)}
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));document.querySelectorAll('.dropdown.open').forEach(d=>d.classList.remove('open'))}});
 
