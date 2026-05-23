@@ -161,7 +161,11 @@
     .large-notes-box{min-height:220px!important;height:clamp(220px,42vh,430px)!important;line-height:1.45;font-size:14px;padding:12px!important}
 
     .toast{position:fixed;left:50%;bottom:74px;transform:translate(-50%,20px);opacity:0;background:var(--navy);color:#fff;border-radius:999px;padding:10px 15px;font-weight:900;z-index:7000;box-shadow:0 12px 30px rgba(0,0,0,.25);transition:.18s ease;font-size:13px}.toast.show{opacity:1;transform:translate(-50%,0)}
-    .print-shell{display:none}.print-brand{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:3px solid #163051;padding-bottom:16px;margin-bottom:18px}.print-brand img{width:150px}.print-title{text-align:right}.print-title h2{margin:0 0 6px;font-size:34px;color:#163051}.print-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px}.print-box{border:1px solid #d9dee8;border-radius:10px;padding:12px}.print-box h3{margin:0 0 8px;font-size:14px;text-transform:uppercase;color:#637189}.print-table{width:100%;border-collapse:collapse;margin-top:12px}.print-table th,.print-table td{border-bottom:1px solid #d9dee8;padding:8px;text-align:left}.print-table th{background:#eef4fb;color:#163051}.print-totals{width:330px;margin-left:auto;margin-top:16px}.signature{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:35px}.sig-line{border-top:1px solid #163051;padding-top:7px;color:#637189;font-size:12px}
+    /* Professional one-page print invoice */
+    .print-shell{display:none}
+    .print-page{font-family:Arial,sans-serif;color:#111827;background:#fff;font-size:11px;line-height:1.3}
+    .print-header{display:grid;grid-template-columns:1fr auto;gap:22px;align-items:start;border-bottom:3px solid #163051;padding-bottom:12px;margin-bottom:12px}
+    .print-shop{display:flex;gap:12px;align-items:flex-start}.print-shop img{width:128px;height:auto;object-fit:contain}.print-shop h1{margin:0 0 4px;font-size:20px;letter-spacing:-.02em;color:#163051}.print-shop p{margin:0;color:#374151;line-height:1.35}.print-doc{text-align:right;min-width:210px}.print-doc h2{margin:0 0 8px;font-size:27px;letter-spacing:.02em;color:#163051;text-transform:uppercase}.print-badge{display:inline-block;border:2px solid #163051;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:900;color:#163051;margin-bottom:8px}.print-badge.paid{border-color:#15803d;color:#15803d}.print-badge.due{border-color:#b91c1c;color:#b91c1c}.print-meta{display:grid;grid-template-columns:auto auto;gap:3px 12px;justify-content:end}.print-meta span{color:#6b7280;text-transform:uppercase;font-size:9px;font-weight:900;letter-spacing:.05em}.print-meta strong{font-size:11px;color:#111827}.print-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}.print-box{border:1px solid #d1d5db;border-radius:8px;padding:9px;break-inside:avoid}.print-box h3{margin:0 0 6px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#163051}.print-box p{margin:0}.print-small{font-size:10px;color:#4b5563}.print-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:10.5px}.print-table th{background:#163051;color:#fff;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.05em;padding:7px 6px}.print-table td{border-bottom:1px solid #e5e7eb;padding:6px;vertical-align:top}.print-table .right{text-align:right}.print-table .center{text-align:center}.print-table .desc{width:52%}.print-summary{display:grid;grid-template-columns:1fr 270px;gap:12px;margin-top:10px;align-items:start}.print-terms{font-size:9.5px;color:#374151;border:1px solid #d1d5db;border-radius:8px;padding:9px;break-inside:avoid}.print-terms h3{margin:0 0 5px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#163051}.print-terms p{margin:0 0 5px}.print-totals{border:1px solid #d1d5db;border-radius:8px;overflow:hidden;break-inside:avoid}.print-total-row{display:flex;justify-content:space-between;gap:12px;padding:6px 9px;border-bottom:1px solid #e5e7eb}.print-total-row:last-child{border-bottom:0}.print-total-row span{color:#374151}.print-total-row strong{color:#111827}.print-total-row.grand{background:#163051;color:#fff;font-size:15px;align-items:center}.print-total-row.grand span,.print-total-row.grand strong{color:#fff}.print-total-row.balance-due strong{color:#b91c1c}.print-total-row.balance-paid strong{color:#15803d}.print-payments{font-size:9.5px;color:#374151;margin-top:6px}.print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:18px;break-inside:avoid}.print-signature-line{border-top:1px solid #111827;padding-top:5px;font-size:10px;color:#374151}.print-footer-note{margin-top:8px;font-size:9px;color:#6b7280;text-align:center}
 
     /* Read-only customer / vehicle summary */
     .info-card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px;box-shadow:0 6px 14px rgba(22,48,81,.04)}
@@ -173,7 +177,7 @@
     .hidden-sync-fields{display:none!important}
 
     @media(max-width:1050px){body{overflow:auto}.app{height:auto;min-height:100dvh;overflow:visible;grid-template-rows:auto auto auto auto auto}.topbar,.ribbon{flex-wrap:wrap}.ticket-row,.main,.bottom-bar{grid-template-columns:1fr}.bottom-actions{display:grid;grid-template-columns:1fr 1fr}.line-wrap{max-height:440px}.drop-menu{position:fixed;left:10px!important;right:10px!important;top:118px;width:auto}.top-actions{flex-wrap:wrap}.brand h1{font-size:18px}}
-    @media print{body{background:#fff;color:#111;overflow:visible}.app,.toast,.modal-overlay{display:none!important}.print-shell{display:block;padding:0}@page{margin:18mm}}
+    @media print{html,body{background:#fff!important;color:#111!important;overflow:visible!important;height:auto!important}.app,.toast,.modal-overlay,.autosave-floating{display:none!important}.print-shell{display:block!important;padding:0!important}.print-page{width:100%;padding:0}.print-no-break{break-inside:avoid}@page{size:letter;margin:0.35in}}
   
     /* FINAL FIX: make Totals / Payment card itself scroll reliably */
     .main{
@@ -1196,6 +1200,7 @@
 <!-- PAYMENT_ROWS_SWITCH_INVOICE_DOM_RESET_FINAL -->
 <!-- CUSTOMER_LOCK_AFTER_ESTIMATE_FINAL -->
 <!-- STATUS_PAYMENT_STATUS_SEPARATED_FINAL -->
+<!-- PROFESSIONAL_PRINT_INVOICE_FINAL -->
 <!-- LOCKED_INVOICE_SENDS_USER_TO_NEW_DRAFT_FINAL -->
 </head>
 
@@ -6646,8 +6651,116 @@
 
   function renderPrint(){
     const t=calc();
-    const rows=invoice.lines.map(l=>`<tr><td>${esc(l.type)}</td><td>${esc(l.description)}</td><td>${l.qty}</td><td>${money(l.cost||0)}</td><td>${money(l.price)}</td><td>${money((Number(l.qty)||0)*(Number(l.price)||0))}</td></tr>`).join('');
-    document.getElementById('printableInvoice').innerHTML=`<div class="print-brand"><div><img src="/logo.png" alt="Toro's Auto Care"><p><strong>Toro's Auto Care</strong><br>Auto Repair & Service Without the Bull</p></div><div class="print-title"><h2>${esc(invoice.status)}</h2><p><strong>${esc(invoice.docNumber)}</strong><br>${esc(formatDateTimeShort(invoice.openedDate)||'')}</p></div></div><div class="print-grid"><div class="print-box"><h3>Customer</h3><p><strong>${esc(invoice.customerName)}</strong><br>${esc(formatPhone(invoice.customerPhone))}<br>${esc(invoice.customerEmail)}</p></div><div class="print-box"><h3>Vehicle</h3><p><strong>${esc(invoice.vehicle)}</strong><br>VIN: ${esc(invoice.vin)}<br>Plate: ${esc(invoice.plate)}<br>Mileage: ${esc(formatMileage(invoice.mileage))}</p></div></div><div class="print-box"><h3>Concern</h3><p>${esc(invoice.concern).replace(/\n/g,'<br>')}</p></div><table class="print-table"><thead><tr><th>Type</th><th>Description</th><th>Qty/Hrs</th><th>Cost</th><th>Price</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table><div class="print-totals"><div class="total-row"><span>Labor</span><strong>${money(t.labor)}</strong></div><div class="total-row"><span>Parts</span><strong>${money(t.parts)}</strong></div><div class="total-row"><span>Tax</span><strong>${money(t.tax)}</strong></div><div class="total-row grand"><span>Total</span><strong>${money(t.total)}</strong></div><div class="total-row"><span>Paid</span><strong>${money(t.paid)}</strong></div><div class="total-row"><span>Balance</span><strong>${money(t.balance)}</strong></div></div><div class="print-box" style="margin-top:16px"><h3>Recommendations</h3><p>${esc(invoice.recommendations).replace(/\n/g,'<br>')}</p></div><p style="margin-top:18px">${esc(settings.footer)}</p><div class="signature"><div class="sig-line">Customer Authorization</div><div class="sig-line">Date</div></div>`;
+    const docType=String(invoice.status || 'Invoice').replace('Draft / Not Saved','Estimate');
+    const balanceDue=Number(t.balance || 0) > 0.009;
+    const isPaid=Number(t.total || 0) > 0 && !balanceDue;
+    const paymentStatus=isPaid ? 'Paid' : 'Unpaid';
+    const printedAt=new Date().toLocaleString('en-US',{month:'2-digit',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit'});
+    const docDate=formatDateTimeShort(invoice.openedDate || invoice.createdAt || new Date());
+    const dueLabel=balanceDue ? 'BALANCE DUE' : 'PAID';
+    const badgeClass=balanceDue ? 'due' : 'paid';
+
+    const visibleLines=(invoice.lines || []).filter(l=>String(l.description || '').trim() || Number(l.qty) || Number(l.price));
+    const rows=visibleLines.length ? visibleLines.map((l,index)=>{
+      const qty=Number(l.qty)||0;
+      const price=Number(l.price)||0;
+      const lineTotal=qty*price;
+      return `<tr>
+        <td class="center">${index+1}</td>
+        <td>${esc(l.type || '')}</td>
+        <td class="desc">${esc(l.description || '')}</td>
+        <td class="right">${esc(qty || '')}</td>
+        <td class="right">${money(price)}</td>
+        <td class="right"><strong>${money(lineTotal)}</strong></td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="6" class="center print-small">No line items added.</td></tr>`;
+
+    const paymentRows=(invoice.payments || []).filter(p=>Number(p.amount)>0).map(p=>`${esc(p.method || 'Payment')}: ${money(p.amount)}`).join(' • ');
+    const customerEmail=String(invoice.customerEmail || '').trim();
+    const concern=String(invoice.concern || '').trim();
+    const recommendations=String(invoice.recommendations || '').trim();
+    const footer=String(settings.footer || '').trim();
+
+    document.getElementById('printableInvoice').innerHTML=`
+      <div class="print-page">
+        <div class="print-header">
+          <div class="print-shop">
+            <img src="/logo.png" alt="Toro's Auto Care">
+            <div>
+              <h1>Toro's Auto Care</h1>
+              <p><strong>Auto Repair & Service Without the Bull</strong><br>
+              8 Lake Marian Rd, Carpentersville, IL 60110<br>
+              Phone: (847) 608-0236 · Email: torosautocare@gmail.com</p>
+            </div>
+          </div>
+          <div class="print-doc">
+            <h2>${esc(docType)}</h2>
+            <div class="print-badge ${badgeClass}">${dueLabel}</div>
+            <div class="print-meta">
+              <span>Invoice / RO #</span><strong>${esc(invoice.docNumber || 'Not assigned')}</strong>
+              <span>Date</span><strong>${esc(docDate || '')}</strong>
+              <span>Status</span><strong>${esc(docType)}</strong>
+              <span>Payment</span><strong>${esc(paymentStatus)}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="print-grid print-no-break">
+          <div class="print-box">
+            <h3>Bill To</h3>
+            <p><strong>${esc(invoice.customerName || 'Customer')}</strong><br>
+            ${esc(formatPhone(invoice.customerPhone) || 'No phone')}<br>
+            ${customerEmail ? esc(customerEmail) : 'No email on file'}</p>
+          </div>
+          <div class="print-box">
+            <h3>Vehicle</h3>
+            <p><strong>${esc(invoice.vehicle || 'Vehicle not entered')}</strong><br>
+            VIN: ${esc(invoice.vin || 'N/A')}<br>
+            Plate: ${esc(invoice.plate || 'N/A')}<br>
+            Mileage: ${esc(formatMileage(invoice.mileage) || 'N/A')}</p>
+          </div>
+        </div>
+
+        ${concern ? `<div class="print-box print-no-break" style="margin-bottom:10px"><h3>Customer Concern / Work Requested</h3><p>${esc(concern).replace(/\n/g,'<br>')}</p></div>` : ''}
+
+        <table class="print-table">
+          <thead><tr><th>#</th><th>Type</th><th>Description</th><th class="right">Qty/Hrs</th><th class="right">Rate</th><th class="right">Amount</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+
+        <div class="print-summary">
+          <div>
+            ${recommendations ? `<div class="print-box print-no-break" style="margin-bottom:8px"><h3>Recommendations / Notes</h3><p>${esc(recommendations).replace(/\n/g,'<br>')}</p></div>` : ''}
+            <div class="print-terms">
+              <h3>Terms, Authorization & Disclaimers</h3>
+              <p>Customer authorizes Toro's Auto Care to perform the listed inspection, diagnosis, repairs, parts installation, and related road testing as needed. Estimates are based on visible/known conditions and may change if additional issues are found. Customer approval is required before additional paid work is performed.</p>
+              <p>Payment is due at vehicle pickup unless other written arrangements are made. Vehicles, keys, and completed work may be held until the balance is paid in full where allowed by law. Parts remain property of Toro's Auto Care until paid in full.</p>
+              <p>Warranty applies only as written by Toro's Auto Care and/or the applicable parts manufacturer. Warranty does not cover customer-supplied parts, misuse, neglect, racing/off-road use, pre-existing unrelated issues, or failures caused by declined recommended repairs.</p>
+              ${footer ? `<p>${esc(footer)}</p>` : ''}
+            </div>
+          </div>
+          <div>
+            <div class="print-totals">
+              <div class="print-total-row"><span>Labor</span><strong>${money(t.labor)}</strong></div>
+              <div class="print-total-row"><span>Parts</span><strong>${money(t.parts)}</strong></div>
+              <div class="print-total-row"><span>Fees</span><strong>${money(t.fees)}</strong></div>
+              <div class="print-total-row"><span>Shop Supplies</span><strong>${money(t.supplies)}</strong></div>
+              <div class="print-total-row"><span>Discounts</span><strong>-${money(t.discount)}</strong></div>
+              <div class="print-total-row"><span>Parts Tax (${esc(settings.taxRate)}%)</span><strong>${money(t.tax)}</strong></div>
+              <div class="print-total-row grand"><span>Total</span><strong>${money(t.total)}</strong></div>
+              <div class="print-total-row"><span>Paid</span><strong>${money(t.paid)}</strong></div>
+              <div class="print-total-row ${balanceDue?'balance-due':'balance-paid'}"><span>Balance</span><strong>${money(t.balance)}</strong></div>
+            </div>
+            ${paymentRows ? `<div class="print-payments"><strong>Payments:</strong> ${paymentRows}</div>` : `<div class="print-payments"><strong>Payments:</strong> None recorded</div>`}
+          </div>
+        </div>
+
+        <div class="print-signatures">
+          <div class="print-signature-line">Customer Authorization / Signature</div>
+          <div class="print-signature-line">Date</div>
+        </div>
+        <div class="print-footer-note">Printed ${esc(printedAt)} · Please keep this invoice for your records.</div>
+      </div>`;
   }
   function printInvoice(){bindFields();renderPrint();window.print()}
   function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove('show'),1800)}
