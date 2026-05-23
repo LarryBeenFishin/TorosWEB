@@ -6741,3 +6741,110 @@
 </script>
 </body>
 </html>
+<style>
+/* MULTI-PAGE PRINT FIX: allow long parts/labor invoices to continue onto more pages */
+@media print{
+  @page{size:letter;margin:.18in!important}
+
+  html,body{
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+    background:#fff!important;
+  }
+
+  body.print-invoice-only .app,
+  body.print-invoice-only .toast,
+  body.print-invoice-only .modal-overlay,
+  body.print-invoice-only .autosave-floating,
+  body.print-invoice-only > *:not(.print-shell){
+    display:none!important;
+  }
+
+  body.print-invoice-only .print-shell{
+    display:block!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+  }
+
+  body.print-invoice-only .print-page{
+    width:auto!important;
+    height:auto!important;
+    min-height:10.6in!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:.12in!important;
+    overflow:visible!important;
+    display:block!important;
+    box-shadow:none!important;
+    border:1px dotted #777!important;
+    page-break-after:auto!important;
+    break-after:auto!important;
+  }
+
+  /* Keep top invoice identity together */
+  body.print-invoice-only .print-top,
+  body.print-invoice-only .print-info-band{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  /* Let the main line section grow past one page */
+  body.print-invoice-only .print-split{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    min-height:6.45in!important;
+    height:auto!important;
+    overflow:visible!important;
+    break-inside:auto!important;
+    page-break-inside:auto!important;
+  }
+
+  body.print-invoice-only .print-half{
+    min-height:6.45in!important;
+    height:auto!important;
+    overflow:visible!important;
+    break-inside:auto!important;
+    page-break-inside:auto!important;
+  }
+
+  body.print-invoice-only .print-half:first-child{
+    border-right:1.5px solid #000!important;
+  }
+
+  /* Repeat-style column headers are kept with following rows where possible */
+  body.print-invoice-only .print-half-title{
+    break-after:avoid!important;
+    page-break-after:avoid!important;
+  }
+
+  body.print-invoice-only .print-line,
+  body.print-invoice-only .print-section-note,
+  body.print-invoice-only .print-total-row,
+  body.print-invoice-only .print-signatures,
+  body.print-invoice-only .print-payment-note{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  /* Totals/legal move naturally after all line items, on final page if needed */
+  body.print-invoice-only .print-bottom{
+    display:grid!important;
+    grid-template-columns:1fr 2.85in!important;
+    gap:.16in!important;
+    margin-top:.08in!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  body.print-invoice-only .print-footer-note{
+    margin-top:.1in!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+}
+</style>
