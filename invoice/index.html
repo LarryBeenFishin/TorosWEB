@@ -4333,6 +4333,42 @@
     return {customerName,phone,vehicle,doc,status,paymentStatus,total,paid,balance,date};
   }
 
+
+  function invoiceKeySet(item){
+    item = item || {};
+    const n = normalizeInvoiceForHistory(item);
+    const values = [
+      n.doc,
+      item.invoiceId,
+      item.id,
+      item.invoiceNumber,
+      item.docNumber,
+      item.roNumber,
+      item.repairOrderNumber,
+      item.estimateNumber,
+      item.InvoiceID,
+      item.InvoiceNumber,
+      item['Invoice ID'],
+      item['Invoice Number'],
+      item['RO Number']
+    ];
+
+    return values
+      .filter(value => value !== undefined && value !== null && String(value).trim() !== '')
+      .map(value => String(value).trim().toLowerCase());
+  }
+
+  function isCurrentInvoiceInHistory(item){
+    if(!item || !invoice) return false;
+
+    const currentKeys = invoiceKeySet(invoice);
+    const itemKeys = invoiceKeySet(item);
+
+    if(!currentKeys.length || !itemKeys.length) return false;
+
+    return itemKeys.some(key => currentKeys.includes(key));
+  }
+
   function firstValue(){
     for(const value of arguments){
       if(value !== undefined && value !== null && String(value).trim() !== '') return value;
@@ -4678,6 +4714,12 @@
     const item=allInvoiceHistory[index];
     if(!item)return;
 
+    if(isCurrentInvoiceInHistory(item)){
+      toast('This invoice is already open. Use the current screen to keep editing.');
+      renderAllInvoiceHistory();
+      return;
+    }
+
     const status=String(firstValue(item.status, item.Status)).toLowerCase();
     if(status==='closed' || item.readOnly===true || String(item.readOnly || item.ReadOnly).toUpperCase()==='TRUE'){
       viewAllInvoiceHistory(index);
@@ -4910,7 +4952,9 @@
         <small>${lines || 'No lines'}</small>
 
         <div class="mini-row">
-          ${isClosed?'':`<button class="green" type="button" onclick="openSavedInvoiceFromHistory(${originalIndex})">Open</button>`}
+          ${isCurrentInvoiceInHistory(item)
+            ? '<button class="light" type="button" disabled title="This invoice is already open">Locked</button>'
+            : (isClosed ? '' : `<button class="green" type="button" onclick="openSavedInvoiceFromHistory(${originalIndex})">Open</button>`)}
           <button class="blue" type="button" onclick="viewAllInvoiceHistory(${originalIndex})">View</button>
           <button class="light" type="button" onclick="duplicateAllInvoiceHistory(${originalIndex})">Duplicate</button>
           <button class="light" type="button" onclick="printAllInvoiceHistory(${originalIndex})">Print</button>
