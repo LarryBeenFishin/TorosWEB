@@ -3453,6 +3453,7 @@
       balance:cleanNumber(t.balance||0),
       paid:cleanNumber(t.paid||0),
       lines:(invoice.lines||[]).map(l=>({
+        id:l.id||uid(),
         type:l.type,
         description:l.description,
         qty:l.qty,
@@ -3467,7 +3468,12 @@
     bindFields();
 
     if(!invoice.customerName && !invoice.customerPhone){
-      toast('Select a customer before saving a revision');
+      toast('Select a customer before sending work to revisions');
+      return;
+    }
+
+    if(!Array.isArray(invoice.lines) || !invoice.lines.length){
+      toast('There are no jobs / lines to send to revisions');
       return;
     }
 
@@ -3488,6 +3494,7 @@
     revision.plate=invoice.plate||'';
     revision.mileage=invoice.mileage||'';
     revision.internalNotes=invoice.internalNotes||'';
+    revision.lines=(revision.lines||[]).map(l=>Object.assign({id:uid()},l,{id:l.id||uid()}));
 
     try{
       await saveRevisionToGoogleSheets(revision);
@@ -3498,8 +3505,17 @@
 
     profile.revisions.unshift(revision);
     saveCurrentCustomerProfile(profile);
-    renderRevisionHistory();
-    toast('Revision saved');
+
+    // Move the work out of the active order after it has been copied into the revision.
+    invoice.lines=[];
+    try{ renderLines(); }catch(e){}
+    try{ renderTotals(); }catch(e){}
+    try{ renderPrint(); }catch(e){}
+    try{ renderRevisionHistory(); }catch(e){}
+    try{ updateInvoice(); }catch(e){}
+    try{ queueInvoiceAutoSave('sentToRevisions'); }catch(e){}
+
+    toast('Moved jobs / lines to revisions');
   }
   function saveToServiceHistory(){
     const profile=getCurrentCustomerProfile();
@@ -3767,8 +3783,16 @@
   }
   
   function renderRevisionReviewLines(){
-    const body=document.getElementById('revisionReviewLinesBody');
+    const body=document.getElementById('revisionReviewLinesBody') || document.getElementById('revisionReviewLines');
     if(!body)return;
+
+    revisionReviewLines=(revisionReviewLines||[]).map(l=>Object.assign({id:uid(),type:'Labor',description:'',qty:0,cost:0,price:0,taxable:false},l,{id:l.id||uid()}));
+
+    if(!revisionReviewLines.length){
+      body.innerHTML='<div class="empty" style="margin:10px">No lines were saved with this revision.</div>';
+      renderRevisionReviewTotals();
+      return;
+    }
 
     body.innerHTML=(revisionReviewLines||[]).map(line=>{
       const total=(Number(line.qty)||0)*(Number(line.price)||0);
@@ -3846,7 +3870,19 @@
     if(!revision)return;
 
     activeRevisionReviewId=revision.id||revision.revisionId||revision.invoiceId;
-    revisionReviewLines=JSON.parse(JSON.stringify(revision.lines||[]));
+    revisionReviewLines=JSON.parse(JSON.stringify(revision.lines||[])).map(l=>({
+      id:l.id||uid(),
+      type:l.type||'Labor',
+      description:l.description||'',
+      qty:Number(l.qty)||0,
+      cost:String(l.type||'').toLowerCase()==='part'?cleanNumber(l.cost||0):0,
+      price:cleanNumber(l.price||0),
+      taxable:String(l.type||'').toLowerCase()==='part' ? l.taxable!==false : false
+    }));
+
+    // Keep old revisions fixed after opening so future autosaves and edits have stable line IDs.
+    revision.lines=revisionReviewLines.map(l=>Object.assign({},l));
+    saveCurrentCustomerProfile(profile);
 
     const title=document.getElementById('revisionReviewTitle');
     if(title) title.textContent=`Review Revision · ${revision.revisionNumber||revision.docNumber||'Revision'}`;
@@ -3940,14 +3976,18 @@
       }
 
       const profile=getCurrentCustomerProfile();
-      profile.revisions=(data.revisions||[]).map(r=>Object.assign({},r,{
-        id:r.revisionId || r.id || uid(),
-        invoiceId:r.revisionId || r.invoiceId || r.id || '',
-        revisionId:r.revisionId || r.invoiceId || r.id || '',
-        docNumber:r.revisionNumber || r.docNumber || '',
-        status:'Revision',
-        paymentStatus:'Quote'
-      }));
+      profile.revisions=(data.revisions||[]).map(r=>{
+        const fixed=Object.assign({},r,{
+          id:r.revisionId || r.id || uid(),
+          invoiceId:r.revisionId || r.invoiceId || r.id || '',
+          revisionId:r.revisionId || r.invoiceId || r.id || '',
+          docNumber:r.revisionNumber || r.docNumber || '',
+          status:'Revision',
+          paymentStatus:'Quote'
+        });
+        fixed.lines=(fixed.lines||[]).map(l=>Object.assign({id:uid()},l,{id:l.id||uid()}));
+        return fixed;
+      });
       saveCurrentCustomerProfile(profile);
       renderRevisionHistory();
     }catch(err){
