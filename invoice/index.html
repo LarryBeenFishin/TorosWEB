@@ -6177,7 +6177,7 @@
   }
 
   
-  function startFreshInvoice(){
+  async function startFreshInvoice(){
     await releaseActiveInvoiceLock();
     clearActiveInvoiceDraft();
     invoice=defaultInvoice();
