@@ -1117,6 +1117,30 @@
       flex:0 0 auto!important;
     }
 
+
+    .invoice-lock-pill{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      padding:4px 8px;
+      font-size:11px;
+      font-weight:900;
+      background:#fff7ed;
+      color:#c2410c;
+      border:1px solid #fed7aa;
+      margin-left:6px;
+    }
+    .invoice-lock-note{
+      background:#fff7ed;
+      border:1px solid #fed7aa;
+      color:#9a3412;
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -1741,6 +1765,169 @@
     return INVOICE_BACKEND_URL;
   }
 
+  const INVOICE_LOCK_HEARTBEAT_MS = 60000;
+  const INVOICE_LOCK_SESSION_ID = (() => {
+    const key='toros_invoice_lock_session_id';
+    let existing=sessionStorage.getItem(key);
+    if(!existing){
+      existing='LOCK-'+Date.now()+'-'+Math.random().toString(16).slice(2);
+      sessionStorage.setItem(key, existing);
+    }
+    return existing;
+  })();
+
+  let activeInvoiceLockKey='';
+  let activeInvoiceLockTimer=null;
+  let invoiceLocksByKey={};
+
+  function invoiceLockUserLabel(){
+    return 'Browser '+INVOICE_LOCK_SESSION_ID.slice(-5);
+  }
+
+  function normalizeInvoiceLockKey(value){
+    return String(value||'').trim().toUpperCase();
+  }
+
+  function invoiceLockKeyFromItem(item){
+    item=item||{};
+    return normalizeInvoiceLockKey(item.invoiceNumber || item.docNumber || item.invoiceId || item.id || item.roNumber || '');
+  }
+
+  function invoiceLockKeyFromCurrentInvoice(){
+    return normalizeInvoiceLockKey(invoice?.docNumber || invoice?.invoiceNumber || invoice?.invoiceId || invoice?.id || '');
+  }
+
+  async function postInvoiceLockAction(action, payload={}){
+    const res=await fetch(getInvoiceBackendUrl(), {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(Object.assign({
+        action,
+        password:INVOICE_BACKEND_PASSWORD,
+        sessionId:INVOICE_LOCK_SESSION_ID,
+        userLabel:invoiceLockUserLabel()
+      }, payload))
+    });
+    return await res.json();
+  }
+
+  async function loadInvoiceLocksFromBackend(){
+    try{
+      const data=await postInvoiceLockAction('getInvoiceLocks');
+      invoiceLocksByKey={};
+      if(data.status==='success'){
+        (data.locks||[]).forEach(lock=>{
+          const key=normalizeInvoiceLockKey(lock.invoiceKey || lock.invoiceNumber);
+          if(key) invoiceLocksByKey[key]=lock;
+        });
+      }
+    }catch(err){
+      console.error('Could not load invoice locks', err);
+      invoiceLocksByKey={};
+    }
+  }
+
+  function getInvoiceLockForItem(item){
+    return invoiceLocksByKey[invoiceLockKeyFromItem(item)] || null;
+  }
+
+  function isInvoiceLockedByAnother(item){
+    const lock=getInvoiceLockForItem(item);
+    return !!(lock && String(lock.sessionId||'') !== INVOICE_LOCK_SESSION_ID);
+  }
+
+  function startInvoiceLockHeartbeat(){
+    clearInterval(activeInvoiceLockTimer);
+    if(!activeInvoiceLockKey)return;
+    activeInvoiceLockTimer=setInterval(async ()=>{
+      if(!activeInvoiceLockKey)return;
+      try{
+        const data=await postInvoiceLockAction('refreshInvoiceLock', {
+          invoiceKey:activeInvoiceLockKey,
+          invoiceNumber:invoice?.docNumber || activeInvoiceLockKey
+        });
+        if(data.status==='locked'){
+          clearInterval(activeInvoiceLockTimer);
+          activeInvoiceLockTimer=null;
+          toast('This invoice was opened in another browser. Stop editing to avoid conflicts.');
+        }
+      }catch(err){
+        console.error('Invoice lock heartbeat failed', err);
+      }
+    }, INVOICE_LOCK_HEARTBEAT_MS);
+  }
+
+  async function releaseActiveInvoiceLock(){
+    if(!activeInvoiceLockKey)return;
+    const key=activeInvoiceLockKey;
+    activeInvoiceLockKey='';
+    clearInterval(activeInvoiceLockTimer);
+    activeInvoiceLockTimer=null;
+    try{
+      await postInvoiceLockAction('releaseInvoiceLock', { invoiceKey:key });
+    }catch(err){
+      console.error('Invoice lock release failed', err);
+    }
+  }
+
+  async function acquireInvoiceLockForKey(key, invoiceNumber){
+    key=normalizeInvoiceLockKey(key);
+    if(!key)return true;
+    if(activeInvoiceLockKey && activeInvoiceLockKey !== key){
+      await releaseActiveInvoiceLock();
+    }
+    try{
+      const data=await postInvoiceLockAction('acquireInvoiceLock', { invoiceKey:key, invoiceNumber:invoiceNumber || key });
+      if(data.status==='locked'){
+        const who=data.lock?.userLabel || 'another browser';
+        const last=data.lock?.lastSeen ? ' Last active: '+data.lock.lastSeen : '';
+        toast('Locked by '+who+'.'+last);
+        await loadInvoiceLocksFromBackend();
+        renderAllInvoiceHistory();
+        return false;
+      }
+      if(data.status !== 'success'){
+        toast(data.message || 'Could not lock invoice');
+        return false;
+      }
+      activeInvoiceLockKey=key;
+      startInvoiceLockHeartbeat();
+      await loadInvoiceLocksFromBackend();
+      return true;
+    }catch(err){
+      console.error(err);
+      toast('Could not check invoice lock');
+      return false;
+    }
+  }
+
+  async function acquireInvoiceLockForItem(item){
+    return acquireInvoiceLockForKey(invoiceLockKeyFromItem(item), item?.invoiceNumber || item?.docNumber || item?.invoiceId || '');
+  }
+
+  async function acquireInvoiceLockForCurrentInvoice(){
+    if(!isConvertedInvoice(invoice) || invoice.readOnly)return true;
+    return acquireInvoiceLockForKey(invoiceLockKeyFromCurrentInvoice(), invoice.docNumber || invoice.invoiceNumber || '');
+  }
+
+  window.addEventListener('beforeunload', () => {
+    if(!activeInvoiceLockKey)return;
+    try{
+      const payload=JSON.stringify({ action:'releaseInvoiceLock', password:INVOICE_BACKEND_PASSWORD, sessionId:INVOICE_LOCK_SESSION_ID, invoiceKey:activeInvoiceLockKey });
+      if(navigator.sendBeacon){
+        navigator.sendBeacon(getInvoiceBackendUrl(), new Blob([payload], {type:'text/plain;charset=utf-8'}));
+      }else{
+        fetch(getInvoiceBackendUrl(), {method:'POST', body:payload, keepalive:true, headers:{'Content-Type':'text/plain;charset=utf-8'}});
+      }
+    }catch(err){}
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState==='visible' && activeInvoiceLockKey){
+      postInvoiceLockAction('refreshInvoiceLock', {invoiceKey:activeInvoiceLockKey, invoiceNumber:invoice?.docNumber || activeInvoiceLockKey}).catch(()=>{});
+    }
+  });
+
   function makeBackendInvoicePayload(){
     bindFields();
     const totals=calc();
@@ -1750,6 +1937,8 @@
       invoiceId: invoice.invoiceId || invoice.id || '',
       docNumber: invoice.docNumber || '',
       invoiceNumber: invoice.docNumber || '',
+      invoiceKey: invoice.docNumber || invoice.invoiceNumber || invoice.invoiceId || invoice.id || '',
+      lockSessionId: INVOICE_LOCK_SESSION_ID,
       status: invoice.status || 'Estimate',
       paymentStatus: invoice.paymentStatus || '',
       paymentMethod: invoice.paymentMethod || '',
@@ -1817,6 +2006,13 @@
     });
 
     const data=await res.json();
+
+    if(data.status === 'locked'){
+      toast(data.message || 'This invoice is locked in another browser');
+      await loadInvoiceLocksFromBackend();
+      renderAllInvoiceHistory();
+      throw new Error(data.message || 'This invoice is locked in another browser');
+    }
 
     if(data.status !== 'success'){
       throw new Error(data.message || 'Invoice backend error');
@@ -2104,6 +2300,7 @@
 
     await assignRoNumberIfNeeded();
     await saveInvoiceToGoogleSheets();
+    await acquireInvoiceLockForCurrentInvoice();
     saveActiveInvoiceDraft();
     updateDraftUiState();
     renderAll();
@@ -3745,6 +3942,8 @@
       return `<div class="history-card">
         <strong>${esc(item.docNumber||'No document #')} · ${esc(item.status||'Estimate')}</strong>
         <small>${esc(formatDateTimeShort(item.savedAt||Date.now()))}</small>
+        ${lockedByAnother ? `<div class="invoice-lock-note">Currently open in ${esc(lockLabel)}. It will unlock automatically after 5 minutes of no activity.</div>` : ''}
+
         <div class="history-meta">
           <div><span>Total</span><b>${money(item.total||0)}</b></div>
           <div><span>Paid</span><b>${money(item.paid||0)}</b></div>
@@ -4306,6 +4505,7 @@
       }
 
       allInvoiceHistory=(data.invoices || []).filter(item=>String(item.status||'').toLowerCase()!=='revision');
+      await loadInvoiceLocksFromBackend();
       mergeCurrentInvoiceIntoAllInvoices();
       renderAllInvoiceHistory();
     }catch(err){
@@ -4700,6 +4900,7 @@
       invoice.readOnly=false;
       invoice.closedAt='';
       if(!invoice.status || invoice.status==='Paid' || invoice.status==='Draft / Not Saved') invoice.status='Estimate';
+      await acquireInvoiceLockForCurrentInvoice();
       await saveInvoiceToGoogleSheets();
       saveActiveInvoiceDraft();
       await loadAllInvoicesFromSheet(true);
@@ -4739,6 +4940,9 @@
         }
       }
     }
+
+    const lockOk=await acquireInvoiceLockForItem(item);
+    if(!lockOk)return;
 
     const opened=invoiceFromSheetItem(item);
 
@@ -4927,6 +5131,9 @@
       const dateText=n.date ? String(n.date) : '';
       const statusLower=String(n.status||'').toLowerCase();
       const isClosed=statusLower==='closed' || item.readOnly===true || String(item.readOnly).toUpperCase()==='TRUE';
+      const lock=getInvoiceLockForItem(item);
+      const lockedByAnother=isInvoiceLockedByAnother(item);
+      const lockLabel=lockedByAnother ? (lock.userLabel || 'another browser') : '';
       const lines=(item.lines||[]).slice(0,3).map(l=>{
         const lineTotal=(Number(l.qty)||0)*(Number(l.price)||0);
         return `${esc(l.type||'Line')}: ${esc(l.description||'')} · ${money(lineTotal)}`;
@@ -4939,7 +5146,10 @@
             <small>${esc(n.customerName || 'No customer')} · ${esc(formatPhone ? formatPhone(n.phone) : n.phone || 'No phone')}</small>
             <small>${esc(n.vehicle || 'No vehicle')} ${item.mileage ? '· '+esc(formatMileage ? formatMileage(item.mileage) : item.mileage) : ''}</small>
           </div>
-          <div class="all-invoice-pill">${esc(n.status || 'No Status')}${n.paymentStatus ? ' · '+esc(n.paymentStatus) : ''}</div>
+          <div>
+            <span class="all-invoice-pill">${esc(n.status || 'No Status')}${n.paymentStatus ? ' · '+esc(n.paymentStatus) : ''}</span>
+            ${lockedByAnother ? `<span class="invoice-lock-pill">Locked</span>` : ''}
+          </div>
         </div>
 
         <div class="history-meta">
@@ -4953,8 +5163,10 @@
 
         <div class="mini-row">
           ${isCurrentInvoiceInHistory(item)
-            ? '<button class="light" type="button" disabled title="This invoice is already open">Locked</button>'
-            : (isClosed ? '' : `<button class="green" type="button" onclick="openSavedInvoiceFromHistory(${originalIndex})">Open</button>`)}
+            ? '<button class="light" type="button" disabled title="This invoice is already open here">Locked</button>'
+            : (lockedByAnother
+              ? `<button class="light" type="button" disabled title="Open in ${esc(lockLabel)}">Locked</button>`
+              : (isClosed ? '' : `<button class="green" type="button" onclick="openSavedInvoiceFromHistory(${originalIndex})">Open</button>`))}
           <button class="blue" type="button" onclick="viewAllInvoiceHistory(${originalIndex})">View</button>
           <button class="light" type="button" onclick="duplicateAllInvoiceHistory(${originalIndex})">Duplicate</button>
           <button class="light" type="button" onclick="printAllInvoiceHistory(${originalIndex})">Print</button>
@@ -5966,6 +6178,7 @@
 
   
   function startFreshInvoice(){
+    await releaseActiveInvoiceLock();
     clearActiveInvoiceDraft();
     invoice=defaultInvoice();
     invoice.payments=[];
@@ -6056,6 +6269,7 @@
       console.error(err);
     }
 
+    await releaseActiveInvoiceLock();
     clearActiveInvoiceDraft();
 
     // Start a clean local draft and clear payment rows from the screen.
@@ -6464,6 +6678,19 @@
       }
     },0);
   });
+
+
+  setTimeout(() => {
+    try{
+      if(typeof invoice !== 'undefined' && isConvertedInvoice(invoice) && !invoice.readOnly){
+        acquireInvoiceLockForCurrentInvoice().catch(err=>console.error(err));
+      }
+      loadInvoiceLocksFromBackend().then(()=>{
+        try{ renderAllInvoiceHistory(); }catch(e){}
+      });
+    }catch(err){ console.error(err); }
+  }, 1400);
+
 
 </script>
 </body>
