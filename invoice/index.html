@@ -1170,6 +1170,7 @@
 <!-- PAYMENT_MARK_PAID_AND_CLOSE_CLEAR_FINAL -->
 <!-- NO_MOJIBAKE_MOBILE_DESKTOP_SMOOTH_FINAL -->
 <!-- PAYMENT_ROWS_SWITCH_INVOICE_DOM_RESET_FINAL -->
+<!-- CUSTOMER_LOCK_AFTER_ESTIMATE_FINAL -->
 <!-- STATUS_PAYMENT_STATUS_SEPARATED_FINAL -->
 </head>
 
@@ -1214,8 +1215,8 @@
         <div class="panel-head"><h2>Customer / Vehicle</h2></div>
         <div class="panel-body stack">
           <div class="mini-row customer-top-actions">
-            <button class="blue" type="button" onclick="openCustomerPicker()">Search Customer</button>
-            <button class="light" type="button" onclick="openNewCustomerPopup()">New Customer</button>
+            <button class="blue" id="searchCustomerBtn" type="button" onclick="openCustomerPicker()">Search Customer</button>
+            <button class="light" id="newCustomerBtn" type="button" onclick="openNewCustomerPopup()">New Customer</button>
           </div>
           <div class="customer-card-actions" id="customerCardActions">
             <button class="light" type="button" onclick="openCustomerInfoPopup()">Edit Info</button>
@@ -1446,7 +1447,7 @@
       </div>
       <div class="modal-foot">
         <button class="light" onclick="closePopup('customerPickerPopup')">Cancel</button>
-        <button class="green" onclick="closePopup('customerPickerPopup');openPopup('customerPopup')">Add Manually</button>
+        <button class="green" onclick="closePopup('customerPickerPopup');openNewCustomerPopup()">Add Manually</button>
       </div>
     </div>
   </div>
@@ -2055,8 +2056,12 @@
     const statusSelect=document.getElementById('quickStatusSelect');
     const docInput=document.getElementById('docNumber');
     const docBadge=document.getElementById('docBadge');
+    const searchCustomerBtn=document.getElementById('searchCustomerBtn');
+    const newCustomerBtn=document.getElementById('newCustomerBtn');
 
     if(convertBtn) convertBtn.style.display=converted?'none':'inline-flex';
+    if(searchCustomerBtn) searchCustomerBtn.style.display=converted?'none':'inline-flex';
+    if(newCustomerBtn) newCustomerBtn.style.display=converted?'none':'inline-flex';
     if(saveBtn) saveBtn.disabled=false;
 
     if(statusSelect){
@@ -2086,12 +2091,12 @@
       return;
     }
 
-    const hasCustomer=!!(invoice.customerName||invoice.customerPhone);
-    const hasVehicle=!!(invoice.vehicle||invoice.vin||invoice.plate);
-    const hasLines=Array.isArray(invoice.lines)&&invoice.lines.length>0;
+    const hasCustomer=!!(String(invoice.customerName||'').trim() || String(invoice.customerPhone||'').trim());
 
-    if(!hasCustomer && !hasVehicle && !hasLines){
-      if(!confirm('Convert this blank draft to an estimate and assign an RO number?'))return;
+    if(!hasCustomer){
+      toast('Add or pick a customer before converting to an estimate');
+      if(typeof openCustomerInfoPopup==='function') openCustomerInfoPopup();
+      return;
     }
 
     invoice.status='Estimate';
@@ -2448,6 +2453,12 @@
   }
 
   function openNewCustomerPopup(){
+    if(isConvertedInvoice(invoice)){
+      toast('New customers can only be added before converting to an estimate');
+      return;
+    }
+
+    window.customerPopupMode='new';
     window.selectedModalVehicleId='';
     window.selectedModalVehicleIndex=-1;
     window.modalVehicleOptions=[];
@@ -2460,6 +2471,11 @@
     const vinStatus=document.getElementById('vinDecodeStatus');
     if(vinStatus) vinStatus.textContent='';
 
+    const vehicleBox=document.getElementById('modalVehiclePickerBox');
+    const vehiclePills=document.getElementById('modalVehiclePills');
+    if(vehicleBox) vehicleBox.classList.remove('open');
+    if(vehiclePills) vehiclePills.innerHTML='';
+
     const picker=document.getElementById('modalVehiclePicker');
     if(picker) picker.innerHTML='';
 
@@ -2470,6 +2486,7 @@
   }
 
   function openCustomerInfoPopup(){
+    window.customerPopupMode='edit';
     if(typeof bindFields === 'function'){
       try{ bindFields(); }catch(err){}
     }
@@ -2601,6 +2618,11 @@
   }
 
   function openCustomerPicker(){
+    if(isConvertedInvoice(invoice)){
+      toast('Customer search is locked after converting to an estimate. Use Edit Info to update this customer.');
+      return;
+    }
+
     openPopup('customerPickerPopup');
     setTimeout(()=>{
       const input=document.getElementById('customerPickerSearch');
@@ -2677,6 +2699,7 @@
     if(typeof scheduleGoogleSheetHistoryLoad==='function') scheduleGoogleSheetHistoryLoad();
 
     if(vehicles.length>1){
+      window.customerPopupMode='edit';
       openPopup('customerPopup');
       document.getElementById('modalCustomerName').value=invoice.customerName;
       document.getElementById('modalCustomerPhone').value=invoice.customerPhone;
@@ -2788,6 +2811,17 @@
     const box=document.getElementById('modalVehiclePickerBox');
     const pills=document.getElementById('modalVehiclePills');
     if(!box || !pills)return;
+
+    // New Customer mode should only show the fields needed to create the customer/vehicle.
+    // Do not show saved vehicles from the previously selected customer profile.
+    if(window.customerPopupMode === 'new'){
+      box.classList.remove('open');
+      pills.innerHTML='';
+      window.modalVehicleOptions=[];
+      window.selectedModalVehicleId='';
+      window.selectedModalVehicleIndex=-1;
+      return;
+    }
 
     const vehicles=normalizeVehicleList(customer);
     window.modalVehicleOptions=vehicles;
@@ -3342,6 +3376,7 @@
     renderCustomerPickerResults();
     renderAll();
     closePopup('customerPopup');
+    window.customerPopupMode='edit';
     toast('Saving customer...');
 
     // Save to Google Sheets in the background. Do not make the user wait in the modal.
