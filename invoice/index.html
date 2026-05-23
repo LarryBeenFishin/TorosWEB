@@ -3205,6 +3205,7 @@
       return;
     }
 
+    // Update the invoice and visible customer panel immediately so the UI feels instant.
     invoice.customerName=customer.name;
     invoice.customerPhone=customer.phone;
     invoice.customerEmail=customer.email;
@@ -3212,48 +3213,68 @@
     invoice.vin=customer.vin;
     invoice.plate=customer.plate;
     invoice.mileage=customer.mileage;
+    invoice.vehicleId=customer.vehicleId || invoice.vehicleId || '';
 
-    try{
-      const savedCustomer=await saveCustomerProfileToSheet(customer);
-      const normalizedSaved=Object.assign({},savedCustomer,{vehicles:normalizeVehicleList(savedCustomer)});
-      mergeCustomerIntoLocalList(normalizedSaved);
-      invoice.selectedCustomerProfile=normalizedSaved;
-      invoice.vehicleId=(savedCustomer.savedVehicle && (savedCustomer.savedVehicle.vehicleId || savedCustomer.savedVehicle.id)) || window.selectedModalVehicleId || invoice.vehicleId || '';
+    const optimisticCustomer=Object.assign({}, customer, {
+      customerName: customer.name,
+      customerPhone: customer.phone,
+      customerEmail: customer.email,
+      vehicles: normalizeVehicleList(customer)
+    });
 
-      // Reload the customer list from the sheet right away so multiple vehicles are available
-      // without needing a hard refresh.
-      await loadCustomers();
-
-      const updated=findCustomerByPhoneOrEmail(customer.phone,customer.email) || normalizedSaved;
-      invoice.selectedCustomerProfile=Object.assign({},updated,{vehicles:normalizeVehicleList(updated)});
-      renderModalVehiclePicker(invoice.selectedCustomerProfile);
-
-      toast('Customer profile saved and vehicle added');
-    }catch(err){
-      console.error(err);
-
-      const existing=findCustomerByPhoneOrEmail(customer.phone,customer.email);
-      if(existing){
-        const existingVehicles=normalizeVehicleList(existing);
-        existingVehicles.push({
-          id:uid(),
-          vehicle:customer.vehicle,
-          vin:customer.vin,
-          plate:customer.plate,
-          mileage:customer.mileage
-        });
-        existing.vehicles=normalizeVehicleList(Object.assign({},existing,{vehicles:existingVehicles}));
-        Object.assign(existing,customer);
-      }else{
-        customers.unshift(Object.assign({},customer,{vehicles:normalizeVehicleList(customer)}));
-      }
-
-      renderCustomerPickerResults();
-      toast('Saved locally, but customer sheet save failed');
+    const existing=findCustomerByPhoneOrEmail(customer.phone,customer.email);
+    if(existing){
+      const mergedVehicles=normalizeVehicleList(existing);
+      const incomingVehicle={
+        id:customer.vehicleId || uid(),
+        vehicleId:customer.vehicleId || '',
+        vehicle:customer.vehicle,
+        vin:customer.vin,
+        plate:customer.plate,
+        mileage:customer.mileage
+      };
+      const incomingKey=String(incomingVehicle.vehicleId || incomingVehicle.vin || incomingVehicle.plate || incomingVehicle.vehicle || '').toLowerCase();
+      const foundVehicleIndex=mergedVehicles.findIndex(v=>{
+        const key=String(v.vehicleId || v.id || v.vin || v.plate || v.vehicle || '').toLowerCase();
+        return incomingKey && key && incomingKey===key;
+      });
+      if(foundVehicleIndex>=0) mergedVehicles[foundVehicleIndex]=Object.assign({}, mergedVehicles[foundVehicleIndex], incomingVehicle);
+      else if(incomingVehicle.vehicle || incomingVehicle.vin || incomingVehicle.plate) mergedVehicles.push(incomingVehicle);
+      Object.assign(existing, customer, {vehicles:normalizeVehicleList(Object.assign({}, existing, {vehicles:mergedVehicles}))});
+      invoice.selectedCustomerProfile=existing;
+    }else{
+      customers.unshift(Object.assign({}, optimisticCustomer));
+      invoice.selectedCustomerProfile=optimisticCustomer;
     }
 
+    renderCustomerPickerResults();
     renderAll();
     closePopup('customerPopup');
+    toast('Saving customer...');
+
+    // Save to Google Sheets in the background. Do not make the user wait in the modal.
+    (async()=>{
+      try{
+        const savedCustomer=await saveCustomerProfileToSheet(customer);
+        const normalizedSaved=Object.assign({},savedCustomer,{vehicles:normalizeVehicleList(savedCustomer)});
+        mergeCustomerIntoLocalList(normalizedSaved);
+        invoice.selectedCustomerProfile=normalizedSaved;
+        invoice.vehicleId=(savedCustomer.savedVehicle && (savedCustomer.savedVehicle.vehicleId || savedCustomer.savedVehicle.id)) || window.selectedModalVehicleId || invoice.vehicleId || '';
+
+        // Refresh later so multi-vehicle data stays accurate, but do it after the UI already updated.
+        try{ await loadCustomers(); }catch(refreshErr){ console.warn('Customer refresh after save failed:', refreshErr); }
+
+        const updated=findCustomerByPhoneOrEmail(customer.phone,customer.email) || normalizedSaved;
+        invoice.selectedCustomerProfile=Object.assign({},updated,{vehicles:normalizeVehicleList(updated)});
+        renderModalVehiclePicker(invoice.selectedCustomerProfile);
+        renderCustomerPickerResults();
+        renderAll();
+        toast('Customer saved');
+      }catch(err){
+        console.error(err);
+        toast('Customer saved on screen, but Google Sheets save failed');
+      }
+    })();
   }
 
   function bindFields(){
