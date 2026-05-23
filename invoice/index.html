@@ -3432,8 +3432,11 @@
     if(statusSelect) statusSelect.value=invoice.status || 'Draft / Not Saved';
 
     ensurePayments();
-    if(!invoice.payments.length && Number(invoice.amountPaid||0)>0){
-      invoice.payments=[{id:uid(),method:invoice.paymentMethod||'Payment',amount:Number(invoice.amountPaid)||0,note:'Imported payment'}];
+    // Do not auto-create a payment row from amountPaid here.
+    // Payment rows should only render when the current invoice actually has saved payments.
+    if(!invoice.payments.length){
+      invoice.amountPaid=0;
+      invoice.paymentMethod='None';
     }
 
     renderLines();
@@ -4445,7 +4448,20 @@
     item=item||{};
 
     const clonedLines=JSON.parse(JSON.stringify(item.lines || item.Lines || []));
-    const clonedPayments=JSON.parse(JSON.stringify(item.payments || item.Payments || []));
+
+    // Payment rows must come ONLY from the saved invoice's Payments JSON.
+    // Do not rebuild a payment row from the Paid total, because that can carry over
+    // stale payment data when opening a different invoice.
+    let savedPaymentRows = item.payments || item.Payments || [];
+    if (typeof savedPaymentRows === 'string') {
+      try { savedPaymentRows = JSON.parse(savedPaymentRows || '[]'); }
+      catch (err) { savedPaymentRows = []; }
+    }
+    const clonedPayments = Array.isArray(savedPaymentRows)
+      ? JSON.parse(JSON.stringify(savedPaymentRows)).filter(p => p && (p.method || Number(p.amount || 0) !== 0))
+      : [];
+    const clonedPaymentTotal = clonedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
     const originalDoc=savedInvoiceDocNumber(item);
     const originalInvoiceId=firstValue(item.invoiceId, item.id, item.InvoiceId, item['Invoice ID']);
 
@@ -4457,7 +4473,7 @@
       paymentStatus:firstValue(item.paymentStatus, item.PaymentStatus, item['Payment Status']) ||
         (Number(item.balance||0)<=0 && Number(item.total||0)>0 ? 'Paid':'Unpaid'),
       paymentMethod:firstValue(item.paymentMethod, item.PaymentMethod, 'None'),
-      amountPaid:Number(firstValue(item.paid, item.amountPaid, 0)) || 0,
+      amountPaid:clonedPaymentTotal,
       payments:clonedPayments,
 
       customerId:savedInvoiceCustomerId(item),
