@@ -1196,6 +1196,7 @@
 <!-- PAYMENT_ROWS_SWITCH_INVOICE_DOM_RESET_FINAL -->
 <!-- CUSTOMER_LOCK_AFTER_ESTIMATE_FINAL -->
 <!-- STATUS_PAYMENT_STATUS_SEPARATED_FINAL -->
+<!-- LOCKED_INVOICE_SENDS_USER_TO_NEW_DRAFT_FINAL -->
 </head>
 
 <body>
@@ -1849,7 +1850,8 @@
         if(data.status==='locked'){
           clearInterval(activeInvoiceLockTimer);
           activeInvoiceLockTimer=null;
-          toast('This invoice was opened in another browser. Stop editing to avoid conflicts.');
+          activeInvoiceLockKey='';
+          sendUserToNewInvoiceAfterLockConflict('This invoice is now locked in another browser. A new blank invoice was started to prevent duplicate editing.');
         }
       }catch(err){
         console.error('Invoice lock heartbeat failed', err);
@@ -4942,7 +4944,10 @@
     }
 
     const lockOk=await acquireInvoiceLockForItem(item);
-    if(!lockOk)return;
+    if(!lockOk){
+      sendUserToNewInvoiceAfterLockConflict('That invoice is locked by another browser. A new blank invoice was started instead.');
+      return;
+    }
 
     const opened=invoiceFromSheetItem(item);
 
@@ -6226,6 +6231,33 @@
     saveActiveInvoiceDraft({bind:false});
     showTab('lines');
     toast('New draft started. Click Convert to Estimate when ready.');
+  }
+
+
+  function sendUserToNewInvoiceAfterLockConflict(message){
+    try{
+      clearInterval(activeInvoiceLockTimer);
+      activeInvoiceLockTimer=null;
+      activeInvoiceLockKey='';
+
+      clearActiveInvoiceDraft();
+      invoice=defaultInvoice();
+      invoice.payments=[];
+      invoice.amountPaid=0;
+      invoice.paymentStatus='Unpaid';
+      invoice.paymentMethod='None';
+
+      const paymentBox=document.getElementById('paymentsList');
+      if(paymentBox) paymentBox.innerHTML='';
+
+      renderAll();
+      saveActiveInvoiceDraft({bind:false});
+      showTab('lines');
+      toast(message || 'This invoice is locked by another browser. A new blank invoice was started.');
+    }catch(err){
+      console.error('Could not reset after invoice lock conflict', err);
+      toast(message || 'This invoice is locked by another browser.');
+    }
   }
 
   async function closeInvoice(){
