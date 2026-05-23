@@ -1261,6 +1261,41 @@
       body.print-invoice-only .print-footer-note{margin-top:auto!important}
     }
 
+
+
+    /* PRINT FIX: Keep the Mitchell-style left/right layout and repeat header on continuation pages */
+    .print-shell{display:none}
+    .print-page{
+      font-family:Arial,Helvetica,sans-serif!important;
+      color:#000!important;
+      background:#fff!important;
+      font-size:10px!important;
+      line-height:1.16!important;
+      border:1px dotted #777!important;
+      padding:.16in!important;
+      width:8.5in!important;
+      min-height:11in!important;
+      display:flex!important;
+      flex-direction:column!important;
+      page-break-after:always!important;
+      break-after:page!important;
+      box-sizing:border-box!important;
+      overflow:hidden!important;
+    }
+    .print-page:last-child{page-break-after:auto!important;break-after:auto!important}
+    .print-top{flex:0 0 auto!important;display:grid!important;grid-template-columns:1fr 1.45fr 1fr!important;align-items:start!important;border-bottom:2px solid #000!important;padding-bottom:4px!important;margin-bottom:4px!important}
+    .print-shop-left img{width:112px!important;height:auto!important;display:block!important;margin-bottom:3px!important}.print-shop-left div{font-size:9px!important}.print-shop-center{text-align:center!important;font-size:10.4px!important;line-height:1.22!important}.print-shop-center strong{display:block!important;font-size:13px!important}.print-doc-box{text-align:right!important}.print-doc-title{font-size:13px!important;font-weight:900!important;text-decoration:underline!important;margin-bottom:2px!important}.print-doc-number{display:inline-block!important;border:1px solid #000!important;min-width:105px!important;text-align:center!important;padding:2px 8px!important;font-weight:900!important}.print-doc-meta{font-size:8.8px!important;margin-top:2px!important}
+    .print-info-band{flex:0 0 auto!important;display:grid!important;grid-template-columns:1.05fr 1.25fr .95fr!important;gap:10px!important;border-bottom:2px solid #000!important;padding:3px 0 5px!important;margin-bottom:0!important}.print-info-title{font-size:18px!important;font-weight:900!important;margin:0 0 3px!important;text-transform:uppercase!important}.print-label{font-size:9px!important;color:#333!important}.print-value{font-weight:900!important}.print-info-box{min-height:42px!important}.print-info-line{display:grid!important;grid-template-columns:94px 1fr!important;gap:4px!important;margin:1px 0!important}.print-info-right .print-info-line{grid-template-columns:84px 1fr!important}.print-muted{color:#555!important;font-weight:400!important}
+    .print-split{display:grid!important;grid-template-columns:1fr 1fr!important;border-bottom:2px solid #000!important;flex:1 1 auto!important;min-height:0!important;overflow:hidden!important}.print-half{min-height:0!important;overflow:hidden!important}.print-half:first-child{border-right:1.5px solid #000!important}.print-half-title{display:grid!important;grid-template-columns:1fr 50px 60px 64px!important;border-bottom:1px solid #000!important;font-size:9.4px!important;font-weight:900!important;background:#fff!important}.print-half-title.labor{grid-template-columns:1fr 78px!important}.print-half-title span{padding:4px 5px!important;border-right:1px solid #000!important}.print-half-title span:last-child{border-right:0!important}.print-line{display:grid!important;grid-template-columns:1fr 50px 60px 64px!important;font-size:9.4px!important;min-height:18px!important;break-inside:avoid!important;page-break-inside:avoid!important}.print-line.labor{grid-template-columns:1fr 78px!important}.print-line span{padding:3px 5px!important}.print-line .right{text-align:right!important}.print-line .desc{word-break:break-word!important}.print-empty-line{height:15px!important}.print-section-note{font-size:9px!important;padding:5px!important;border-top:1px solid #aaa!important;color:#222!important;break-inside:avoid!important;page-break-inside:avoid!important}
+    .print-bottom{flex:0 0 auto!important;display:grid!important;grid-template-columns:1fr 2.65in!important;gap:12px!important;margin-top:6px!important}.print-legal{font-size:8.3px!important;line-height:1.22!important}.print-legal strong{font-size:8.8px!important}.print-totals-mini{border:1px solid #000!important;font-size:9px!important}.print-total-row{display:grid!important;grid-template-columns:1fr .9in!important;border-bottom:1px solid #000!important}.print-total-row:last-child{border-bottom:0!important}.print-total-row span,.print-total-row strong{padding:3px 6px!important}.print-total-row strong{text-align:right!important;border-left:1px solid #000!important}.print-total-row.grand{font-size:12.5px!important;font-weight:900!important;background:#f2f2f2!important}.print-total-row.balance-due strong{color:#b00000!important}.print-total-row.balance-paid strong{color:#0b7a34!important}.print-payment-note{font-size:8.5px!important;margin-top:4px!important}.print-signatures{display:grid!important;grid-template-columns:1fr 1.2in!important;gap:18px!important;margin-top:18px!important}.print-signature-line{border-top:1px solid #000!important;padding-top:3px!important;font-size:8.7px!important}.print-footer-note{flex:0 0 auto!important;font-size:7.8px!important;text-align:center!important;margin-top:5px!important;color:#333!important}.print-continued-note{flex:0 0 auto!important;text-align:right!important;font-size:9px!important;font-weight:900!important;padding-top:5px!important;color:#333!important}
+    @media print{
+      html,body{background:#fff!important;color:#000!important;overflow:visible!important;height:auto!important;margin:0!important;padding:0!important}
+      body.print-invoice-only .app,body.print-invoice-only .toast,body.print-invoice-only .modal-overlay,body.print-invoice-only .autosave-floating,body.print-invoice-only > *:not(.print-shell){display:none!important}
+      body.print-invoice-only .print-shell{display:block!important;width:8.5in!important;margin:0!important;padding:0!important;overflow:visible!important}
+      body.print-invoice-only .print-page{box-shadow:none!important;margin:0!important}
+      @page{size:letter;margin:0!important}
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -6566,7 +6601,12 @@
     const partsLines=visibleLines.filter(l=>String(l.type || '').toLowerCase() !== 'labor');
     const laborLines=visibleLines.filter(l=>String(l.type || '').toLowerCase() === 'labor');
 
-    const partRows=(partsLines.length ? partsLines : []).map(l=>{
+    const concern=String(invoice.concern || '').trim();
+    const recommendations=String(invoice.recommendations || '').trim();
+    const paymentRows=(invoice.payments || []).filter(p=>Number(p.amount)>0).map(p=>`${esc(p.method || 'Payment')} ${money(p.amount)}`).join(' / ');
+    const footer=String(settings.footer || '').trim();
+
+    function partLineHtml(l){
       const qty=Number(l.qty)||0;
       const sale=Number(l.price)||0;
       const ext=qty*sale;
@@ -6578,9 +6618,9 @@
         <span class="right">${sale ? money(sale).replace('$','') : ''}</span>
         <span class="right">${money(ext).replace('$','')}</span>
       </div>`;
-    }).join('') || `<div class="print-empty-line"></div>`;
+    }
 
-    const laborRows=(laborLines.length ? laborLines : []).map(l=>{
+    function laborLineHtml(l){
       const qty=Number(l.qty)||0;
       const sale=Number(l.price)||0;
       const ext=qty*sale;
@@ -6589,15 +6629,11 @@
         <span class="desc"><strong>${esc(desc)}</strong>${qty ? `<br><span class="print-muted">${esc(qty)} hr @ ${money(sale)}</span>` : ''}</span>
         <span class="right">${money(ext).replace('$','')}</span>
       </div>`;
-    }).join('') || `<div class="print-empty-line"></div>`;
+    }
 
-    const concern=String(invoice.concern || '').trim();
-    const recommendations=String(invoice.recommendations || '').trim();
-    const paymentRows=(invoice.payments || []).filter(p=>Number(p.amount)>0).map(p=>`${esc(p.method || 'Payment')} ${money(p.amount)}`).join(' / ');
-    const footer=String(settings.footer || '').trim();
-
-    document.getElementById('printableInvoice').innerHTML=`
-      <div class="print-page">
+    function headerHtml(pageNumber,totalPages){
+      const continued = totalPages > 1 && pageNumber > 1;
+      return `
         <div class="print-top">
           <div class="print-shop-left">
             <img src="/logo.png" alt="Toro's Auto Care">
@@ -6610,9 +6646,9 @@
             torosautocare@gmail.com
           </div>
           <div class="print-doc-box">
-            <div class="print-doc-title">${esc(docType).toUpperCase()}</div>
+            <div class="print-doc-title">${esc(docType).toUpperCase()}${continued ? ' CONTINUED' : ''}</div>
             <div class="print-doc-number">${esc(docNumber)}</div>
-            <div class="print-doc-meta">Payment: ${esc(paymentStatus)}</div>
+            <div class="print-doc-meta">Payment: ${esc(paymentStatus)}${totalPages > 1 ? `<br>Page ${pageNumber} of ${totalPages}` : ''}</div>
           </div>
         </div>
 
@@ -6635,22 +6671,28 @@
             <div class="print-info-line"><span class="print-label">Invoice #</span><span>${esc(docNumber)}</span></div>
             <div class="print-info-line"><span class="print-label">Status</span><span>${esc(docType)}</span></div>
           </div>
-        </div>
+        </div>`;
+    }
 
-        <div class="print-split">
+    function splitHtml(partSlice,laborSlice,isLastPage){
+      const partRows=partSlice.map(partLineHtml).join('') || `<div class="print-empty-line"></div>`;
+      const laborRows=laborSlice.map(laborLineHtml).join('') || `<div class="print-empty-line"></div>`;
+      return `<div class="print-split ${isLastPage ? 'last-page-split' : 'continued-page-split'}">
           <div class="print-half">
             <div class="print-half-title"><span>Part Description / Number</span><span>Qty</span><span>Sale</span><span>Ext</span></div>
             ${partRows}
-            ${concern ? `<div class="print-section-note"><strong>Concern:</strong> ${esc(concern).replace(/\n/g,'<br>')}</div>` : ''}
+            ${isLastPage && concern ? `<div class="print-section-note"><strong>Concern:</strong> ${esc(concern).replace(/\n/g,'<br>')}</div>` : ''}
           </div>
           <div class="print-half">
             <div class="print-half-title labor"><span>Labor Description</span><span>Ext</span></div>
             ${laborRows}
-            ${recommendations ? `<div class="print-section-note"><strong>Recommendations:</strong> ${esc(recommendations).replace(/\n/g,'<br>')}</div>` : ''}
+            ${isLastPage && recommendations ? `<div class="print-section-note"><strong>Recommendations:</strong> ${esc(recommendations).replace(/\n/g,'<br>')}</div>` : ''}
           </div>
-        </div>
+        </div>`;
+    }
 
-        <div class="print-bottom">
+    function bottomHtml(){
+      return `<div class="print-bottom">
           <div>
             <div class="print-legal">
               <strong>Authorization / Terms:</strong> Customer authorizes Toro's Auto Care to inspect, diagnose, road test, and perform the listed repairs. Estimate amounts may change if additional issues are discovered; customer approval is required before additional paid work is performed. Payment is due at vehicle pickup unless other written arrangements are made. Warranty applies only as written by Toro's Auto Care and/or the parts manufacturer and excludes customer-supplied parts, misuse, neglect, racing/off-road use, and failures caused by declined recommended repairs.
@@ -6676,8 +6718,42 @@
             <div class="print-payment-note"><strong>Payments:</strong> ${paymentRows || 'None recorded'}</div>
           </div>
         </div>
-        <div class="print-footer-note">Thank you for choosing Toro's Auto Care. Please keep this invoice for your records.</div>
+        <div class="print-footer-note">Thank you for choosing Toro's Auto Care. Please keep this invoice for your records.</div>`;
+    }
+
+    const maxRows=Math.max(partsLines.length,laborLines.length,1);
+    const onePageLimit=18;
+    const continuedLimit=27;
+    const pages=[];
+    let i=0;
+
+    if(maxRows <= onePageLimit){
+      pages.push({start:0,end:maxRows});
+    }else{
+      while(i < maxRows){
+        const remaining=maxRows-i;
+        let take=continuedLimit;
+        if(remaining <= continuedLimit) take=remaining;
+        if(remaining > continuedLimit && remaining < continuedLimit + 8) take=Math.max(18, remaining-8);
+        pages.push({start:i,end:i+take});
+        i += take;
+      }
+    }
+
+    const totalPages=pages.length;
+    const pageHtml=pages.map((page,index)=>{
+      const pageNumber=index+1;
+      const isLastPage=index===pages.length-1;
+      const partSlice=partsLines.slice(page.start,page.end);
+      const laborSlice=laborLines.slice(page.start,page.end);
+      return `<div class="print-page ${isLastPage ? 'print-page-final' : 'print-page-continued'}">
+        ${headerHtml(pageNumber,totalPages)}
+        ${splitHtml(partSlice,laborSlice,isLastPage)}
+        ${isLastPage ? bottomHtml() : `<div class="print-continued-note">Continued on next page</div>`}
       </div>`;
+    }).join('');
+
+    document.getElementById('printableInvoice').innerHTML=pageHtml;
   }
   function printInvoice(){
     bindFields();
