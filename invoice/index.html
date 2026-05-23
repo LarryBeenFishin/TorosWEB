@@ -1170,6 +1170,7 @@
 <!-- PAYMENT_MARK_PAID_AND_CLOSE_CLEAR_FINAL -->
 <!-- NO_MOJIBAKE_MOBILE_DESKTOP_SMOOTH_FINAL -->
 <!-- PAYMENT_ROWS_SWITCH_INVOICE_DOM_RESET_FINAL -->
+<!-- STATUS_PAYMENT_STATUS_SEPARATED_FINAL -->
 </head>
 
 <body>
@@ -3555,7 +3556,7 @@
 
     const revision=snapshotInvoice('revision');
     revision.status='Revision';
-    revision.paymentStatus='Quote';
+    revision.paymentStatus='Unpaid';
     revision.docNumber=(invoice.docNumber||nextDocNumber())+'-REV';
     revision.customerName=invoice.customerName||'';
     revision.customerPhone=invoice.customerPhone||'';
@@ -3906,7 +3907,7 @@
       updatedAt:new Date().toISOString(),
       docNumber:(invoice.docNumber||nextDocNumber())+'-REV',
       status:'Revision',
-      paymentStatus:'Quote',
+      paymentStatus:'Unpaid',
       customerName:invoice.customerName||'',
       customerPhone:invoice.customerPhone||'',
       customerEmail:invoice.customerEmail||'',
@@ -4056,7 +4057,7 @@
           revisionId:r.revisionId || r.invoiceId || r.id || '',
           docNumber:r.revisionNumber || r.docNumber || '',
           status:'Revision',
-          paymentStatus:'Quote'
+          paymentStatus:'Unpaid'
         });
         fixed.lines=(fixed.lines||[]).map(l=>Object.assign({id:uid()},l,{id:l.id||uid()}));
         return fixed;
@@ -5151,13 +5152,19 @@
       return;
     }
 
+    // Workflow status and payment status are intentionally separate.
+    // Status stays Draft / Estimate / Repair Order / Invoice / Closed.
+    // Payment Status is only Paid or Unpaid and is controlled by payments.
     invoice.status=s;
-    if(s==='Paid')invoice.paymentStatus='Paid';
     if(s==='Estimate' || s==='Repair Order' || s==='Invoice') invoice.isDraft=false;
     renderAll();
     if(typeof queueInvoiceAutoSave==='function') queueInvoiceAutoSave('statusChange');
   }
-  function setPaymentStatus(s){invoice.paymentStatus=s;if(s==='Paid')markPaidFull(false);else renderPayment();updateInvoice()}
+  function setPaymentStatus(s){
+    invoice.paymentStatus=(s==='Paid')?'Paid':'Unpaid';
+    if(s==='Paid') markPaidFull(false);
+    else { invoice.payments=[]; invoice.amountPaid=0; renderPayment(); updateInvoice(); }
+  }
   function renderPayment(){
     document.querySelectorAll('.payment-chip').forEach(b=>b.classList.toggle('active',b.dataset.pay===invoice.paymentStatus));
     // Keep the payment row UI tied to the currently loaded invoice only.
@@ -5564,8 +5571,10 @@
     btn.textContent=paid?'Mark Unpaid':'Mark Paid';
     btn.classList.toggle('paid', paid);
     btn.classList.toggle('unpaid', !paid);
-    invoice.paymentStatus=paid?'Paid':(sumPayments()>0?'Partial':'Unpaid');
-    if(paid) invoice.status='Paid';
+
+    // Do NOT change invoice.status here. That dropdown is the workflow status only.
+    // Payment Status column in Google Sheets should only be Paid or Unpaid.
+    invoice.paymentStatus=paid?'Paid':'Unpaid';
   }
   function ensurePaidPaymentRow(){
     ensurePayments();
@@ -5607,7 +5616,7 @@
       invoice.payments=[];
       invoice.amountPaid=0;
       invoice.paymentStatus='Unpaid';
-      if(invoice.status==='Paid') invoice.status='Invoice';
+      
       renderAll();
       queueInvoiceAutoSave?.('markUnpaid');
       toast('Marked unpaid');
