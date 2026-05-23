@@ -1169,6 +1169,7 @@
 <!-- OPEN_SAVED_ESTIMATE_BIND_FIX_FINAL -->
 <!-- PAYMENT_MARK_PAID_AND_CLOSE_CLEAR_FINAL -->
 <!-- NO_MOJIBAKE_MOBILE_DESKTOP_SMOOTH_FINAL -->
+<!-- PAYMENT_ROWS_SWITCH_INVOICE_DOM_RESET_FINAL -->
 </head>
 
 <body>
@@ -4646,6 +4647,10 @@
     invoice=opened;
     invoice.isDraft=false;
 
+    // Hard reset payment UI between invoice switches so rows never visually carry over.
+    const paymentBox=document.getElementById('paymentsList');
+    if(paymentBox) paymentBox.innerHTML='<div class="empty" style="margin:8px">Loading payments...</div>';
+
     // Restore customer and vehicle from the selected saved row.
     applyCustomerVehicleFromInvoiceItem(item);
 
@@ -5153,7 +5158,13 @@
     if(typeof queueInvoiceAutoSave==='function') queueInvoiceAutoSave('statusChange');
   }
   function setPaymentStatus(s){invoice.paymentStatus=s;if(s==='Paid')markPaidFull(false);else renderPayment();updateInvoice()}
-  function renderPayment(){document.querySelectorAll('.payment-chip').forEach(b=>b.classList.toggle('active',b.dataset.pay===invoice.paymentStatus))}
+  function renderPayment(){
+    document.querySelectorAll('.payment-chip').forEach(b=>b.classList.toggle('active',b.dataset.pay===invoice.paymentStatus));
+    // Keep the payment row UI tied to the currently loaded invoice only.
+    // Previously this function only updated old payment chips, so when switching invoices
+    // the visible payment rows could stay from the last invoice even though invoice.payments changed.
+    renderPayments();
+  }
 
   function addLine(type){
     bindFields();
