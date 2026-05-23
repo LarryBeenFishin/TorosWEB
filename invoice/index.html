@@ -1697,6 +1697,27 @@
     if(!d) return '';
     return Number(d).toLocaleString('en-US');
   }
+  function formatDateTimeShort(value){
+    const raw=String(value||'').trim();
+    if(!raw)return '';
+
+    // Keep plain date-only values clean instead of showing midnight.
+    if(/^\d{4}-\d{2}-\d{2}$/.test(raw)){
+      const [y,m,d]=raw.split('-').map(Number);
+      return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+    }
+
+    const date=new Date(raw);
+    if(isNaN(date.getTime()))return raw;
+
+    return date.toLocaleString('en-US',{
+      month:'2-digit',
+      day:'2-digit',
+      year:'numeric',
+      hour:'numeric',
+      minute:'2-digit'
+    });
+  }
   function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
   function num(id){return Number(document.getElementById(id)?.value||0)}
 
@@ -3389,8 +3410,8 @@
       ['displayVin', invoice.vin, 'No VIN'],
       ['displayPlate', invoice.plate, 'No plate'],
       ['displayMileage', formatMileage(invoice.mileage), 'No mileage'],
-      ['displayOpenedDate', invoice.openedDate, 'No date'],
-      ['displayPromiseDate', invoice.promiseDate, 'No date']
+      ['displayOpenedDate', formatDateTimeShort(invoice.openedDate), 'No date'],
+      ['displayPromiseDate', formatDateTimeShort(invoice.promiseDate), 'No date']
     ];
     map.forEach(([id,value,fallback])=>{
       const el=document.getElementById(id);
@@ -3688,7 +3709,7 @@
       const extra=(item.lines||[]).length>4?`<br><small>+ ${(item.lines||[]).length-4} more line(s)</small>`:'';
       return `<div class="history-card">
         <strong>${esc(item.docNumber||'No document #')} · ${esc(item.status||'Estimate')}</strong>
-        <small>${new Date(item.savedAt||Date.now()).toLocaleString()}</small>
+        <small>${esc(formatDateTimeShort(item.savedAt||Date.now()))}</small>
         <div class="history-meta">
           <div><span>Total</span><b>${money(item.total||0)}</b></div>
           <div><span>Paid</span><b>${money(item.paid||0)}</b></div>
@@ -4124,7 +4145,7 @@
       const firstLine=(r.lines||[])[0]||{};
       const total=Number(r.total||r.balance||0);
       const dateText=r.savedAt||r.createdAt||r.updatedAt;
-      const displayDate=dateText ? new Date(dateText).toLocaleString() : '';
+      const displayDate=formatDateTimeShort(dateText);
       const doc=r.revisionNumber||r.docNumber||'Revision';
 
       return `<div class="history-card">
@@ -6004,7 +6025,7 @@
     if(!box)return;
     const docs=getDocs();
     if(!docs.length){box.innerHTML='<div class="empty">No saved documents yet. Saved invoices are local for now until you connect a database.</div>';return}
-    box.innerHTML=docs.slice(0,8).map(d=>`<div class="result-card" onclick="loadDocument('${d.id}')"><strong>${esc(d.docNumber||d.id)} · ${esc(d.status)}</strong><small>${esc(d.customerName||'No customer')} · ${esc(d.vehicle||'No vehicle')}</small><small>${new Date(d.updatedAt||Date.now()).toLocaleString()}</small></div>`).join('');
+    box.innerHTML=docs.slice(0,8).map(d=>`<div class="result-card" onclick="loadDocument('${d.id}')"><strong>${esc(d.docNumber||d.id)} · ${esc(d.status)}</strong><small>${esc(d.customerName||'No customer')} · ${esc(d.vehicle||'No vehicle')}</small><small>${esc(formatDateTimeShort(d.updatedAt||Date.now()))}</small></div>`).join('');
   }
   function loadDocument(id){const d=getDocs().find(x=>x.id===id);if(!d)return;invoice=d;renderAll();toast('Document loaded')}
 
@@ -6312,7 +6333,7 @@
   function renderPrint(){
     const t=calc();
     const rows=invoice.lines.map(l=>`<tr><td>${esc(l.type)}</td><td>${esc(l.description)}</td><td>${l.qty}</td><td>${money(l.cost||0)}</td><td>${money(l.price)}</td><td>${money((Number(l.qty)||0)*(Number(l.price)||0))}</td></tr>`).join('');
-    document.getElementById('printableInvoice').innerHTML=`<div class="print-brand"><div><img src="/logo.png" alt="Toro's Auto Care"><p><strong>Toro's Auto Care</strong><br>Auto Repair & Service Without the Bull</p></div><div class="print-title"><h2>${esc(invoice.status)}</h2><p><strong>${esc(invoice.docNumber)}</strong><br>${esc(invoice.openedDate||'')}</p></div></div><div class="print-grid"><div class="print-box"><h3>Customer</h3><p><strong>${esc(invoice.customerName)}</strong><br>${esc(formatPhone(invoice.customerPhone))}<br>${esc(invoice.customerEmail)}</p></div><div class="print-box"><h3>Vehicle</h3><p><strong>${esc(invoice.vehicle)}</strong><br>VIN: ${esc(invoice.vin)}<br>Plate: ${esc(invoice.plate)}<br>Mileage: ${esc(formatMileage(invoice.mileage))}</p></div></div><div class="print-box"><h3>Concern</h3><p>${esc(invoice.concern).replace(/\n/g,'<br>')}</p></div><table class="print-table"><thead><tr><th>Type</th><th>Description</th><th>Qty/Hrs</th><th>Cost</th><th>Price</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table><div class="print-totals"><div class="total-row"><span>Labor</span><strong>${money(t.labor)}</strong></div><div class="total-row"><span>Parts</span><strong>${money(t.parts)}</strong></div><div class="total-row"><span>Tax</span><strong>${money(t.tax)}</strong></div><div class="total-row grand"><span>Total</span><strong>${money(t.total)}</strong></div><div class="total-row"><span>Paid</span><strong>${money(t.paid)}</strong></div><div class="total-row"><span>Balance</span><strong>${money(t.balance)}</strong></div></div><div class="print-box" style="margin-top:16px"><h3>Recommendations</h3><p>${esc(invoice.recommendations).replace(/\n/g,'<br>')}</p></div><p style="margin-top:18px">${esc(settings.footer)}</p><div class="signature"><div class="sig-line">Customer Authorization</div><div class="sig-line">Date</div></div>`;
+    document.getElementById('printableInvoice').innerHTML=`<div class="print-brand"><div><img src="/logo.png" alt="Toro's Auto Care"><p><strong>Toro's Auto Care</strong><br>Auto Repair & Service Without the Bull</p></div><div class="print-title"><h2>${esc(invoice.status)}</h2><p><strong>${esc(invoice.docNumber)}</strong><br>${esc(formatDateTimeShort(invoice.openedDate)||'')}</p></div></div><div class="print-grid"><div class="print-box"><h3>Customer</h3><p><strong>${esc(invoice.customerName)}</strong><br>${esc(formatPhone(invoice.customerPhone))}<br>${esc(invoice.customerEmail)}</p></div><div class="print-box"><h3>Vehicle</h3><p><strong>${esc(invoice.vehicle)}</strong><br>VIN: ${esc(invoice.vin)}<br>Plate: ${esc(invoice.plate)}<br>Mileage: ${esc(formatMileage(invoice.mileage))}</p></div></div><div class="print-box"><h3>Concern</h3><p>${esc(invoice.concern).replace(/\n/g,'<br>')}</p></div><table class="print-table"><thead><tr><th>Type</th><th>Description</th><th>Qty/Hrs</th><th>Cost</th><th>Price</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table><div class="print-totals"><div class="total-row"><span>Labor</span><strong>${money(t.labor)}</strong></div><div class="total-row"><span>Parts</span><strong>${money(t.parts)}</strong></div><div class="total-row"><span>Tax</span><strong>${money(t.tax)}</strong></div><div class="total-row grand"><span>Total</span><strong>${money(t.total)}</strong></div><div class="total-row"><span>Paid</span><strong>${money(t.paid)}</strong></div><div class="total-row"><span>Balance</span><strong>${money(t.balance)}</strong></div></div><div class="print-box" style="margin-top:16px"><h3>Recommendations</h3><p>${esc(invoice.recommendations).replace(/\n/g,'<br>')}</p></div><p style="margin-top:18px">${esc(settings.footer)}</p><div class="signature"><div class="sig-line">Customer Authorization</div><div class="sig-line">Date</div></div>`;
   }
   function printInvoice(){bindFields();renderPrint();window.print()}
   function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove('show'),1800)}
