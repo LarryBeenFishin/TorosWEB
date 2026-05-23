@@ -1158,7 +1158,7 @@
             <button class="light" type="button" onclick="openNewCustomerPopup()">New Customer</button>
           </div>
           <div class="customer-card-actions" id="customerCardActions">
-            <button class="light" type="button" onclick="openPopup('customerPopup')">Edit Info</button>
+            <button class="light" type="button" onclick="openCustomerInfoPopup()">Edit Info</button>
           </div>
           <div class="customer-empty-state" id="customerEmptyState">
             <strong>No customer selected</strong>
@@ -1417,7 +1417,14 @@
           <div><label>Phone</label><input id="modalCustomerPhone" inputmode="tel" onblur="this.value=formatPhone(this.value)"></div>
           <div><label>Email</label><input id="modalCustomerEmail"></div>
           <div><label>Vehicle</label><input id="modalVehicle"></div>
-          <div><label>VIN</label><input id="modalVin"></div>
+          <div>
+            <label>VIN</label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input id="modalVin" style="flex:1;min-width:0;" oninput="this.value=this.value.toUpperCase()" placeholder="Enter VIN">
+              <button class="blue" id="decodeVinBtn" type="button" onclick="decodeModalVin()" style="min-width:78px;padding-left:10px;padding-right:10px;">Decode</button>
+            </div>
+            <div id="vinDecodeStatus" style="margin-top:5px;font-size:12px;font-weight:800;color:#64748b;min-height:16px;"></div>
+          </div>
           <div><label>Plate</label><input id="modalPlate"></div>
           <div class="full"><label>Mileage</label><input id="modalMileage" inputmode="numeric" onblur="this.value=formatMileage(this.value)"></div>
         </div>
@@ -2358,6 +2365,9 @@
       if(el) el.value='';
     });
 
+    const vinStatus=document.getElementById('vinDecodeStatus');
+    if(vinStatus) vinStatus.textContent='';
+
     const picker=document.getElementById('modalVehiclePicker');
     if(picker) picker.innerHTML='';
 
@@ -2365,6 +2375,137 @@
 
     const nameInput=document.getElementById('modalCustomerName');
     if(nameInput) setTimeout(()=>nameInput.focus(),50);
+  }
+
+  function openCustomerInfoPopup(){
+    if(typeof bindFields === 'function'){
+      try{ bindFields(); }catch(err){}
+    }
+
+    if(typeof ensureSelectedCustomerProfileFromInvoice === 'function'){
+      try{ ensureSelectedCustomerProfileFromInvoice(); }catch(err){}
+    }
+
+    const set=(id,val)=>{
+      const el=document.getElementById(id);
+      if(el) el.value=val || '';
+    };
+
+    set('modalCustomerName', invoice.customerName || '');
+    set('modalCustomerPhone', typeof formatPhone === 'function' ? formatPhone(invoice.customerPhone || '') : (invoice.customerPhone || ''));
+    set('modalCustomerEmail', invoice.customerEmail || '');
+    set('modalVehicle', invoice.vehicle || '');
+    set('modalVin', String(invoice.vin || '').toUpperCase());
+    set('modalPlate', invoice.plate || '');
+    set('modalMileage', typeof formatMileage === 'function' ? formatMileage(invoice.mileage || '') : (invoice.mileage || ''));
+
+    const vinStatus=document.getElementById('vinDecodeStatus');
+    if(vinStatus) vinStatus.textContent='';
+
+    const profile=invoice.selectedCustomerProfile || buildCustomerProfileFromInvoiceItem({
+      customerId:invoice.customerId || '',
+      customerName:invoice.customerName || '',
+      customerPhone:invoice.customerPhone || '',
+      customerEmail:invoice.customerEmail || '',
+      vehicleId:invoice.vehicleId || '',
+      vehicle:invoice.vehicle || '',
+      vin:invoice.vin || '',
+      plate:invoice.plate || '',
+      mileage:invoice.mileage || ''
+    }, invoice);
+
+    const vehicles=typeof normalizeVehicleList === 'function' ? normalizeVehicleList(profile) : [];
+    let selectedIndex=-1;
+    const currentVehicleId=String(invoice.vehicleId || '');
+    const currentVin=String(invoice.vin || '').trim().toLowerCase();
+    const currentPlate=String(invoice.plate || '').trim().toLowerCase();
+    const currentVehicle=String(invoice.vehicle || '').trim().toLowerCase();
+
+    selectedIndex=vehicles.findIndex(v=>{
+      const vid=String(v.vehicleId || v.id || '');
+      const vin=String(v.vin || '').trim().toLowerCase();
+      const plate=String(v.plate || '').trim().toLowerCase();
+      const vehicle=String(v.vehicle || '').trim().toLowerCase();
+      if(currentVehicleId && vid && currentVehicleId===vid) return true;
+      if(currentVin && vin && currentVin===vin) return true;
+      if(currentPlate && plate && currentPlate===plate) return true;
+      if(currentVehicle && vehicle && currentVehicle===vehicle) return true;
+      return false;
+    });
+
+    window.selectedModalVehicleIndex=selectedIndex;
+    window.selectedModalVehicleId=selectedIndex>=0 ? (vehicles[selectedIndex].vehicleId || vehicles[selectedIndex].id || '') : (invoice.vehicleId || '');
+
+    if(typeof renderModalVehiclePicker === 'function'){
+      renderModalVehiclePicker(Object.assign({}, profile, {vehicles}));
+    }
+
+    openPopup('customerPopup');
+  }
+
+  async function decodeModalVin(){
+    const vinInput=document.getElementById('modalVin');
+    const vehicleInput=document.getElementById('modalVehicle');
+    const status=document.getElementById('vinDecodeStatus');
+    const btn=document.getElementById('decodeVinBtn');
+
+    if(!vinInput)return;
+
+    const vin=String(vinInput.value || '').toUpperCase().replace(/[^A-Z0-9]/g,'').trim();
+    vinInput.value=vin;
+
+    if(!vin || vin.length<11){
+      if(status){ status.style.color='#af2727'; status.textContent='Enter a valid VIN first.'; }
+      if(typeof toast === 'function') toast('Enter a valid VIN first');
+      return;
+    }
+
+    if(btn){ btn.disabled=true; btn.textContent='Checking'; }
+    if(status){ status.style.color='#64748b'; status.textContent='Decoding VIN...'; }
+
+    try{
+      const url='https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended/' + encodeURIComponent(vin) + '?format=json';
+      const res=await fetch(url,{cache:'no-store'});
+      if(!res.ok) throw new Error('VIN decoder request failed');
+      const data=await res.json();
+      const result=(data && data.Results && data.Results[0]) ? data.Results[0] : null;
+      if(!result) throw new Error('No VIN data returned');
+
+      const year=(result.ModelYear || '').trim();
+      const make=(result.Make || '').trim();
+      const model=(result.Model || '').trim();
+      const trim=(result.Trim || '').trim();
+      const engineParts=[result.EngineCylinders ? result.EngineCylinders + ' Cyl' : '', result.DisplacementL ? result.DisplacementL + 'L' : ''].filter(Boolean);
+      const vehicleText=[year, make, model, trim].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+
+      if(!year && !make && !model){
+        throw new Error('VIN decoded, but year/make/model was not found');
+      }
+
+      if(vehicleInput && vehicleText) vehicleInput.value=vehicleText;
+
+      invoice.vin=vin;
+      if(vehicleText) invoice.vehicle=vehicleText;
+
+      const hiddenVin=document.getElementById('vin');
+      const hiddenVehicle=document.getElementById('vehicle');
+      if(hiddenVin) hiddenVin.value=vin;
+      if(hiddenVehicle && vehicleText) hiddenVehicle.value=vehicleText;
+
+      if(status){
+        status.style.color='#1d7f4f';
+        status.textContent='Decoded: ' + vehicleText + (engineParts.length ? ' · ' + engineParts.join(' ') : '');
+      }
+
+      if(typeof renderAll === 'function') renderAll();
+      if(typeof toast === 'function') toast('VIN decoded');
+    }catch(err){
+      console.error(err);
+      if(status){ status.style.color='#af2727'; status.textContent=err.message || 'Could not decode VIN.'; }
+      if(typeof toast === 'function') toast('Could not decode VIN');
+    }finally{
+      if(btn){ btn.disabled=false; btn.textContent='Decode'; }
+    }
   }
 
   function openCustomerPicker(){
@@ -3047,7 +3188,7 @@
       phone:formatPhone(document.getElementById('modalCustomerPhone').value),
       email:document.getElementById('modalCustomerEmail').value.trim(),
       vehicle:document.getElementById('modalVehicle').value.trim(),
-      vin:document.getElementById('modalVin').value.trim(),
+      vin:document.getElementById('modalVin').value.trim().toUpperCase(),
       plate:document.getElementById('modalPlate').value.trim(),
       mileage:formatMileage(document.getElementById('modalMileage').value),
       vehicleId:window.selectedModalVehicleId || '',
