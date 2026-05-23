@@ -1173,6 +1173,94 @@
       }
     }
 
+  
+
+    /* FULL-PAGE PROFESSIONAL PRINT SPREAD FINAL */
+    .print-page{
+      display:flex!important;
+      flex-direction:column!important;
+      width:8.5in!important;
+      height:11in!important;
+      min-height:11in!important;
+      max-height:11in!important;
+      padding:.16in!important;
+      font-size:10.5px!important;
+      line-height:1.22!important;
+      border:0!important;
+      overflow:hidden!important;
+    }
+    .print-top{
+      flex:0 0 auto!important;
+      grid-template-columns:1.05fr 1.45fr 1.05fr!important;
+      padding-bottom:5px!important;
+      margin-bottom:6px!important;
+    }
+    .print-shop-left img{width:118px!important;margin-bottom:4px!important}
+    .print-shop-left div{font-size:9.5px!important}
+    .print-shop-center{font-size:10.5px!important;line-height:1.22!important}
+    .print-shop-center strong{font-size:13px!important}
+    .print-doc-title{font-size:14px!important}
+    .print-doc-number{min-width:112px!important;padding:3px 10px!important;font-size:11px!important}
+    .print-doc-meta{font-size:9px!important}
+    .print-info-band{
+      flex:0 0 auto!important;
+      grid-template-columns:1.12fr 1.28fr .95fr!important;
+      gap:14px!important;
+      padding:5px 0 6px!important;
+    }
+    .print-info-title{font-size:19px!important;margin-bottom:4px!important}
+    .print-label{font-size:9.5px!important}
+    .print-info-line{grid-template-columns:98px 1fr!important;margin:2px 0!important}
+    .print-info-right .print-info-line{grid-template-columns:88px 1fr!important}
+    .print-split{
+      flex:1 1 auto!important;
+      min-height:0!important;
+      height:auto!important;
+      display:grid!important;
+      grid-template-columns:1fr 1fr!important;
+      border-bottom:2px solid #000!important;
+      overflow:hidden!important;
+    }
+    .print-half{min-height:0!important;overflow:hidden!important}
+    .print-half:first-child{border-right:1.5px solid #000!important}
+    .print-half-title{grid-template-columns:1fr 50px 60px 64px!important;font-size:9.5px!important}
+    .print-half-title.labor{grid-template-columns:1fr 76px!important}
+    .print-half-title span{padding:4px 5px!important}
+    .print-line{grid-template-columns:1fr 50px 60px 64px!important;font-size:9.5px!important;min-height:18px!important}
+    .print-line.labor{grid-template-columns:1fr 76px!important}
+    .print-line span{padding:3px 5px!important}
+    .print-section-note{font-size:9.5px!important;padding:5px!important}
+    .print-bottom{
+      flex:0 0 auto!important;
+      display:grid!important;
+      grid-template-columns:minmax(0,1fr) 2.55in!important;
+      gap:14px!important;
+      margin-top:6px!important;
+      align-items:start!important;
+    }
+    .print-legal{font-size:8.8px!important;line-height:1.24!important}
+    .print-legal strong{font-size:9.2px!important}
+    .print-signatures{margin-top:20px!important;grid-template-columns:1fr 1.25in!important}
+    .print-totals-mini{font-size:9.5px!important}
+    .print-total-row{grid-template-columns:1fr .92in!important}
+    .print-total-row span,.print-total-row strong{padding:4px 7px!important}
+    .print-total-row.grand{font-size:13px!important}
+    .print-payment-note{font-size:8.8px!important;margin-top:5px!important}
+    .print-footer-note{
+      flex:0 0 auto!important;
+      margin-top:auto!important;
+      padding-top:6px!important;
+      font-size:8.5px!important;
+    }
+    @media print{
+      @page{size:letter;margin:0!important}
+      html,body{width:8.5in!important;height:11in!important;margin:0!important;padding:0!important}
+      body.print-invoice-only .print-shell{width:8.5in!important;height:11in!important;margin:0!important;padding:0!important;overflow:hidden!important}
+      body.print-invoice-only .print-page{width:8.5in!important;height:11in!important;min-height:11in!important;max-height:11in!important;padding:.16in!important;margin:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+      body.print-invoice-only .print-split{flex:1 1 auto!important;min-height:0!important;height:auto!important}
+      body.print-invoice-only .print-footer-note{margin-top:auto!important}
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
