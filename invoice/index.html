@@ -1059,6 +1059,64 @@
       }
     }
 
+
+    /* REVISION POPUP: make Review Revision behave exactly like Jobs / Lines */
+    .revision-review-modal{
+      width:min(1240px,96vw)!important;
+      max-height:92vh!important;
+      display:flex!important;
+      flex-direction:column!important;
+      overflow:hidden!important;
+    }
+    .revision-review-modal .modal-body{
+      flex:1 1 auto!important;
+      min-height:0!important;
+      overflow:hidden!important;
+      display:flex!important;
+      flex-direction:column!important;
+      gap:10px!important;
+    }
+    .revision-review-toolbar{
+      flex:0 0 auto!important;
+    }
+    .revision-review-lines{
+      flex:1 1 auto!important;
+      min-height:280px!important;
+      overflow:auto!important;
+      border:1px solid var(--line)!important;
+      border-radius:12px!important;
+      background:#fff!important;
+    }
+    .revision-line-table{
+      width:100%!important;
+      min-width:820px!important;
+      border-collapse:collapse!important;
+    }
+    .revision-line-table th{
+      position:sticky!important;
+      top:0!important;
+      z-index:2!important;
+    }
+    .revision-line-table td{
+      vertical-align:top!important;
+    }
+    .revision-line-table input,
+    .revision-line-table select{
+      height:30px!important;
+      min-height:30px!important;
+      display:block!important;
+    }
+    .revision-line-table .line-total{
+      text-align:right!important;
+      font-weight:900!important;
+      padding-top:11px!important;
+      white-space:nowrap!important;
+      color:var(--navy)!important;
+    }
+    .revision-review-totals{
+      flex:0 0 auto!important;
+    }
+
   </style>
 <!-- patched-new-close-flow-v2 -->
 <!-- patched-header-new-close-final -->
@@ -1506,11 +1564,22 @@
           <div class="mini-row"><button class="light" type="button" onclick="openProfitLoss('revision')">Profit / Loss</button><div class="revision-autosave-note">Auto-saves while editing</div></div>
         </div>
 
-        <div class="revision-review-lines">
-          <div class="revision-review-head">
-            <div></div><div>Type</div><div>Description</div><div>Qty/Hrs</div><div>Cost</div><div>Price</div><div>Total</div><div></div>
-          </div>
-          <div id="revisionReviewLines"></div>
+        <div class="line-wrap revision-review-lines">
+          <table class="line-table revision-line-table">
+            <thead>
+              <tr>
+                <th class="drag-col"></th>
+                <th class="type-col">Type</th>
+                <th>Description</th>
+                <th class="qty-col">Qty/Hrs</th>
+                <th class="cost-col">Cost</th>
+                <th class="price-col">Price</th>
+                <th class="total-col">Total</th>
+                <th class="remove-col"></th>
+              </tr>
+            </thead>
+            <tbody id="revisionReviewLinesBody"></tbody>
+          </table>
         </div>
 
         <div class="revision-review-totals" id="revisionReviewTotals"></div>
@@ -3789,7 +3858,7 @@
     revisionReviewLines=(revisionReviewLines||[]).map(l=>Object.assign({id:uid(),type:'Labor',description:'',qty:0,cost:0,price:0,taxable:false},l,{id:l.id||uid()}));
 
     if(!revisionReviewLines.length){
-      body.innerHTML='<div class="empty" style="margin:10px">No lines were saved with this revision.</div>';
+      body.innerHTML='<tr><td colspan="8"><div class="empty" style="margin:10px">No lines were saved with this revision.</div></td></tr>';
       renderRevisionReviewTotals();
       return;
     }
