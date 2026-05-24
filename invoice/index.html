@@ -6722,6 +6722,12 @@
     }
 
     const maxRows=Math.max(partsLines.length,laborLines.length,1);
+
+    // Print pagination:
+    // Keep the original parts-left / labor-right look, but do NOT intentionally
+    // leave a half-empty continuation page just to make the final page bigger.
+    // Continuation pages should fill naturally, then the final page carries the
+    // remaining rows plus totals/signature.
     const onePageLimit=18;
     const continuedLimit=27;
     const pages=[];
@@ -6732,9 +6738,7 @@
     }else{
       while(i < maxRows){
         const remaining=maxRows-i;
-        let take=continuedLimit;
-        if(remaining <= continuedLimit) take=remaining;
-        if(remaining > continuedLimit && remaining < continuedLimit + 8) take=Math.max(18, remaining-8);
+        const take=Math.min(continuedLimit, remaining);
         pages.push({start:i,end:i+take});
         i += take;
       }
@@ -7171,6 +7175,51 @@
     font-size:9.5px!important;
     margin-top:auto!important;
     padding:.13in .20in .10in!important;
+  }
+}
+</style>
+
+
+<style>
+/* FINAL CONTINUATION PAGE FIX: keep parts/labor split, but let continuation pages fill instead of ending halfway */
+@media print{
+  @page{size:letter;margin:.45in!important}
+
+  body.print-invoice-only .print-page{
+    width:7.42in!important;
+    max-width:7.42in!important;
+    min-height:10.04in!important;
+    margin:0 auto!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+
+  body.print-invoice-only .print-page-continued .print-split{
+    flex:1 1 auto!important;
+    min-height:8.35in!important;
+    height:auto!important;
+    margin:0 .16in!important;
+    overflow:hidden!important;
+  }
+
+  body.print-invoice-only .print-page-final .print-split{
+    flex:1 1 auto!important;
+    min-height:5.95in!important;
+    height:auto!important;
+    margin:0 .16in!important;
+    overflow:hidden!important;
+  }
+
+  body.print-invoice-only .print-continued-note{
+    margin-top:auto!important;
+    padding:.06in .16in .04in!important;
+    text-align:right!important;
+  }
+
+  body.print-invoice-only .print-line{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
   }
 }
 </style>
