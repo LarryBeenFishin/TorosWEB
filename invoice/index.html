@@ -6930,21 +6930,29 @@
     // authorization, signatures, totals, and payment summary.
     const firstPageLimit = 18;
     const continuationPageLimit = 18;
-    const finalPageLimit = 9;
+    const finalPageLimit = 15;
     const pages=[];
     let i=0;
 
+    // Balanced hard pagination:
+    // - Page 1 takes a full safe amount of rows.
+    // - Every continuation page takes the same full safe amount of rows.
+    // - Only the final page reserves room for totals/terms/signature.
+    // This prevents a skinny middle page followed by a fuller final page.
     if(maxRows <= finalPageLimit){
       pages.push({start:0,end:maxRows,final:true});
     }else{
       let limit = firstPageLimit;
       while((maxRows - i) > finalPageLimit){
-        const take = Math.min(limit, maxRows - i - finalPageLimit);
+        const remaining = maxRows - i;
+        const take = Math.min(limit, remaining);
         pages.push({start:i,end:i+take,final:false});
         i += take;
         limit = continuationPageLimit;
       }
-      pages.push({start:i,end:maxRows,final:true});
+      if(i < maxRows){
+        pages.push({start:i,end:maxRows,final:true});
+      }
     }
 
     const totalPages=pages.length;
