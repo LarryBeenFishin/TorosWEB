@@ -6754,7 +6754,6 @@ function startNewSmsMessage() {
   showSmsConversationView();
 }
 
-const TOROS_SMS_TEMPLATE_STORAGE_KEY = "torosSmsTemplatesV1";
 const TOROS_DEFAULT_SMS_TEMPLATES = [
   {
     id: "appointment-confirmed",
@@ -6783,16 +6782,100 @@ const TOROS_DEFAULT_SMS_TEMPLATES = [
   }
 ];
 
-function getSmsTemplates() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(TOROS_SMS_TEMPLATE_STORAGE_KEY) || "null");
-    if (Array.isArray(saved) && saved.length) return saved;
-  } catch (err) {}
-  return TOROS_DEFAULT_SMS_TEMPLATES.slice();
+let torosSmsTemplatesCache = TOROS_DEFAULT_SMS_TEMPLATES.slice();
+let torosSmsTemplatesLoaded = false;
+let torosSmsTemplatesLoading = false;
+
+function normalizeSmsTemplate(template) {
+  template = template || {};
+  return {
+    id: template.id || template.templateId || ("sms-template-" + Date.now() + "-" + Math.random().toString(16).slice(2)),
+    templateId: template.templateId || template.id || "",
+    name: template.name || template.title || "Untitled Template",
+    body: template.body || template.message || ""
+  };
 }
 
-function saveSmsTemplates(templates) {
-  localStorage.setItem(TOROS_SMS_TEMPLATE_STORAGE_KEY, JSON.stringify(templates || []));
+function getSmsTemplates() {
+  return Array.isArray(torosSmsTemplatesCache) && torosSmsTemplatesCache.length
+    ? torosSmsTemplatesCache
+    : TOROS_DEFAULT_SMS_TEMPLATES.slice();
+}
+
+async function loadSmsTemplatesFromSheet(options) {
+  options = options || {};
+
+  if (torosSmsTemplatesLoading && !options.force) return getSmsTemplates();
+  torosSmsTemplatesLoading = true;
+
+  try {
+    const response = await fetch(ADMIN_API + "?action=getSmsTemplates&cacheBust=" + Date.now(), {
+      headers: adminAuthHeaders(),
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not load text templates: HTTP " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (data && data.status === "success" && Array.isArray(data.templates)) {
+      torosSmsTemplatesCache = data.templates.map(normalizeSmsTemplate).filter(template => template.name && template.body);
+      torosSmsTemplatesLoaded = true;
+      renderSmsTemplateDropdown();
+      if (document.getElementById("smsTemplateModal")?.classList.contains("open")) {
+        renderSmsTemplateSettingsList();
+      }
+      return torosSmsTemplatesCache;
+    }
+
+    throw new Error((data && data.message) || "Text template response was invalid.");
+  } catch (err) {
+    console.error(err);
+    if (!options.silent) showToast("Could not load text templates. Using saved defaults for now.", "error", 2500);
+    renderSmsTemplateDropdown();
+    return getSmsTemplates();
+  } finally {
+    torosSmsTemplatesLoading = false;
+  }
+}
+
+async function saveSmsTemplateToSheet(template) {
+  const response = await fetch("/api/admin-appointment", {
+    method: "POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({
+      action: "saveSmsTemplate",
+      template: template
+    })
+  });
+
+  const data = await response.json();
+  if (!data || data.status !== "success") {
+    throw new Error((data && data.message) || "Could not save template.");
+  }
+
+  return data.template || template;
+}
+
+async function deleteSmsTemplateFromSheet(templateId) {
+  const response = await fetch("/api/admin-appointment", {
+    method: "POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({
+      action: "deleteSmsTemplate",
+      templateId: templateId,
+      id: templateId
+    })
+  });
+
+  const data = await response.json();
+  if (!data || data.status !== "success") {
+    throw new Error((data && data.message) || "Could not delete template.");
+  }
+
+  return data;
 }
 
 function renderSmsTemplateDropdown() {
@@ -6823,12 +6906,13 @@ function useSmsTemplate() {
   }
 }
 
-function openSmsTemplateSettings() {
+async function openSmsTemplateSettings() {
   const modal = document.getElementById("smsTemplateModal");
   if (!modal) return;
-  renderSmsTemplateSettingsList();
-  clearSmsTemplateEditor();
   modal.classList.add("open");
+  clearSmsTemplateEditor();
+  renderSmsTemplateSettingsList();
+  await loadSmsTemplatesFromSheet({ force: true, silent: true });
 }
 
 function closeSmsTemplateSettings() {
@@ -6853,6 +6937,11 @@ function renderSmsTemplateSettingsList() {
   if (!list) return;
 
   const templates = getSmsTemplates();
+
+  if (torosSmsTemplatesLoading && !torosSmsTemplatesLoaded) {
+    list.innerHTML = '<div class="empty">Loading templates from Google Sheets...</div>';
+    return;
+  }
 
   if (!templates.length) {
     list.innerHTML = '<div class="empty">No templates saved yet.</div>';
@@ -6887,7 +6976,7 @@ function editSmsTemplate(templateId) {
   if (body) body.value = template.body || "";
 }
 
-function saveSmsTemplateFromSettings() {
+async function saveSmsTemplateFromSettings() {
   const idInput = document.getElementById("smsTemplateEditingId");
   const nameInput = document.getElementById("smsTemplateNameInput");
   const bodyInput = document.getElementById("smsTemplateBodyInput");
@@ -6901,35 +6990,46 @@ function saveSmsTemplateFromSettings() {
     return;
   }
 
-  const templates = getSmsTemplates();
-
-  if (editingId) {
-    const index = templates.findIndex(item => String(item.id) === String(editingId));
-    if (index !== -1) {
-      templates[index] = { id: editingId, name, body };
-    }
-  } else {
-    templates.push({
-      id: "sms-template-" + Date.now(),
+  try {
+    const saved = await saveSmsTemplateToSheet({
+      id: editingId || ("sms-template-" + Date.now()),
+      templateId: editingId || "",
       name,
-      body
+      body,
+      message: body
     });
-  }
 
-  saveSmsTemplates(templates);
-  renderSmsTemplateDropdown();
-  renderSmsTemplateSettingsList();
-  clearSmsTemplateEditor();
+    const normalized = normalizeSmsTemplate(saved);
+    const templates = getSmsTemplates().filter(item => String(item.id) !== String(normalized.id));
+    templates.push(normalized);
+    torosSmsTemplatesCache = templates;
+
+    await loadSmsTemplatesFromSheet({ force: true, silent: true });
+    renderSmsTemplateDropdown();
+    renderSmsTemplateSettingsList();
+    clearSmsTemplateEditor();
+    showToast("Template saved to Google Sheets.", "success", 1800);
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Could not save the template.");
+  }
 }
 
-function deleteSmsTemplate(templateId) {
+async function deleteSmsTemplate(templateId) {
   if (!confirm("Delete this text template?")) return;
 
-  const templates = getSmsTemplates().filter(item => String(item.id) !== String(templateId));
-  saveSmsTemplates(templates);
-  renderSmsTemplateDropdown();
-  renderSmsTemplateSettingsList();
-  clearSmsTemplateEditor();
+  try {
+    await deleteSmsTemplateFromSheet(templateId);
+    torosSmsTemplatesCache = getSmsTemplates().filter(item => String(item.id) !== String(templateId));
+    await loadSmsTemplatesFromSheet({ force: true, silent: true });
+    renderSmsTemplateDropdown();
+    renderSmsTemplateSettingsList();
+    clearSmsTemplateEditor();
+    showToast("Template deleted.", "success", 1800);
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Could not delete the template.");
+  }
 }
 
 function escapeHtml(value) {
@@ -9460,7 +9560,10 @@ window.sendIncomingSmsPush = async function () { return; };
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    try { renderSmsTemplateDropdown(); } catch (err) {}
+    try {
+      renderSmsTemplateDropdown();
+      loadSmsTemplatesFromSheet({ silent: true });
+    } catch (err) {}
   });
 </script>
 </body>
