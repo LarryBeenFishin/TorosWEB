@@ -3922,28 +3922,71 @@ body.toros-admin-logged-in #openTextPanelBtn {
       location.reload();
     }
 
-    async function loadAppointments() {
+    // Live appointment refresh state. This prevents a temporary idle/network/auth hiccup
+    // from wiping the calendar blank while still keeping the dashboard updated.
+    let lastAppointmentLoadAt = 0;
+    let appointmentLoadInFlight = false;
+    let appointmentLoadFailCount = 0;
+
+    function isValidAppointmentsResponse(data) {
+      if (Array.isArray(data)) return true;
+      if (!data || typeof data !== "object") return false;
+      if (Array.isArray(data.appointments)) return true;
+      return false;
+    }
+
+    async function loadAppointments(options) {
+      options = options || {};
+      const silent = options.silent === true;
+
+      if (appointmentLoadInFlight && !options.force) return;
+      appointmentLoadInFlight = true;
+
       try {
-        const response = await fetch(ADMIN_API + "?action=getAppointments&cacheBust=" + Date.now(), { headers: adminAuthHeaders() });
+        const response = await fetch(ADMIN_API + "?action=getAppointments&cacheBust=" + Date.now(), {
+          headers: adminAuthHeaders(),
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error("Appointment refresh failed: HTTP " + response.status);
+        }
+
         const data = await response.json();
 
-        appointments = Array.isArray(data) ? data : data.appointments || [];
+        if (!isValidAppointmentsResponse(data)) {
+          // Most important fix: never replace current appointments with [] just because
+          // the backend returned an auth/error object during idle time.
+          throw new Error((data && data.message) || "Appointment refresh returned invalid data.");
+        }
+
+        appointments = Array.isArray(data) ? data : data.appointments;
+        appointmentLoadFailCount = 0;
+        lastAppointmentLoadAt = Date.now();
 
         saveCachedAppointments();
         renderCalendar();
         renderLists();
       } catch (error) {
+        appointmentLoadFailCount += 1;
         console.error(error);
 
+        // Keep whatever is already on screen. Do not blank the calendar after idle.
         if (!appointments.length) {
           const hasCache = loadCachedAppointments();
 
-          if (!hasCache) {
-            document.getElementById("todayAppointments").innerHTML = "Could not load appointments.";
-            document.getElementById("upcomingAppointments").innerHTML = "Could not load appointments.";
+          if (!hasCache && !silent) {
+            document.getElementById("todayAppointments").innerHTML = "Could not load appointments. Retrying automatically...";
+            document.getElementById("upcomingAppointments").innerHTML = "Could not load appointments. Retrying automatically...";
             renderCalendar();
           }
         }
+
+        if (!silent && appointmentLoadFailCount >= 2) {
+          showToast("Connection paused. Keeping current appointments and retrying...", "error", 2500);
+        }
+      } finally {
+        appointmentLoadInFlight = false;
       }
     }
 
@@ -4276,7 +4319,7 @@ body.toros-admin-logged-in #openTextPanelBtn {
           showToast("Appointment deleted.", "success", 2500);
           selectedAppointment = null;
           closeModal();
-          await loadAppointments(true);
+          await loadAppointments({ force: true });
         } else {
           alert(result.message || "Could not delete appointment.");
         }
@@ -6232,12 +6275,46 @@ function playNotificationSound() {
 function startAppointmentAutoRefresh() {
   if (appointmentRefreshTimer) return;
 
+  // Initial refresh, then keep it live. 15 seconds is responsive without hammering Apps Script.
+  if (localStorage.getItem("torosAdminLoggedIn") === "true") {
+    loadAppointments({ silent: true, force: true });
+  }
+
   appointmentRefreshTimer = setInterval(() => {
     if (localStorage.getItem("torosAdminLoggedIn") === "true") {
-      loadAppointments();
+      loadAppointments({ silent: true });
     }
-  }, 30000);
+  }, 15000);
 }
+
+function stopAppointmentAutoRefresh() {
+  if (appointmentRefreshTimer) {
+    clearInterval(appointmentRefreshTimer);
+    appointmentRefreshTimer = null;
+  }
+}
+
+function refreshAppointmentsWhenAwake() {
+  if (localStorage.getItem("torosAdminLoggedIn") !== "true") return;
+  loadAppointments({ silent: true, force: true });
+}
+
+// When a desktop sleeps or a mobile browser pauses the tab, refresh as soon as it wakes.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshAppointmentsWhenAwake();
+});
+window.addEventListener("focus", refreshAppointmentsWhenAwake);
+window.addEventListener("online", refreshAppointmentsWhenAwake);
+
+// Extra safety: if the computer wakes after a long idle, force a refresh immediately.
+let torosLastWakeCheck = Date.now();
+setInterval(() => {
+  const now = Date.now();
+  if (now - torosLastWakeCheck > 45000) {
+    refreshAppointmentsWhenAwake();
+  }
+  torosLastWakeCheck = now;
+}, 20000);
 
 function startSmsGlobalPolling() {
   if (smsGlobalTimer) return;
