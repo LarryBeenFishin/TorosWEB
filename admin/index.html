@@ -3795,8 +3795,13 @@ body.toros-admin-logged-in #openTextPanelBtn {
 
 
     let appointments = [];
-    let currentDate = new Date();
+    let currentDate = getCalendarMonthDate(new Date());
     let selectedAppointment = null;
+
+    function getCalendarMonthDate(date) {
+      const d = date instanceof Date && !isNaN(date) ? date : new Date();
+      return new Date(d.getFullYear(), d.getMonth(), 1);
+    }
 
     const appointmentTimes = [
       "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM",
@@ -4246,65 +4251,24 @@ body.toros-admin-logged-in #openTextPanelBtn {
     }
 
 
-    function appointmentDeleteKey(app) {
-      if (!app) return "";
-      const eventId = String(app.eventId || app.appointmentId || app.id || "").trim();
-      if (eventId) return "event:" + eventId;
-
-      return [
-        app.name || app.customer || app.customerName || "",
-        app.phone || app.customerPhone || "",
-        formatAppointmentDate(app),
-        app.time || "",
-        app.service || app.reason || ""
-      ].join("|").toLowerCase();
-    }
-
-    function removeAppointmentLocally(deletedAppointment) {
-      const deleteKey = appointmentDeleteKey(deletedAppointment);
-      const deletedEventId = String(deletedAppointment?.eventId || deletedAppointment?.appointmentId || deletedAppointment?.id || "").trim();
-      const deletedPhone = String(deletedAppointment?.phone || deletedAppointment?.customerPhone || "").replace(/\D/g, "").slice(-10);
-      const deletedDate = formatAppointmentDate(deletedAppointment);
-      const deletedTime = String(deletedAppointment?.time || "").trim().toLowerCase();
-
-      appointments = (appointments || []).filter(function(app) {
-        const appKey = appointmentDeleteKey(app);
-        const appEventId = String(app.eventId || app.appointmentId || app.id || "").trim();
-        const appPhone = String(app.phone || app.customerPhone || "").replace(/\D/g, "").slice(-10);
-        const appDate = formatAppointmentDate(app);
-        const appTime = String(app.time || "").trim().toLowerCase();
-
-        if (deletedEventId && appEventId && deletedEventId === appEventId) return false;
-        if (deleteKey && appKey && deleteKey === appKey) return false;
-        if (deletedPhone && appPhone && deletedPhone === appPhone && deletedDate && appDate === deletedDate && deletedTime && appTime === deletedTime) return false;
-
-        return true;
-      });
-
-      saveCachedAppointments();
-      renderCalendar();
-      renderLists();
-    }
-
     async function deleteSelectedAppointment() {
       if (!selectedAppointment) {
         alert("No appointment selected.");
         return;
       }
 
-      const appointmentToDelete = Object.assign({}, selectedAppointment);
-      const customerName = appointmentToDelete.name || appointmentToDelete.customer || "this customer";
-      const confirmed = confirm(`Delete the appointment for ${customerName}? This removes it from the admin calendar, Google Calendar, and Google Sheets.`);
+      const customerName = selectedAppointment.name || selectedAppointment.customer || "this customer";
+      const confirmed = confirm(`Delete the appointment for ${customerName}? This removes it from the admin calendar and Google Calendar.`);
       if (!confirmed) return;
 
       const payload = {
         action: "deleteAppointment",
-        eventId: appointmentToDelete.eventId || appointmentToDelete.appointmentId || appointmentToDelete.id || "",
-        appointmentId: appointmentToDelete.appointmentId || appointmentToDelete.id || appointmentToDelete.eventId || "",
-        name: appointmentToDelete.name || appointmentToDelete.customer || appointmentToDelete.customerName || "",
-        phone: appointmentToDelete.phone || appointmentToDelete.customerPhone || "",
-        date: formatAppointmentDate(appointmentToDelete),
-        time: appointmentToDelete.time || ""
+        eventId: selectedAppointment.eventId || selectedAppointment.appointmentId || selectedAppointment.id || "",
+        appointmentId: selectedAppointment.appointmentId || selectedAppointment.id || selectedAppointment.eventId || "",
+        name: selectedAppointment.name || selectedAppointment.customer || selectedAppointment.customerName || "",
+        phone: selectedAppointment.phone || selectedAppointment.customerPhone || "",
+        date: formatAppointmentDate(selectedAppointment),
+        time: selectedAppointment.time || ""
       };
 
       try {
@@ -4314,14 +4278,7 @@ body.toros-admin-logged-in #openTextPanelBtn {
           showToast("Appointment deleted.", "success", 2500);
           selectedAppointment = null;
           closeModal();
-
-          // Update the screen immediately so the deleted appointment does not stay visible.
-          removeAppointmentLocally(appointmentToDelete);
-
-          // Then do a fresh backend pull to confirm Calendar + Sheets are clean.
-          setTimeout(function() {
-            loadAppointments().catch(function(err) { console.error(err); });
-          }, 350);
+          await loadAppointments(true);
         } else {
           alert(result.message || "Could not delete appointment.");
         }
@@ -4331,6 +4288,7 @@ body.toros-admin-logged-in #openTextPanelBtn {
       }
     }
 
+    
     function openInvoiceForSelectedAppointment() {
       if (!selectedAppointment) {
         alert("No appointment selected.");
@@ -4464,12 +4422,12 @@ body.toros-admin-logged-in #openTextPanelBtn {
     }
 
     function changeMonth(amount) {
-      currentDate.setMonth(currentDate.getMonth() + amount);
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + amount, 1);
       renderCalendar();
     }
 
     function goToToday() {
-      currentDate = new Date();
+      currentDate = getCalendarMonthDate(new Date());
       renderCalendar();
     }
 
