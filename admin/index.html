@@ -4651,14 +4651,12 @@ body.toros-admin-logged-in #openTextPanelBtn {
             </div>
           </div>
 
-          <label class="sms-template-label">Quick Templates</label>
+          <div class="sms-template-topline">
+            <label class="sms-template-label">Quick Templates</label>
+            <button type="button" id="smsTemplateSettingsBtn" onclick="openSmsTemplateSettings()">Settings</button>
+          </div>
           <select id="smsTemplate" onchange="useSmsTemplate()">
             <option value="">Choose a template</option>
-            <option value="Hi, this is Toro's Auto Care. Your appointment has been confirmed. Reply here if you have any questions.">Appointment Confirmed</option>
-            <option value="Hi, this is Toro's Auto Care. Your vehicle inspection is ready. Please review it when you have a chance.">Inspection Ready</option>
-            <option value="Hi, this is Toro's Auto Care. Your vehicle is ready for pickup. Thank you!">Vehicle Ready</option>
-            <option value="Hi, this is Toro's Auto Care. Just checking in to see if you had any questions about your estimate.">Estimate Follow-Up</option>
-            <option value="Thank you for choosing Toro's Auto Care. If you had a great experience, we would really appreciate a Google review.">Review Request</option>
           </select>
         </div>
 
@@ -4678,6 +4676,33 @@ body.toros-admin-logged-in #openTextPanelBtn {
           <div id="smsStatus"></div>
         </div>
       </section>
+    </div>
+  </div>
+</div>
+
+<div id="smsTemplateModal" class="sms-template-modal-overlay">
+  <div class="sms-template-modal">
+    <div class="sms-template-modal-head">
+      <div>
+        <h2>Text Message Templates</h2>
+        <p>Add, edit, or delete quick SMS templates.</p>
+      </div>
+      <button type="button" class="sms-template-close" onclick="closeSmsTemplateSettings()" aria-label="Close">X</button>
+    </div>
+
+    <div class="sms-template-modal-body">
+      <div class="sms-template-list" id="smsTemplateList"></div>
+
+      <div class="sms-template-editor">
+        <h3 id="smsTemplateEditorTitle">Add Template</h3>
+        <input id="smsTemplateNameInput" placeholder="Template name, example: Vehicle Ready">
+        <textarea id="smsTemplateBodyInput" placeholder="Template message..."></textarea>
+        <input type="hidden" id="smsTemplateEditingId">
+        <div class="sms-template-editor-actions">
+          <button type="button" class="success-btn" onclick="saveSmsTemplateFromSettings()">Save Template</button>
+          <button type="button" class="light-btn" onclick="clearSmsTemplateEditor()">Clear</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -6081,7 +6106,153 @@ body.toros-admin-logged-in #openTextPanelBtn {
     .admin-action-grid .admin-action-card:nth-child(7) { animation-delay: 0.21s; }
 
 
-  </style>
+  
+
+  /* SMS template settings */
+  .sms-template-topline{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:8px;
+  }
+  .sms-template-topline .sms-template-label{
+    margin:0!important;
+  }
+  #smsTemplateSettingsBtn{
+    background:#eef3fa;
+    color:#163051;
+    border:1px solid #d8dee9;
+    border-radius:10px;
+    padding:7px 10px;
+    font-size:12px;
+    min-height:32px;
+  }
+  #smsTemplateSettingsBtn:hover{
+    background:#dfe8f4;
+  }
+  .sms-template-modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.58);
+    z-index:30000;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+  }
+  .sms-template-modal-overlay.open{
+    display:flex;
+  }
+  .sms-template-modal{
+    width:min(780px,100%);
+    max-height:90vh;
+    overflow:hidden;
+    background:#fff;
+    border-radius:18px;
+    box-shadow:0 24px 80px rgba(0,0,0,.35);
+    display:flex;
+    flex-direction:column;
+  }
+  .sms-template-modal-head{
+    background:#163051;
+    color:#fff;
+    padding:16px 18px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .sms-template-modal-head h2{
+    margin:0 0 4px;
+    font-size:22px;
+  }
+  .sms-template-modal-head p{
+    margin:0;
+    color:rgba(255,255,255,.78);
+    font-size:13px;
+  }
+  .sms-template-close{
+    width:38px;
+    height:38px;
+    padding:0;
+    border-radius:10px;
+    background:rgba(255,255,255,.14);
+    color:#fff;
+  }
+  .sms-template-modal-body{
+    padding:16px;
+    display:grid;
+    grid-template-columns:minmax(220px,.85fr) minmax(280px,1.15fr);
+    gap:14px;
+    overflow:auto;
+  }
+  .sms-template-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .sms-template-row{
+    border:1px solid #d8dee9;
+    background:#f8fbff;
+    border-radius:12px;
+    padding:10px;
+  }
+  .sms-template-row strong{
+    display:block;
+    color:#163051;
+    font-size:14px;
+    margin-bottom:4px;
+  }
+  .sms-template-row small{
+    display:block;
+    color:#60708a;
+    line-height:1.3;
+    font-size:12px;
+    margin-bottom:8px;
+  }
+  .sms-template-row-actions{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+  }
+  .sms-template-row-actions button{
+    min-height:30px;
+    padding:7px 9px;
+    font-size:12px;
+    border-radius:9px;
+  }
+  .sms-template-editor{
+    border:1px solid #d8dee9;
+    border-radius:14px;
+    padding:14px;
+    background:#fff;
+  }
+  .sms-template-editor h3{
+    margin:0 0 10px;
+    color:#163051;
+  }
+  .sms-template-editor input,
+  .sms-template-editor textarea{
+    margin-bottom:10px;
+  }
+  .sms-template-editor textarea{
+    min-height:150px;
+  }
+  .sms-template-editor-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  @media(max-width:760px){
+    .sms-template-modal-body{
+      grid-template-columns:1fr;
+    }
+    .sms-template-modal{
+      max-height:92vh;
+    }
+  }
+</style>
 
 <script>
 let smsMessages = [];
@@ -6583,12 +6754,191 @@ function startNewSmsMessage() {
   showSmsConversationView();
 }
 
+const TOROS_SMS_TEMPLATE_STORAGE_KEY = "torosSmsTemplatesV1";
+const TOROS_DEFAULT_SMS_TEMPLATES = [
+  {
+    id: "appointment-confirmed",
+    name: "Appointment Confirmed",
+    body: "Hi, this is Toro's Auto Care. Your appointment has been confirmed. Reply here if you have any questions."
+  },
+  {
+    id: "inspection-ready",
+    name: "Inspection Ready",
+    body: "Hi, this is Toro's Auto Care. Your vehicle inspection is ready. Please review it when you have a chance."
+  },
+  {
+    id: "vehicle-ready",
+    name: "Vehicle Ready",
+    body: "Hi, this is Toro's Auto Care. Your vehicle is ready for pickup. Thank you!"
+  },
+  {
+    id: "estimate-follow-up",
+    name: "Estimate Follow-Up",
+    body: "Hi, this is Toro's Auto Care. Just checking in to see if you had any questions about your estimate."
+  },
+  {
+    id: "review-request",
+    name: "Review Request",
+    body: "Thank you for choosing Toro's Auto Care. If you had a great experience, we would really appreciate a Google review."
+  }
+];
+
+function getSmsTemplates() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TOROS_SMS_TEMPLATE_STORAGE_KEY) || "null");
+    if (Array.isArray(saved) && saved.length) return saved;
+  } catch (err) {}
+  return TOROS_DEFAULT_SMS_TEMPLATES.slice();
+}
+
+function saveSmsTemplates(templates) {
+  localStorage.setItem(TOROS_SMS_TEMPLATE_STORAGE_KEY, JSON.stringify(templates || []));
+}
+
+function renderSmsTemplateDropdown() {
+  const select = document.getElementById("smsTemplate");
+  if (!select) return;
+
+  const currentValue = select.value;
+  const templates = getSmsTemplates();
+
+  select.innerHTML = '<option value="">Choose a template</option>';
+  templates.forEach(template => {
+    const option = document.createElement("option");
+    option.value = template.body || "";
+    option.textContent = template.name || "Untitled Template";
+    select.appendChild(option);
+  });
+
+  if ([...select.options].some(option => option.value === currentValue)) {
+    select.value = currentValue;
+  }
+}
+
 function useSmsTemplate() {
   const template = document.getElementById("smsTemplate").value;
   if (template) {
     document.getElementById("smsMessage").value = template;
     autoGrowSmsMessageBox();
   }
+}
+
+function openSmsTemplateSettings() {
+  const modal = document.getElementById("smsTemplateModal");
+  if (!modal) return;
+  renderSmsTemplateSettingsList();
+  clearSmsTemplateEditor();
+  modal.classList.add("open");
+}
+
+function closeSmsTemplateSettings() {
+  const modal = document.getElementById("smsTemplateModal");
+  if (modal) modal.classList.remove("open");
+}
+
+function clearSmsTemplateEditor() {
+  const title = document.getElementById("smsTemplateEditorTitle");
+  const id = document.getElementById("smsTemplateEditingId");
+  const name = document.getElementById("smsTemplateNameInput");
+  const body = document.getElementById("smsTemplateBodyInput");
+
+  if (title) title.textContent = "Add Template";
+  if (id) id.value = "";
+  if (name) name.value = "";
+  if (body) body.value = "";
+}
+
+function renderSmsTemplateSettingsList() {
+  const list = document.getElementById("smsTemplateList");
+  if (!list) return;
+
+  const templates = getSmsTemplates();
+
+  if (!templates.length) {
+    list.innerHTML = '<div class="empty">No templates saved yet.</div>';
+    return;
+  }
+
+  list.innerHTML = templates.map(template => `
+    <div class="sms-template-row">
+      <strong>${escapeHtml(template.name || "Untitled Template")}</strong>
+      <small>${escapeHtml(template.body || "")}</small>
+      <div class="sms-template-row-actions">
+        <button type="button" class="light-btn" onclick="editSmsTemplate('${escapeHtml(template.id)}')">Edit</button>
+        <button type="button" class="danger-btn" onclick="deleteSmsTemplate('${escapeHtml(template.id)}')">Delete</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function editSmsTemplate(templateId) {
+  const templates = getSmsTemplates();
+  const template = templates.find(item => String(item.id) === String(templateId));
+  if (!template) return;
+
+  const title = document.getElementById("smsTemplateEditorTitle");
+  const id = document.getElementById("smsTemplateEditingId");
+  const name = document.getElementById("smsTemplateNameInput");
+  const body = document.getElementById("smsTemplateBodyInput");
+
+  if (title) title.textContent = "Edit Template";
+  if (id) id.value = template.id;
+  if (name) name.value = template.name || "";
+  if (body) body.value = template.body || "";
+}
+
+function saveSmsTemplateFromSettings() {
+  const idInput = document.getElementById("smsTemplateEditingId");
+  const nameInput = document.getElementById("smsTemplateNameInput");
+  const bodyInput = document.getElementById("smsTemplateBodyInput");
+
+  const editingId = idInput ? String(idInput.value || "") : "";
+  const name = nameInput ? String(nameInput.value || "").trim() : "";
+  const body = bodyInput ? String(bodyInput.value || "").trim() : "";
+
+  if (!name || !body) {
+    alert("Add both a template name and message.");
+    return;
+  }
+
+  const templates = getSmsTemplates();
+
+  if (editingId) {
+    const index = templates.findIndex(item => String(item.id) === String(editingId));
+    if (index !== -1) {
+      templates[index] = { id: editingId, name, body };
+    }
+  } else {
+    templates.push({
+      id: "sms-template-" + Date.now(),
+      name,
+      body
+    });
+  }
+
+  saveSmsTemplates(templates);
+  renderSmsTemplateDropdown();
+  renderSmsTemplateSettingsList();
+  clearSmsTemplateEditor();
+}
+
+function deleteSmsTemplate(templateId) {
+  if (!confirm("Delete this text template?")) return;
+
+  const templates = getSmsTemplates().filter(item => String(item.id) !== String(templateId));
+  saveSmsTemplates(templates);
+  renderSmsTemplateDropdown();
+  renderSmsTemplateSettingsList();
+  clearSmsTemplateEditor();
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function normalizePhone(phone) {
@@ -9107,5 +9457,11 @@ textarea:focus {
 window.sendIncomingSmsPush = async function () { return; };
 </script>
 
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    try { renderSmsTemplateDropdown(); } catch (err) {}
+  });
+</script>
 </body>
 </html>
