@@ -4102,13 +4102,12 @@ body.toros-admin-logged-in #openTextPanelBtn {
       document.getElementById("modalShopNotes").textContent = app.shopNotes || "None";
       document.getElementById("modalSource").textContent = app.source || "Website";
 
-      document.getElementById("callBtn").onclick = () => {
-        if (phone) window.location.href = "tel:" + phone.replace(/\D/g, "");
-      };
-
-      document.getElementById("emailBtn").onclick = () => {
-        if (email) window.location.href = "mailto:" + email;
-      };
+      const emailBtn = document.getElementById("emailBtn");
+      if (emailBtn) {
+        emailBtn.onclick = () => {
+          if (email) window.location.href = "mailto:" + email;
+        };
+      }
 
       showModalSmooth(document.getElementById("appointmentModal"));
     }
