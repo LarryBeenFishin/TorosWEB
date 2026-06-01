@@ -547,6 +547,7 @@
       border-radius: 20px;
       padding: 24px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
     }
 
     .modal h2 {
@@ -3549,6 +3550,7 @@ body.toros-admin-logged-in #openTextPanelBtn {
 
   <div class="modal-overlay" id="appointmentModal">
     <div class="modal">
+      <button type="button" class="modal-x" onclick="closeModal()" aria-label="Close appointment details"></button>
       <h2 id="modalName">Customer</h2>
       <div class="modal-date" id="modalDate"></div>
 
@@ -3564,13 +3566,10 @@ body.toros-admin-logged-in #openTextPanelBtn {
         <p><strong>Source:</strong> <span id="modalSource"></span></p>
 
         <div class="modal-actions">
-          <button id="callBtn">Call Customer</button>
           <button class="light-btn" id="emailBtn">Email</button>
           <button class="quick-text-btn" onclick="textSelectedAppointmentCustomer()">Text Customer</button>
-          <button class="success-btn" onclick="openInvoiceForSelectedAppointment()">Create Invoice</button>
           <button class="secondary-btn" onclick="switchToEditMode()">Edit / Reschedule</button>
           <button class="danger-btn" onclick="deleteSelectedAppointment()">Delete Appointment</button>
-          <button class="light-btn" onclick="closeModal()">Close</button>
         </div>
       </div>
 
